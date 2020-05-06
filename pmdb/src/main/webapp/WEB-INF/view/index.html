@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-<title>PMDB</title>
-</head>
-<body>
-<h1>Spring MVC with Thymeleaf</h1>
-<p th:text="${message}"></p>
-</body>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
+	<head>
+		<title>PMDB</title>
+	</head>
+	<body>
+		<div layout:fragment="content">
+			<h1 th:text="#{index.greeting}">index.greeting</h1>
+			<p th:text="${message}"></p>
+		</div>
+	</body>
 </html>

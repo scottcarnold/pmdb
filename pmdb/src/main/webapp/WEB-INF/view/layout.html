@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<title>PMDB - Personal Movie Database</title>
+	</head>
+	<body>
+		<div th:replace="header :: header">
+			Header Block
+		</div>
+		<div layout:fragment="content">
+			Content Block
+		</div>
+		<div th:replace="footer :: footer">
+			Footer Block
+		</div>
+	</body>
+</html>
