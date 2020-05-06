@@ -46,4 +46,34 @@
 			<version>${log4j2.version}</version>
 		</dependency>
 	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>enforce-banned-dependencies</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<bannedDependencies>
+									<excludes>
+										<!-- Prohibit routing Apache Commons Logging API via SLF4J, use more direct route to Log4j2. -->
+										<exclude>org.slf4j:jcl-over-slf4j</exclude>
+										<!-- Prohibit routing "java.util.logging" API via SLF4J, use more direct route to Log4j2. -->
+										<exclude>org.slf4j:jul-to-slf4j</exclude>
+										<!-- Prohibit routing log4j-1.2 via SLF4J, use more direct route to Log4j2. -->
+										<exclude>org.slf4j:log4j-over-slf4j</exclude>
+									</excludes>
+								</bannedDependencies>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

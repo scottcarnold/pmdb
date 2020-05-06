@@ -16,7 +16,7 @@ public class PmdbInitializer implements WebApplicationInitializer {
 	
 	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException {
-		LOGGER.warn("PmdbInitializer onStartup called");
+		LOGGER.info("PmdbInitializer onStartup called");
 		AnnotationConfigWebApplicationContext webAppContext = new AnnotationConfigWebApplicationContext();
 		webAppContext.register(WebConfig.class);
 		webAppContext.setServletContext(servletContext);

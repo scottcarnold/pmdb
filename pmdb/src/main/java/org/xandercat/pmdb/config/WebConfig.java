@@ -17,12 +17,12 @@ public class WebConfig implements WebMvcConfigurer {
 	private static final Logger LOGGER = LogManager.getLogger(WebConfig.class);
 	
 	public void addViewControllers(ViewControllerRegistry registry) {
-		LOGGER.warn("WebConfig addViewControllers called");
+		LOGGER.info("WebConfig addViewControllers called");
 		registry.addViewController("/").setViewName("index");
 	}
 
 	public void configureViewResolvers(ViewResolverRegistry registry) {
-		LOGGER.warn("WebConfig configureViewResolvers called");
+		LOGGER.info("WebConfig configureViewResolvers called");
 		registry.jsp();  // registers JSP with default prefix "/WEB-INF/" and default suffix ".jsp"
 	}
 }
