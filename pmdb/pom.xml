@@ -45,12 +45,18 @@
 			<artifactId>log4j-jcl</artifactId>
 			<version>${log4j2.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.thymeleaf</groupId>
+			<artifactId>thymeleaf-spring5</artifactId>
+			<version>3.0.11.RELEASE</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.0.0-M3</version>
 				<executions>
 					<execution>
 						<id>enforce-banned-dependencies</id>
