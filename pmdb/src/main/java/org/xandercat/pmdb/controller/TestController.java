@@ -9,7 +9,7 @@ public class TestController {
 
 	@GetMapping("/")
 	public String test(Model model) {
-		model.addAttribute("message", "Now get templating working!");
+		model.addAttribute("message", "Now get authentication and authorization working!");
 		return "index";
 	}
 }
