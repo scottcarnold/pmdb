@@ -4,13 +4,13 @@
 		<title>PMDB - Personal Movie Database</title>
 	</head>
 	<body>
-		<div th:replace="header :: header">
+		<div th:replace="layout/header :: header">
 			Header Block
 		</div>
 		<div layout:fragment="content">
 			Content Block
 		</div>
-		<div th:replace="footer :: footer">
+		<div th:replace="layout/footer :: footer">
 			Footer Block
 		</div>
 	</body>
