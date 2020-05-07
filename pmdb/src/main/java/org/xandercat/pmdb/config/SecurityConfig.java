@@ -38,13 +38,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		http.csrf().disable().authorizeRequests()
 			.antMatchers("/login*").anonymous()  // note -- you actually can't visit the login pages after logging in with this setup
 			.antMatchers("/**").hasRole("USER")
+			.and().logout()
+			.logoutSuccessUrl("/login.html") // after logout, go back to login
 			.and().formLogin()
 			.usernameParameter("username")
 			.passwordParameter("password")
 			.loginPage("/login.html")
 			.failureUrl("/login-error.html")
 			.loginProcessingUrl("/loginProcess.html")
-			.defaultSuccessUrl("/afterLogin.html");
+			.defaultSuccessUrl("/afterLogin.html")
+			.and().requiresChannel()
+			.antMatchers("/**").requiresSecure(); // force everything to be HTTPS
 	}
 
 }
