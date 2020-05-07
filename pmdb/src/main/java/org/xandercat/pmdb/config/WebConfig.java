@@ -28,7 +28,7 @@ import nz.net.ultraq.thymeleaf.LayoutDialect;
 
 @EnableWebMvc
 @Configuration
-@ComponentScan(basePackages={"org.xandercat.pmdb.controller"})
+@ComponentScan(basePackages={"org.xandercat.pmdb"})
 public class WebConfig implements WebMvcConfigurer {
 
 	private static final Logger LOGGER = LogManager.getLogger(WebConfig.class);
@@ -83,7 +83,7 @@ public class WebConfig implements WebMvcConfigurer {
 	@Override
 	public void addViewControllers(ViewControllerRegistry registry) {
 		LOGGER.info("WebConfig addViewControllers called");
-		registry.addViewController("/").setViewName("index");
+		registry.addViewController("/").setViewName("home");  // with nothing else, default to home page; should redirect to login if not logged in
 	}
 
 	@Override

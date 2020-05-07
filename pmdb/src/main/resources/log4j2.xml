@@ -17,7 +17,7 @@
 		<Logger name="org.xandercat.pmdb" level="debug" additivity="false">
 			<AppenderRef ref="File"/>
 		</Logger>
-		<Root level="info">
+		<Root level="debug">
 			<AppenderRef ref="File"/>
 		</Root>
 	</Loggers>

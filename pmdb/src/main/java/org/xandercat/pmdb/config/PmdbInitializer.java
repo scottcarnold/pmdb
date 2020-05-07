@@ -10,11 +10,10 @@ import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 
-public class PmdbInitializer implements WebApplicationInitializer {
+public class PmdbInitializer { //implements WebApplicationInitializer {
 
 	private static final Logger LOGGER = LogManager.getLogger(PmdbInitializer.class);
 	
-	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException {
 		LOGGER.info("PmdbInitializer onStartup called");
 		AnnotationConfigWebApplicationContext webAppContext = new AnnotationConfigWebApplicationContext();
