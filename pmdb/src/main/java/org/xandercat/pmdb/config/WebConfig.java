@@ -83,7 +83,7 @@ public class WebConfig implements WebMvcConfigurer {
 	@Override
 	public void addViewControllers(ViewControllerRegistry registry) {
 		LOGGER.info("WebConfig addViewControllers called");
-		registry.addViewController("/").setViewName("home");  // with nothing else, default to home page; should redirect to login if not logged in
+		//registry.addViewController("/").setViewName("home");  // can essentially set up noop controllers with this if desired
 	}
 
 	@Override

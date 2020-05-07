@@ -31,6 +31,6 @@ public class AuthenticationController {
 		UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 		User user = (User) authentication.getPrincipal();
 		LOGGER.info("User logged in: " + user.getUsername());
-		return "redirect:/home";
+		return "redirect:/";
 	}
 }
