@@ -4,9 +4,25 @@
 	</head>
 	<body>
 		<div th:fragment="header">
-			HEADER HEADER HEADER 
-			<!--  logout action has to be a post due to CSRF token -->
-			<form th:action="@{/logout}" method="post"><input type="submit" value="Log Out"/></form>
+			<nav class="navbar navbar-default">
+				<div class="container-fluid">
+					<div class="navbar-header">
+						<a class="navbar-brand">PMDB</a>
+					</div>
+					<div id="navbar" class="navbar-collapse collapse">
+						<ul class="nav navbar-nav">
+							<li class="active"><a th:href="@{/home}">Home</a></li>
+							<li><a th:href="@{/useradmin}">User Admin</a></li>
+						</ul>
+						<ul class="nav navbar-nav navbar-right">
+							<li>
+								<!--  logout action has to be a post due to CSRF token -->
+								<form th:action="@{/logout}" method="post"><input type="submit" value="Log Out"/></form>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</nav>
 		</div>
 	</body>
 </html>

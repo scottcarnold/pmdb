@@ -17,7 +17,7 @@ public class HomeController {
 	private JdbcTemplate jdbcTemplate;
 	
 	@GetMapping("/")
-	public String test(Model model) {
+	public String home(Model model) {
 		String bar = jdbcTemplate.queryForObject("SELECT foo FROM testtable WHERE id = 1", String.class);
 		model.addAttribute("message", "You are now logged in with the " + environment + " environment.  Database check: " + bar);
 		return "home";
