@@ -4,11 +4,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.xandercat.pmdb.dto.PmdbUser;
 
 @Controller
 public class AuthenticationController {
@@ -29,7 +29,7 @@ public class AuthenticationController {
 	@RequestMapping(value="/afterLogin.html", method=RequestMethod.GET)
 	public String loginProcess() {
 		UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-		User user = (User) authentication.getPrincipal();
+		PmdbUser user = (PmdbUser) authentication.getPrincipal();
 		LOGGER.info("User logged in: " + user.getUsername());
 		return "redirect:/";
 	}

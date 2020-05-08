@@ -4,7 +4,9 @@
 	</head>
 	<body>
 		<div th:fragment="header">
-			HEADER HEADER HEADER <a th:href="@{/logout}">Logout</a>
+			HEADER HEADER HEADER 
+			<!--  logout action has to be a post due to CSRF token -->
+			<form th:action="@{/logout}" method="post"><input type="submit" value="Log Out"/></form>
 		</div>
 	</body>
 </html>
