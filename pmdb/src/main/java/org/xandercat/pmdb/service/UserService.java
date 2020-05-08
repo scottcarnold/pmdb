@@ -1,5 +1,7 @@
 package org.xandercat.pmdb.service;
 
+import java.util.List;
+
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.util.PmdbException;
 
@@ -38,4 +40,6 @@ public interface UserService {
 	 * @return  number of users in the system
 	 */
 	public int getUserCount();
+	
+	public List<PmdbUser> searchUsers(String searchString);
 }

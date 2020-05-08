@@ -4,7 +4,9 @@ import java.io.UnsupportedEncodingException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -113,5 +115,45 @@ public class UserDaoImpl implements UserDao {
 	@Override
 	public int getUserCount() {
 		return jdbcTemplate.queryForObject("select count(*) from users", Integer.class).intValue();
+	}
+
+	@Override
+	public List<PmdbUser> searchUsers(String searchString) {
+		final String lcSearchString = searchString.trim().toLowerCase();
+		final List<PmdbUser> users = new ArrayList<PmdbUser>();
+		final String sql = "SELECT users.username, password, enabled, firstName, lastName, email, createdTs, updatedTs, lastAccessTs FROM users"
+				+ " INNER JOIN user_details ON users.username = user_details.username"
+				+ " WHERE LOWER(users.username) like ?"
+				+ " OR LOWER(user_details.firstName) like ?"
+				+ " OR LOWER(user_details.lastName) like ?"
+				+ " ORDER BY LOWER(users.username)";
+		jdbcTemplate.query(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setString(1, "%" + lcSearchString + "%");
+				ps.setString(2, "%" + lcSearchString + "%");
+				ps.setString(3, "%" + lcSearchString + "%");
+			}
+		}, new RowCallbackHandler() {
+			@Override
+			public void processRow(ResultSet rs) throws SQLException {
+				PmdbUser pmdbUser = new PmdbUser();
+				pmdbUser.setUsername(rs.getString(1));
+				try {
+					pmdbUser.setPassword(new String(rs.getBytes(2), "UTF-8"));
+				} catch (UnsupportedEncodingException e) {
+					LOGGER.error("Unable to read password hash from database.", e);
+				} 
+				pmdbUser.setEnabled(rs.getBoolean(3));
+				pmdbUser.setFirstName(rs.getString(4));
+				pmdbUser.setLastName(rs.getString(5));
+				pmdbUser.setEmail(rs.getString(6));
+				pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));
+				pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));
+				pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));
+				users.add(pmdbUser);
+			}
+		});		
+		return users;
 	}
 }

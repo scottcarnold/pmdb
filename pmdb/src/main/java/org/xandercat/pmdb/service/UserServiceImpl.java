@@ -1,5 +1,7 @@
 package org.xandercat.pmdb.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.xandercat.pmdb.dao.AuthDao;
@@ -37,6 +39,11 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public int getUserCount() {
 		return userDao.getUserCount();
+	}
+
+	@Override
+	public List<PmdbUser> searchUsers(String searchString) {
+		return userDao.searchUsers(searchString);
 	}
 
 
