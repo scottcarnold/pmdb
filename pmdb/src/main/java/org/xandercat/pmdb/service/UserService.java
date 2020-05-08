@@ -26,6 +26,13 @@ public interface UserService {
 	public void addUser(PmdbUser user, String unencryptedPassword) throws PmdbException;
 	
 	/**
+	 * Update the last access timestamp for a user to the current date.  Call this when a user logs in.
+	 * 
+	 * @param username
+	 */
+	public void updateLastAccess(String username);
+	
+	/**
 	 * Returns count of the number of users in the system, regardless of any status.
 	 * 
 	 * @return  number of users in the system

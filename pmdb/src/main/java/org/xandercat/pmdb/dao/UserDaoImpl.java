@@ -99,6 +99,18 @@ public class UserDaoImpl implements UserDao {
 	}
 
 	@Override
+	public void updateLastAccess(String username) {
+		final String sql = "UPDATE user_details SET lastAccessTs = ? WHERE username = ?";
+		jdbcTemplate.update(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				DBUtil.setGMTTimestamp(ps, 1, new Date());
+				ps.setString(2, username);
+			}
+		});
+	}
+
+	@Override
 	public int getUserCount() {
 		return jdbcTemplate.queryForObject("select count(*) from users", Integer.class).intValue();
 	}

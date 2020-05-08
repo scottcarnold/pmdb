@@ -49,7 +49,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				.loginPage("/login.html")
 				.failureUrl("/login-error.html")
 				.loginProcessingUrl("/loginProcess.html")
-				.defaultSuccessUrl("/afterLogin.html")
+				.defaultSuccessUrl("/afterLogin.html", true)
 			.and().requiresChannel()
 				.antMatchers("/**").requiresSecure(); // force everything to be HTTPS -- side note: csrf token validation fails if not over HTTPS but csrf can be disabled if needed
 	}

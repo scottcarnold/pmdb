@@ -30,7 +30,14 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	public void updateLastAccess(String username) {
+		userDao.updateLastAccess(username);
+	}
+	
+	@Override
 	public int getUserCount() {
 		return userDao.getUserCount();
 	}
+
+
 }

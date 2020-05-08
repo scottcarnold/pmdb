@@ -9,5 +9,7 @@ public interface UserDao {
 	
 	public PmdbUser getUser(String username);
 	
+	public void updateLastAccess(String username);
+	
 	public int getUserCount();
 }
