@@ -9,8 +9,9 @@
 			<h1>User Administration: Edit User</h1>
 			<form th:action="@{/useradmin/editUserSubmit}" th:object="${userForm}" method="post" class="form-horizontal">
 				<div th:replace="form/input :: textDisabled('Username', 'username')"></div>
-				<div th:replace="form/input :: password('Change Password', 'password')"></div>
-				<div th:replace="form/input :: password('Change Password Confirm', 'passwordConfirm')"></div>
+				<div th:replace="form/input :: hidden('username')"></div>
+				<div th:replace="form/input :: passwordPair('Change Password', 'passwordPair.first', 'passwordPair')"></div>
+				<div th:replace="form/input :: passwordPair('Change Password Confirm', 'passwordPair.second', 'passwordPair')"></div>
 				<div th:replace="form/input :: text('First Name', 'firstName')"></div>
 				<div th:replace="form/input :: text('Last Name', 'lastName')"></div>
 				<div th:replace="form/input :: text('Email Address', 'email')"></div>

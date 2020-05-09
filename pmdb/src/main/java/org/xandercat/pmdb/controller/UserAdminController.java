@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.form.useradmin.SearchForm;
 import org.xandercat.pmdb.form.useradmin.UserForm;
@@ -73,6 +74,10 @@ public class UserAdminController {
 	public String addNewUserSubmit(Model model,
 			@ModelAttribute("userForm") @Valid UserForm userForm,
 			BindingResult result) {
+		if (StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())) {
+			// special case; new user must be setting a new password, so blank value is not acceptable
+			result.rejectValue("password", "userform.password.required", "A password must be provided for new users.");
+		}
 		if (result.hasErrors()) {
 			return "useradmin/adduser";
 		}

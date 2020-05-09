@@ -72,15 +72,15 @@ public class UserServiceImpl implements UserService {
 		user.setEmail(userForm.getEmail().trim());
 		user.setEnabled(userForm.isEnabled());
 		if (newUser) {
-			userDao.addUser(user, userForm.getPassword().trim());
+			userDao.addUser(user, userForm.getPasswordPair().getFirst().trim());
 			authDao.grant(username, PmdbGrantedAuthority.ROLE_USER);
 			if (userForm.isAdministrator()) {
 				authDao.grant(username, PmdbGrantedAuthority.ROLE_ADMIN);
 			}
 		} else {
 			userDao.saveUser(user);
-			if (!StringUtils.isEmptyOrWhitespace(userForm.getPassword())) {
-				userDao.changePassword(username, userForm.getPassword().trim());
+			if (!StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())) {
+				userDao.changePassword(username, userForm.getPasswordPair().getFirst().trim());
 			}
 			boolean isAdmin = isAdministrator(username);
 			if (userForm.isAdministrator() && !isAdmin) {

@@ -30,6 +30,15 @@
 				</div>
 			</div>
 		</div>
+		<div th:fragment="passwordPair (label, fieldName, validatedFieldName)">  <!-- for our semi-custom Pair solution to password validation -->
+			<div class="form-group">
+				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-2 control-label">Label</label>
+				<div class="col-md-10">
+					<input type="password" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError"/>
+					<p th:if="${#fields.hasErrors('__${validatedFieldName}__')}" th:errors="*{__${validatedFieldName}__}">Errors</p>
+				</div>
+			</div>
+		</div>
 		<div th:fragment="checkbox (label, fieldName)">
 			<div class="form-group">
 				<div class="col-md-offset-2 col-md-12">
@@ -38,6 +47,9 @@
 					</div>
 				</div>
 			</div>
+		</div>
+		<div th:fragment="hidden (fieldName)">
+			<input type="hidden" th:field="*{__${fieldName}__}"/>
 		</div>
 		<div th:fragment="submit (label)">
 			<div class="form-group">

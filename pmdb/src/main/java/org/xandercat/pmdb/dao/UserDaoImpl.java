@@ -88,6 +88,7 @@ public class UserDaoImpl implements UserDao {
 				ps.setString(2, user.getLastName());
 				ps.setString(3, user.getEmail());
 				DBUtil.setGMTTimestamp(ps, 4, now);
+				ps.setString(5, user.getUsername());
 			}
 		});
 	}

@@ -3,6 +3,8 @@ package org.xandercat.pmdb.form.useradmin;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.util.Pair;
+import org.xandercat.pmdb.validation.ValuesMatch;
 
 @Validated
 public class UserForm {
@@ -10,9 +12,8 @@ public class UserForm {
 	@Length(min=4, max=50)
 	private String username;
 	
-	private String password;
-	
-	private String passwordConfirm;
+	@ValuesMatch
+	private Pair<String> passwordPair = new Pair<String>();
 	
 	private String firstName;
 	
@@ -40,17 +41,12 @@ public class UserForm {
 	public void setUsername(String username) {
 		this.username = username;
 	}
-	public String getPassword() {
-		return password;
+
+	public Pair<String> getPasswordPair() {
+		return passwordPair;
 	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	public String getPasswordConfirm() {
-		return passwordConfirm;
-	}
-	public void setPasswordConfirm(String passwordConfirm) {
-		this.passwordConfirm = passwordConfirm;
+	public void setPasswordPair(Pair<String> passwordPair) {
+		this.passwordPair = passwordPair;
 	}
 	public String getFirstName() {
 		return firstName;
@@ -82,5 +78,4 @@ public class UserForm {
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
-
 }

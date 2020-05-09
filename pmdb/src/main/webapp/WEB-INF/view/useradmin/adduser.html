@@ -9,8 +9,8 @@
 			<h1>User Administration: Add New User</h1>
 			<form th:action="@{/useradmin/addNewUserSubmit}" th:object="${userForm}" method="post" class="form-horizontal">
 				<div th:replace="form/input :: text('Username', 'username')"></div>
-				<div th:replace="form/input :: password('Password', 'password')"></div>
-				<div th:replace="form/input :: password('Password Confirm', 'passwordConfirm')"></div>
+				<div th:replace="form/input :: passwordPair('Password', 'passwordPair.first', 'passwordPair')"></div>
+				<div th:replace="form/input :: passwordPair('Password Confirm', 'passwordPair.second', 'passwordPair')"></div>
 				<div th:replace="form/input :: text('First Name', 'firstName')"></div>
 				<div th:replace="form/input :: text('Last Name', 'lastName')"></div>
 				<div th:replace="form/input :: text('Email Address', 'email')"></div>
