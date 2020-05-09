@@ -26,4 +26,8 @@ public interface CollectionService {
 	public void unshareMovieCollection(int collectionId, String unshareWithUsername, String callingUsername) throws CollectionSharingException;
 	
 	public void updateEditable(int collectionId, String updateUsername, boolean editable, String callingUsername) throws CollectionSharingException;
+	
+	public void assertCollectionViewable(int collectionId, String callingUsername) throws CollectionSharingException;
+	
+	public void assertCollectionEditable(int collectionId, String callingUsername) throws CollectionSharingException;
 }

@@ -26,10 +26,7 @@ public class CollectionServiceImpl implements CollectionService {
 
 	@Override
 	public void setDefaultMovieCollection(int collectionId, String callingUsername) throws CollectionSharingException {
-		MovieCollection viewableMovieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
-		if (viewableMovieCollection == null) { // collection must be viewable
-			throw new CollectionSharingException("User does not have required permission to view collection.");
-		}		
+		assertCollectionViewable(collectionId, callingUsername);		
 		collectionDao.setDefaultCollection(callingUsername, collectionId);
 		
 	}
@@ -76,28 +73,35 @@ public class CollectionServiceImpl implements CollectionService {
 
 	@Override
 	public void shareMovieCollection(int collectionId, String shareWithUsername, boolean editable, String callingUsername) throws CollectionSharingException {
-		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
-		if (movieCollection == null || !movieCollection.isEditable()) { // collection must be editable
-			throw new CollectionSharingException("User does not have required permission to share collection.");
-		}
+		assertCollectionEditable(collectionId, callingUsername);
 		collectionDao.shareCollection(collectionId, shareWithUsername, editable);
 	}
 
 	@Override
 	public void unshareMovieCollection(int collectionId, String unshareWithUsername, String callingUsername) throws CollectionSharingException {
-		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
-		if (movieCollection == null || !movieCollection.isEditable()) { // collection must be editable
-			throw new CollectionSharingException("User does not have required permission to unshare collection.");
-		}
+		assertCollectionEditable(collectionId, callingUsername);
 		collectionDao.unshareCollection(collectionId, unshareWithUsername);
 	}
 
 	@Override
 	public void updateEditable(int collectionId, String updateUsername, boolean editable, String callingUsername) throws CollectionSharingException {
+		assertCollectionEditable(collectionId, callingUsername);
+		collectionDao.updateEditable(collectionId, updateUsername, editable);
+	}
+
+	@Override
+	public void assertCollectionViewable(int collectionId, String callingUsername) throws CollectionSharingException {
+		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
+		if (movieCollection == null) { // collection must be viewable
+			throw new CollectionSharingException("User does not have required permission to update share permission.");
+		}
+	}
+
+	@Override
+	public void assertCollectionEditable(int collectionId, String callingUsername) throws CollectionSharingException {
 		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
 		if (movieCollection == null || !movieCollection.isEditable()) { // collection must be editable
 			throw new CollectionSharingException("User does not have required permission to update share permission.");
-		}	
-		collectionDao.updateEditable(collectionId, updateUsername, editable);
+		}
 	}
 }

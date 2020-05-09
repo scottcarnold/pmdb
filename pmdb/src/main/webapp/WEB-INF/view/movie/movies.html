@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/layout}">
+	<head>
+		<title>PMDB</title>
+	</head>
+	<body>
+		<h1>MOVIES PAGE</h1>
+		<div layout:fragment="content">
+			<div class="panel panel-info">
+				<div class="panel-heading">
+					<p th:text="'Movie Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</p>
+					<p>There are <span th:text="${movies.size()}">0</span> movies in the collection.</p>
+					<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/addMovie}">Add New Movie</a>
+				</div>
+				<table class="table table-striped">
+					<thead>
+					<tr>
+						<th>Title</th>
+						<th>Action</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="movie : ${movies}">
+						<td th:text="${movie.title}">Movie Title</td>
+						<td>
+							<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/editMovie(movieId=${movie.id})}">Edit</a>
+							<a id="deleteMovieLink" href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/deleteMovie(movieId=${movie.id})}">Delete</a> 
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="confirmDeleteDialog" title="Confirm Delete">
+				<p>Are you sure you wish to delete this movie?</p>
+			</div>
+			<script type="text/javascript">
+			$(document).ready(function() {  
+					$( "#confirmDeleteDialog" ).dialog({
+						autoOpen: false, modal: true
+					});
+					$("#deleteMovieLink").click(function(e) {
+					    e.preventDefault();
+					    var targetUrl = $(this).attr("href");
+
+					    $("#confirmDeleteDialog").dialog({
+					      buttons : {
+					        "Confirm" : function() {
+					          window.location.href = targetUrl;
+					        },
+					        "Cancel" : function() {
+					          $(this).dialog("close");
+					        }
+					      }
+					    });
+						$("#confirmDeleteDialog").dialog("open");
+						return false;
+					});
+			} );	
+			
+			</script>
+		</div>
+	</body>
+</html>

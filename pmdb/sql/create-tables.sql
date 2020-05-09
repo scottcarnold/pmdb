@@ -48,7 +48,7 @@ CREATE TABLE collection_default(
 );
 
 CREATE TABLE movie(
-    id            INTEGER NOT NULL PRIMARY KEY,
+    id            INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
     title         VARCHAR(200) NOT NULL,
     collection_id INTEGER NOT NULL,
     CONSTRAINT fk_movie_collection FOREIGN KEY(collection_id) REFERENCES collection(id)

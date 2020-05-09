@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/layout}">
+	<head>
+		<title>PMDB</title>
+	</head>
+	<body>
+		<h1>ADD MOVIE PAGE</h1>
+		<div layout:fragment="content">
+			<h1>Add New Movie</h1>
+			<form th:action="@{/movies/addMovieSubmit}" th:object="${movieForm}" method="post" class="form-horizontal">
+				<div th:replace="form/input :: hidden('id')"></div>
+				<div th:replace="form/input :: hidden('collectionId')"></div>
+				<div th:replace="form/input :: text('Movie Title', 'title')"></div>
+				<!--  TODO: Add dynamic attributes entry -->
+				<div th:replace="form/input :: submit('Create Movie')"></div>
+			</form>
+		</div>
+	</body>
+</html>
