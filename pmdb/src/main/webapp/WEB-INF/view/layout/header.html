@@ -11,8 +11,8 @@
 					</div>
 					<div id="navbar" class="navbar-collapse collapse">
 						<ul class="nav navbar-nav">
-							<li class="active"><a th:href="@{/home}">Home</a></li>
-							<li><a th:href="@{/useradmin}">User Admin</a></li>
+							<li th:classappend="${viewTab == 'isHomeTab'}? 'active'"><a th:href="@{/home}">Home</a></li>
+							<li th:classappend="${viewTab == 'isUserAdminTab'}? 'active'" sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="@{/useradmin}">User Admin</a></li>
 						</ul>
 						<ul class="nav navbar-nav navbar-right">
 							<li>

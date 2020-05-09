@@ -3,9 +3,30 @@
 		<title>Macros for form fields</title>
 	</head>
 	<body>
-		<div th:fragment="text (fieldName)">
-			<input type="text" th:field="*{__${fieldName}__}" th:errorclass="fieldError"/>
-			<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}">Errors</p>
+		<div th:fragment="text (label, fieldName)">
+			<div class="form-group">
+				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-2 control-label">Label</label>
+				<div class="col-md-10">
+					<input type="text" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError"/>
+					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}">Errors</p>
+				</div>
+			</div>
 		</div>
+		<div th:fragment="submit (label)">
+			<div class="form-group">
+				<div class="col-md-offset-2 col-md-10">
+					<button type="submit" th:text="${label}" class="btn btn-default">Submit</button>
+				</div>
+			</div>
+		</div>
+		
+			<!-- 		<form class="form-signin" th:action="@{/loginProcess.html}" method="post">
+				<label for="usernameInput" class="sr-only">Username:</label>
+				<input id="usernameInput" class="form-control" placeholder="Username" type="text" name="username" required/>
+				<label for="passwordInput" class="sr-only">Password:</label>
+				<input type="password" id="passwordInput" class="form-control" placeholder="Password" name="password"/>
+				<p th:if="${loginError}" class="error">Wrong username or password</p>
+				
+			</form>			-->
 	</body>
 </html>

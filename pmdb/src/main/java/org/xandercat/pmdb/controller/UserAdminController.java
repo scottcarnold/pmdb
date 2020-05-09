@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.form.useradmin.SearchForm;
 import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller
 public class UserAdminController {
@@ -21,10 +22,14 @@ public class UserAdminController {
 	@Autowired
 	private UserService userService;
 	
+	@ModelAttribute("viewTab")
+	public String getViewTab() {
+		return ViewUtil.TAB_USER_ADMIN;
+	}
+	
 	@GetMapping("/useradmin")
 	public String userAdmin(Model model) {
 		SearchForm searchForm = new SearchForm();
-		searchForm.setUsername("Does this work?");
 		model.addAttribute("searchForm", searchForm);
 		return "useradmin/useradmin";
 	}

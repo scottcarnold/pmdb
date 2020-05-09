@@ -6,6 +6,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller
 public class HomeController {
@@ -15,6 +17,11 @@ public class HomeController {
 	
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
+
+	@ModelAttribute("viewTab")
+	public String getViewTab() {
+		return ViewUtil.TAB_HOME;
+	}
 	
 	@GetMapping("/")
 	public String home(Model model) {

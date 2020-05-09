@@ -40,6 +40,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		http
 			.authorizeRequests()
 				.antMatchers("/login*").anonymous()  // note -- you actually can't visit the login pages after logging in with this setup
+				.antMatchers("/css/**").permitAll()
+				.antMatchers("/js/**").permitAll()
 				.antMatchers("/**").hasRole("USER")
 			.and().logout()
 				.logoutSuccessUrl("/login.html") // after logout, go back to login
