@@ -41,6 +41,20 @@ public class AuthDaoImpl implements AuthDao {
 	}
 
 	@Override
+	public void revoke(String username, PmdbGrantedAuthority... grantedAuthorities) {
+		final String sql = "DELETE FROM authorities WHERE username = ? AND authority = ?";
+		for (PmdbGrantedAuthority grantedAuthority : grantedAuthorities) {
+			jdbcTemplate.update(sql, new PreparedStatementSetter() {
+				@Override
+				public void setValues(PreparedStatement ps) throws SQLException {
+					ps.setString(1, username);
+					ps.setString(2, grantedAuthority.name());
+				}
+			});
+		}	
+	}
+	
+	@Override
 	public Collection<PmdbGrantedAuthority> getAuthorities(String username) {
 		Set<PmdbGrantedAuthority> authorities = new HashSet<PmdbGrantedAuthority>();
 		final String sql = "SELECT authority FROM authorities WHERE username = ?";

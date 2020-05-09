@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/layout}">
+	<head>
+		<title>PMDB</title>
+	</head>
+	<body>
+		<h1>USER EDIT PAGE</h1>
+		<div layout:fragment="content">
+			<h1>User Administration: Edit User</h1>
+			<form th:action="@{/useradmin/editUserSubmit}" th:object="${userForm}" method="post" class="form-horizontal">
+				<div th:replace="form/input :: textDisabled('Username', 'username')"></div>
+				<div th:replace="form/input :: password('Change Password', 'password')"></div>
+				<div th:replace="form/input :: password('Change Password Confirm', 'passwordConfirm')"></div>
+				<div th:replace="form/input :: text('First Name', 'firstName')"></div>
+				<div th:replace="form/input :: text('Last Name', 'lastName')"></div>
+				<div th:replace="form/input :: text('Email Address', 'email')"></div>
+				<div th:replace="form/input :: checkbox('Administrator', 'administrator')"></div>
+				<div th:replace="form/input :: checkbox('Enabled', 'enabled')"></div>
+				<div th:replace="form/input :: submit('Save User')"></div>
+			</form>
+		</div>
+	</body>
+</html>

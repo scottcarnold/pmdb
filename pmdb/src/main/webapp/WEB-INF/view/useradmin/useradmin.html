@@ -9,7 +9,7 @@
 
 			<h1>User Administration</h1>
 			<form th:action="@{/useradmin/search}" th:object="${searchForm}" method="post" class="form-horizontal">
-				<div th:replace="form/input :: text('Username', 'username')"></div>
+				<div th:replace="form/input :: text('Search For', 'searchString')"></div>
 				<div th:replace="form/input :: submit('Search')"></div>
 				<a href="#" th:href="@{/useradmin/addNewUser}">Add New User</a>
 			</form>
@@ -32,7 +32,7 @@
 						<td th:text="${result.firstName}">First Name</td>
 						<td th:text="${result.lastName}">Last Name</td>
 						<td th:text="${result.enabled}">Enabled/Disabled</td>
-						<td><a href="#" th:href="@{/useradmin/edit(username=${result.username})}">Edit</a></td>
+						<td><a href="#" th:href="@{/useradmin/editUser(username=${result.username})}">Edit</a></td>
 					</tr>
 					</tbody>
 				</table>

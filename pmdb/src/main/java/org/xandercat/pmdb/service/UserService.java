@@ -3,6 +3,7 @@ package org.xandercat.pmdb.service;
 import java.util.List;
 
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.util.PmdbException;
 
 public interface UserService {
@@ -27,6 +28,8 @@ public interface UserService {
 	 */
 	public void addUser(PmdbUser user, String unencryptedPassword) throws PmdbException;
 	
+	public void saveUser(UserForm userForm, boolean newUser) throws PmdbException;
+	
 	/**
 	 * Update the last access timestamp for a user to the current date.  Call this when a user logs in.
 	 * 
@@ -42,4 +45,6 @@ public interface UserService {
 	public int getUserCount();
 	
 	public List<PmdbUser> searchUsers(String searchString);
+	
+	public boolean isAdministrator(String username);
 }

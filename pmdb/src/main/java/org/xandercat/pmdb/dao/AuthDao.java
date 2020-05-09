@@ -10,5 +10,7 @@ public interface AuthDao {
 	
 	public void grant(String username, Collection<PmdbGrantedAuthority> grantedAuthorities);
 	
+	public void revoke(String username, PmdbGrantedAuthority... grantedAuthorities);
+	
 	public Collection<PmdbGrantedAuthority> getAuthorities(String username);
 }

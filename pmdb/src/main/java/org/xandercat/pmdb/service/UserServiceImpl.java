@@ -1,12 +1,16 @@
 package org.xandercat.pmdb.service;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.thymeleaf.util.StringUtils;
+import org.xandercat.pmdb.config.PmdbGrantedAuthority;
 import org.xandercat.pmdb.dao.AuthDao;
 import org.xandercat.pmdb.dao.UserDao;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.util.PmdbException;
 
 @Component
@@ -46,5 +50,51 @@ public class UserServiceImpl implements UserService {
 		return userDao.searchUsers(searchString);
 	}
 
+	@Override
+	public void saveUser(UserForm userForm, boolean newUser) throws PmdbException {
+		if (StringUtils.isEmptyOrWhitespace(userForm.getUsername())) {
+			throw new PmdbException("No username provided.");
+		}
+		String username = userForm.getUsername().trim();
+		PmdbUser user = getUser(username);
+		if (newUser) {
+			if (user != null) {
+				throw new PmdbException("User " + username + " already exists.");
+			}
+			user = new PmdbUser(username);
+		} else {
+			if (user == null) {
+				throw new PmdbException("User " + username + " not found.");
+			}
+		}
+		user.setFirstName(userForm.getFirstName().trim());
+		user.setLastName(userForm.getLastName().trim());
+		user.setEmail(userForm.getEmail().trim());
+		user.setEnabled(userForm.isEnabled());
+		if (newUser) {
+			userDao.addUser(user, userForm.getPassword().trim());
+			authDao.grant(username, PmdbGrantedAuthority.ROLE_USER);
+			if (userForm.isAdministrator()) {
+				authDao.grant(username, PmdbGrantedAuthority.ROLE_ADMIN);
+			}
+		} else {
+			userDao.saveUser(user);
+			if (!StringUtils.isEmptyOrWhitespace(userForm.getPassword())) {
+				userDao.changePassword(username, userForm.getPassword().trim());
+			}
+			boolean isAdmin = isAdministrator(username);
+			if (userForm.isAdministrator() && !isAdmin) {
+				authDao.grant(username, PmdbGrantedAuthority.ROLE_ADMIN);
+			} else if (!userForm.isAdministrator() && isAdmin) {
+				authDao.revoke(username, PmdbGrantedAuthority.ROLE_ADMIN);
+			}
+		}
+	}
+	
 
+	@Override
+	public boolean isAdministrator(String username) {
+		Collection<PmdbGrantedAuthority> authorities = authDao.getAuthorities(username);
+		return authorities.contains(PmdbGrantedAuthority.ROLE_ADMIN);
+	}
 }

@@ -68,6 +68,44 @@ public class UserDaoImpl implements UserDao {
 	}
 
 	@Override
+	public void saveUser(PmdbUser user) {
+		LOGGER.info("Request to save user: " + user.getUsername());
+		final String sql = "UPDATE users SET enabled = ? WHERE username = ?";
+		jdbcTemplate.update(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setBoolean(1, user.isEnabled());
+				ps.setString(2, user.getUsername());
+			}
+		});
+		final String detailsSql = "UPDATE user_details SET firstName = ?, lastName = ?, email = ?, updatedTs = ?"
+				+ " WHERE username = ?";
+		Date now = new Date();
+		jdbcTemplate.update(detailsSql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setString(1, user.getFirstName());
+				ps.setString(2, user.getLastName());
+				ps.setString(3, user.getEmail());
+				DBUtil.setGMTTimestamp(ps, 4, now);
+			}
+		});
+	}
+
+	@Override
+	public void changePassword(String username, String newPassword) {
+		final String sql = "UPDATE users SET password = ? WHERE username = ?";
+		String encryptedPassword = passwordEncoder.encode(newPassword);
+		jdbcTemplate.update(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setBytes(1, encryptedPassword.getBytes());
+				ps.setString(2, username);
+			}
+		});		
+	}
+
+	@Override
 	public PmdbUser getUser(String username) {
 		LOGGER.info("Request to get user: " + username);
 		PmdbUser pmdbUser = new PmdbUser();
