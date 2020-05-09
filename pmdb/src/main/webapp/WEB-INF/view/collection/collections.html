@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/layout}">
+	<head>
+		<title>PMDB</title>
+	</head>
+	<body>
+		<h1>COLLECTIONS PAGE</h1>
+		<div layout:fragment="content">
+			<div th:if="${defaultMovieCollection}" class="panel panel-info">
+				<div class="panel-heading">
+					<p th:text="'Your active movie collection is: ' + ${defaultMovieCollection.name}">Default Movie Collection</p>
+				</div>
+				<p>Your active movie collection will be used by default when managing or searching movies.  Set a movie collection active by the Set Active link in 
+				your list of movie collections.</p>
+				
+			</div>
+			<div th:if="not ${defaultMovieCollection}" class="panel panel-warning">
+				<div class="panel-heading">
+					<p th:text="'No active movie collection has been set.'">Default Movie Collection Name</p>
+				</div>
+				<p>Your active movie collection will be used by default when managing or searching movies.  Set a movie collection active by the Set Active link in 
+				your list of movie collections.</p>
+				
+			</div>			
+			<div class="panel panel-info">
+				<div class="panel-heading">
+					<p>You have access to <span th:text="${movieCollections.size()}">0</span> movie collection(s).</p>
+					<a href="#" th:href="@{/collections/addCollection}">Add New Movie Collection</a>
+				</div>
+				<table class="table table-striped">
+					<thead>
+					<tr>
+						<th>Collection Name</th>
+						<th>Collection Owner</th>
+						<th>Action</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="movieCollection : ${movieCollections}">
+						<td th:text="${movieCollection.name}">Collection Name</td>
+						<td th:text="${movieCollection.owner}">Collection Owner</td>
+						<td>
+							<a href="#" th:href="@{/collections/changeDefaultCollection(collectionId=${movieCollection.id})}">Set Active</a>
+							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editCollection(collectionId=${movieCollection.id})}">Edit Name</a>
+							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editSharing(collectionId=${movieCollection.id})}">Sharing</a>
+							<a id="deleteCollectionLink" href="#" th:if="${movieCollection.editable}" th:href="@{/collections/deleteCollection(collectionId=${movieCollection.id})}">Delete</a> 
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="confirmDeleteDialog" title="Confirm Delete">
+				<p>Deleting this collection will delete all of the movie entries associated with it.  Are you sure 
+				you wish to delete the entire movie collection?</p>
+			</div>
+			<script type="text/javascript">
+			$(document).ready(function() {  
+					$( "#confirmDeleteDialog" ).dialog({
+						autoOpen: false, modal: true
+					});
+					$("#deleteCollectionLink").click(function(e) {
+					    e.preventDefault();
+					    var targetUrl = $(this).attr("href");
+
+					    $("#confirmDeleteDialog").dialog({
+					      buttons : {
+					        "Confirm" : function() {
+					          window.location.href = targetUrl;
+					        },
+					        "Cancel" : function() {
+					          $(this).dialog("close");
+					        }
+					      }
+					    });
+						$("#confirmDeleteDialog").dialog("open");
+						return false;
+					});
+			} );	
+			
+			</script>
+		</div>
+	</body>
+</html>

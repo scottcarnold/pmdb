@@ -58,5 +58,5 @@ CREATE TABLE movie_attributes(
     movie_id      INTEGER NOT NULL PRIMARY KEY,
     attribute_name VARCHAR(50),
     attribute_value VARCHAR(200),
-    CONSTRAINT fk_movie_attributes_movie FOREIGN KEY(movie_id) REFERENCES movie(id)
+    CONSTRAINT fk_movie_attributes_movie FOREIGN KEY(movie_id) REFERENCES movie(id)	ON DELETE CASCADE
 );

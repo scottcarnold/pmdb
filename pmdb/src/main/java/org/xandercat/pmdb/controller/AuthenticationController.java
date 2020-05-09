@@ -3,6 +3,7 @@ package org.xandercat.pmdb.controller;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -17,17 +18,22 @@ public class AuthenticationController {
 
 	private static final Logger LOGGER = LogManager.getLogger(AuthenticationController.class);
 	
+	@Value("${pmdb.environment.name}")
+	private String environment;
+	
 	@Autowired
 	private UserService userService;
 	
 	@RequestMapping(value="/login.html", method=RequestMethod.GET)
-	public String login() {
+	public String login(Model model) {
+		model.addAttribute("environment", environment);
 		return "authentication/login";
 	}
 	
 	@RequestMapping("/login-error.html")
 	public String loginError(Model model) {
 		model.addAttribute("loginError", "Unable to login.");
+		model.addAttribute("environment", environment);
 		return "authentication/login";
 	}
 	

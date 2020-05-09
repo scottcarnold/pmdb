@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/layout}">
+	<head>
+		<title>PMDB</title>
+	</head>
+	<body>
+		<h1>ADD COLLECTION PAGE</h1>
+		<div layout:fragment="content">
+			<h1>Movie Collections: Add New Collection</h1>
+			<form th:action="@{/collections/addCollectionSubmit}" th:object="${collectionForm}" method="post" class="form-horizontal">
+				<div th:replace="form/input :: hidden('id')"></div>
+				<div th:replace="form/input :: text('Movie Collection Name', 'name')"></div>
+				<div th:replace="form/input :: submit('Create Movie Collection')"></div>
+			</form>
+		</div>
+	</body>
+</html>

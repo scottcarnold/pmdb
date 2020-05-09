@@ -5,6 +5,7 @@ public class MovieCollection {
 	private int id;
 	private String name;
 	private String owner;
+	private boolean editable;  // this is here as a convenience and will be dependent on who the user is
 	
 	public int getId() {
 		return id;
@@ -24,7 +25,11 @@ public class MovieCollection {
 	public void setOwner(String owner) {
 		this.owner = owner;
 	}
+	public boolean isEditable() {
+		return editable;
+	}
+	public void setEditable(boolean editable) {
+		this.editable = editable;
+	}
 	
-	
-
 }

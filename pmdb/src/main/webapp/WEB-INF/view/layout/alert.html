@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+	<head>
+		<title>Generic alert for error and success messages.</title>
+	</head>
+	<body>
+		<div th:fragment="alert">
+			<div th:if="${alertMessage}" th:text="${alertMessage}" class="alert alert-success" role="alert"></div>
+			<div th:if="${alertErrorMessage}" th:text="${alertErrorMessage}" class="alert alert-danger" role="alert"></div>
+		</div>
+	</body>
+</html>

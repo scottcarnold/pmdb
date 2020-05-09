@@ -1,12 +1,15 @@
 package org.xandercat.pmdb.controller;
 
+import java.security.Principal;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller
@@ -16,17 +19,21 @@ public class HomeController {
 	private String environment;
 	
 	@Autowired
-	private JdbcTemplate jdbcTemplate;
-
+	private CollectionService collectionService;
+	
 	@ModelAttribute("viewTab")
 	public String getViewTab() {
 		return ViewUtil.TAB_HOME;
 	}
 	
 	@GetMapping("/")
-	public String home(Model model) {
-		String bar = jdbcTemplate.queryForObject("SELECT foo FROM testtable WHERE id = 1", String.class);
-		model.addAttribute("message", "You are now logged in with the " + environment + " environment.  Database check: " + bar);
+	public String home(Model model, Principal principal) {
+		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		if (defaultMovieCollection == null) {
+			// send them to collections so they can set a default movie collection
+			return "redirect:/collections";
+		}
+		model.addAttribute("movieCollection", defaultMovieCollection);
 		return "home";
 	}
 }
