@@ -102,8 +102,7 @@ public class HomeController {
 			return "movie/addMovie";
 		}
 		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
-		Movie movie = new Movie();
-		movie.setTitle(movieForm.getTitle());
+		Movie movie = movieForm.toMovie();
 		movie.setCollectionId(movieCollection.getId());
 		try {
 			movieService.addMovie(movie, principal.getName());
@@ -124,8 +123,10 @@ public class HomeController {
 			return "movie/editMovie";
 		}
 		try {
-			Movie movie = movieService.getMovie(movieForm.getId(), principal.getName());
-			movie.setTitle(movieForm.getTitle());
+			Movie movieBefore = movieService.getMovie(movieForm.getId(), principal.getName());
+			Movie movie = movieForm.toMovie();
+			movie.setId(movieBefore.getId());
+			movie.setCollectionId(movieBefore.getCollectionId());
 			movieService.updateMovie(movie, principal.getName());
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to update movie.", e);

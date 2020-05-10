@@ -17,8 +17,24 @@ public class Movie {
 	public Movie(MovieDetails movieDetails, int collectionId) {
 		this.title = movieDetails.getTitle();
 		this.collectionId = collectionId;
+		this.attributes.put("Year", movieDetails.getYear());
 		this.attributes.put("Genre", movieDetails.getGenre());
-		//TODO: Finish filling out the attributes
+		this.attributes.put("Rated", movieDetails.getRated());
+		this.attributes.put("Plot", movieDetails.getPlot());
+		this.attributes.put("Actors", movieDetails.getActors());
+		this.attributes.put("Director", movieDetails.getDirector());
+		this.attributes.put("Awards", movieDetails.getAwards());
+		this.attributes.put("IMDB ID", movieDetails.getImdbId());
+		this.attributes.put("IMDB Rating", movieDetails.getImdbRating());
+		this.attributes.put("IMDB Votes", movieDetails.getImdbVotes());
+		this.attributes.put("Language", movieDetails.getLanguage());
+		this.attributes.put("Metascore", movieDetails.getMetascore());		
+		this.attributes.put("Poster", movieDetails.getPoster());		
+		this.attributes.put("Released", movieDetails.getReleased());
+		this.attributes.put("Runtime", movieDetails.getRuntime());
+		this.attributes.put("Type", movieDetails.getType());
+		this.attributes.put("Country", movieDetails.getCountry());
+		
 	}
 	public int getId() {
 		return id;

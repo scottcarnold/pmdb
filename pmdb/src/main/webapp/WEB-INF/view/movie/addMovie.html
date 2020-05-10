@@ -11,7 +11,9 @@
 				<div th:replace="form/input :: hidden('id')"></div>
 				<div th:replace="form/input :: hidden('collectionId')"></div>
 				<div th:replace="form/input :: text('Movie Title', 'title')"></div>
-				<!--  TODO: Add dynamic attributes entry -->
+				<div th:each="index : *{keyValueIndicies}">
+					<div th:replace="form/input :: keyValueText('attrKey'+${index}, 'attrValue'+${index})"></div>
+				</div>
 				<div th:replace="form/input :: submit('Create Movie')"></div>
 			</form>
 		</div>

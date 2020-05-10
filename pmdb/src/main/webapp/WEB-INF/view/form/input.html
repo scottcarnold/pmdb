@@ -5,17 +5,29 @@
 	<body>
 		<div th:fragment="text (label, fieldName)">
 			<div class="form-group">
-				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-2 control-label">Label</label>
-				<div class="col-md-10">
+				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
+				<div class="col-md-8">
 					<input type="text" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError"/>
 					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}">Errors</p>
 				</div>
 			</div>
 		</div>
+		<div th:fragment="keyValueText (keyFieldName, valueFieldName)">
+			<div class="form-group">
+				<div class="col-md-4">
+					<input type="text" th:id="${keyFieldName} + '-input'" th:field="*{__${keyFieldName}__}" class="form-control" th:errorclass="fieldError"/>
+					<p th:if="${#fields.hasErrors('__${keyFieldName}__')}" th:errors="*{__${keyFieldName}__}">Errors</p>
+				</div>
+				<div class="col-md-8">
+					<input type="text" th:id="${valueFieldName} + '-input'" th:field="*{__${valueFieldName}__}" class="form-control" th:errorclass="fieldError"/>
+					<p th:if="${#fields.hasErrors('__${valueFieldName}__')}" th:errors="*{__${valueFieldName}__}">Errors</p>
+				</div>
+			</div>
+		</div>
 		<div th:fragment="textDisabled (label, fieldName)">
 			<div class="form-group">
-				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-2 control-label">Label</label>
-				<div class="col-md-10">
+				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
+				<div class="col-md-8">
 					<input type="text" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError" disabled/>
 					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}">Errors</p>
 				</div>
@@ -23,8 +35,8 @@
 		</div>
 		<div th:fragment="password (label, fieldName)">
 			<div class="form-group">
-				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-2 control-label">Label</label>
-				<div class="col-md-10">
+				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
+				<div class="col-md-8">
 					<input type="password" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError"/>
 					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}">Errors</p>
 				</div>
@@ -32,8 +44,8 @@
 		</div>
 		<div th:fragment="passwordPair (label, fieldName, validatedFieldName)">  <!-- for our semi-custom Pair solution to password validation -->
 			<div class="form-group">
-				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-2 control-label">Label</label>
-				<div class="col-md-10">
+				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
+				<div class="col-md-8">
 					<input type="password" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError"/>
 					<p th:if="${#fields.hasErrors('__${validatedFieldName}__')}" th:errors="*{__${validatedFieldName}__}">Errors</p>
 				</div>
@@ -41,7 +53,7 @@
 		</div>
 		<div th:fragment="checkbox (label, fieldName)">
 			<div class="form-group">
-				<div class="col-md-offset-2 col-md-12">
+				<div class="col-md-offset-4 col-md-8">
 					<div class="checkbox">
 						<label><input type="checkbox" th:field="*{__${fieldName}__}"><span th:text="${label}">Label</span></label>
 					</div>
@@ -53,7 +65,7 @@
 		</div>
 		<div th:fragment="submit (label)">
 			<div class="form-group">
-				<div class="col-md-offset-2 col-md-10">
+				<div class="col-md-offset-4 col-md-8">
 					<button type="submit" th:text="${label}" class="btn btn-default">Submit</button>
 				</div>
 			</div>
