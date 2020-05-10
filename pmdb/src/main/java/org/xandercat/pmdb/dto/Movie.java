@@ -3,6 +3,8 @@ package org.xandercat.pmdb.dto;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.xandercat.pmdb.dto.imdb.MovieDetails;
+
 public class Movie {
 
 	private int id;
@@ -10,6 +12,14 @@ public class Movie {
 	private Map<String, String> attributes = new HashMap<String, String>();
 	private int collectionId;
 	
+	public Movie() {
+	}
+	public Movie(MovieDetails movieDetails, int collectionId) {
+		this.title = movieDetails.getTitle();
+		this.collectionId = collectionId;
+		this.attributes.put("Genre", movieDetails.getGenre());
+		//TODO: Finish filling out the attributes
+	}
 	public int getId() {
 		return id;
 	}

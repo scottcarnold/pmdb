@@ -40,10 +40,14 @@
 						<td th:text="${movieCollection.name}">Collection Name</td>
 						<td th:text="${movieCollection.owner}">Collection Owner</td>
 						<td>
-							<a href="#" th:href="@{/collections/changeDefaultCollection(collectionId=${movieCollection.id})}">Set Active</a>
-							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editCollection(collectionId=${movieCollection.id})}">Edit Name</a>
-							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editSharing(collectionId=${movieCollection.id})}">Sharing</a>
-							<a id="deleteCollectionLink" href="#" th:if="${movieCollection.editable}" th:href="@{/collections/deleteCollection(collectionId=${movieCollection.id})}">Delete</a> 
+							<a href="#" th:href="@{/collections/changeDefaultCollection(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Set Active</a>
+							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editCollection(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Edit Name</a>
+							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editSharing(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Sharing</a>
+<!-- 							<a id="deleteCollectionLink" href="#" th:if="${movieCollection.editable}" th:href="@{/collections/deleteCollection(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Delete</a>  -->
+							<form th:action="@{/collections/deleteCollection}" method="post" style="display: inline">
+								<input type="hidden" name="collectionId" th:value="${movieCollection.id}"/>
+								<button type="submit" class="confirmDelete btn btn-default">Delete</button>
+							</form>
 						</td>
 					</tr>
 					</tbody>
@@ -54,27 +58,25 @@
 				you wish to delete the entire movie collection?</p>
 			</div>
 			<script type="text/javascript">
+			var currentForm;
 			$(document).ready(function() {  
 					$( "#confirmDeleteDialog" ).dialog({
-						autoOpen: false, modal: true
-					});
-					$("#deleteCollectionLink").click(function(e) {
-					    e.preventDefault();
-					    var targetUrl = $(this).attr("href");
-
-					    $("#confirmDeleteDialog").dialog({
+						autoOpen: false, modal: true,
 					      buttons : {
-					        "Confirm" : function() {
-					          window.location.href = targetUrl;
-					        },
-					        "Cancel" : function() {
-					          $(this).dialog("close");
-					        }
-					      }
-					    });
-						$("#confirmDeleteDialog").dialog("open");
-						return false;
+						        "Confirm" : function() {
+						          $(this).dialog("close");
+						          currentForm.submit();
+						        },
+						        "Cancel" : function() {
+						          $(this).dialog("close");
+						        }
+						      }
 					});
+			        $(".confirmDelete").click(function() {
+			            currentForm = $(this).closest('form');
+			            $("#confirmDeleteDialog").dialog('open');
+			            return false;
+			          });
 			} );	
 			
 			</script>

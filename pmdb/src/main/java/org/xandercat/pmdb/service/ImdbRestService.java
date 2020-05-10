@@ -8,15 +8,21 @@ import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.util.StringUtils;
+import org.xandercat.pmdb.dto.imdb.MovieDetails;
+import org.xandercat.pmdb.dto.imdb.MovieDetailsWrapper;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
 import org.xandercat.pmdb.util.Pair;
 
 @Component
 public class ImdbRestService {
+	
+	private static final Logger LOGGER = LogManager.getLogger(ImdbRestService.class);
 	
 	@Value("${imdb.rapidapi.host.url}")
 	private String hostUrl;
@@ -61,5 +67,13 @@ public class ImdbRestService {
 		queryParams.add(new Pair<String>("r", "xml"));
 		SearchResult searchResult = builder(queryParams).get(new GenericType<SearchResult>() {});
 		return searchResult;
+	}
+	
+	public MovieDetails getMovieDetails(String imdbId) {
+		List<Pair<String>> queryParams = new ArrayList<Pair<String>>();
+		queryParams.add(new Pair<String>("i", imdbId));
+		queryParams.add(new Pair<String>("r", "xml"));
+		MovieDetailsWrapper movieDetailsWrapper = builder(queryParams).get(new GenericType<MovieDetailsWrapper>() {});
+		return movieDetailsWrapper.getMovieDetails();
 	}
 }

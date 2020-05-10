@@ -13,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.exception.CollectionSharingException;
@@ -112,7 +113,7 @@ public class CollectionController {
 		return collections(model, principal);
 	}
 	
-	@RequestMapping("/collections/deleteCollection")
+	@RequestMapping(value="/collections/deleteCollection", method=RequestMethod.POST)
 	public String deleteCollection(Model model, Principal principal, @RequestParam int collectionId) {
 		try {
 			collectionService.deleteMovieCollection(collectionId, principal.getName());
