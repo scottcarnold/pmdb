@@ -1,6 +1,7 @@
 package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import javax.validation.Valid;
 
@@ -14,10 +15,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.form.movie.MovieForm;
+import org.xandercat.pmdb.form.movie.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.ViewUtil;
@@ -40,6 +43,18 @@ public class HomeController {
 	
 	@GetMapping("/")
 	public String home(Model model, Principal principal) {
+		model.addAttribute("searchForm", new SearchForm());
+		return prepareHome(model, principal, null);
+	}
+	
+	@RequestMapping("/movies/search")
+	public String search(Model model, Principal principal,
+			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
+			BindingResult result) {
+		return prepareHome(model, principal, searchForm.getSearchString());
+	}
+	
+	private String prepareHome(Model model, Principal principal, String searchString) {
 		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		if (defaultMovieCollection == null) {
 			// send them to collections so they can set a default movie collection
@@ -47,12 +62,17 @@ public class HomeController {
 		}
 		model.addAttribute("defaultMovieCollection", defaultMovieCollection);
 		try {
-			model.addAttribute("movies", movieService.getMoviesForCollection(defaultMovieCollection.getId(), principal.getName()));
+			List<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.getId(), principal.getName());
+			model.addAttribute("totalMoviesInCollection", movies.size());
+			if (!StringUtils.isEmptyOrWhitespace(searchString)) {
+				movies = movieService.searchMoviesForCollection(defaultMovieCollection.getId(), searchString, principal.getName());
+			}
+			model.addAttribute("movies", movies); 
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to retrieve movies for default movie collection.", e);
 			ViewUtil.setErrorMessage(model, "Unable to get movies for the collection.");
 		}
-		return "movie/movies";
+		return "movie/movies";		
 	}
 	
 	@RequestMapping("/movies/addMovie")

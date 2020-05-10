@@ -54,6 +54,31 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
+	public List<Movie> searchMoviesForCollection(int collectionId, String searchString) {
+		final String sql = "SELECT id, title FROM movie WHERE collection_id = ? "
+				+ " AND LOWER(title) like ?"
+				+ " ORDER BY title";
+		final List<Movie> movies = new ArrayList<Movie>();
+		jdbcTemplate.query(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setInt(1, collectionId);
+				ps.setString(2, "%" + searchString.trim() + "%");
+			}
+		}, new RowCallbackHandler() {
+			@Override
+			public void processRow(ResultSet rs) throws SQLException {
+				Movie movie = new Movie();
+				movie.setId(rs.getInt(1));
+				movie.setTitle(rs.getString(2));
+				movies.add(movie);
+			}
+		});
+		//TODO: Also load the attributes
+		return movies;
+	}
+
+	@Override
 	public Movie getMovie(int id) {
 		final String sql = "SELECT id, title, collection_id FROM movie WHERE id = ?";
 		final List<Movie> movies = new ArrayList<Movie>();

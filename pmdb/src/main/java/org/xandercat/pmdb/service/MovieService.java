@@ -9,6 +9,8 @@ public interface MovieService {
 
 	public List<Movie> getMoviesForCollection(int collectionId, String callingUsername) throws CollectionSharingException;
 	
+	public List<Movie> searchMoviesForCollection(int collectionId, String searchString, String callingUsername) throws CollectionSharingException;
+	
 	public Movie getMovie(int id, String callingUsername) throws CollectionSharingException;
 	
 	public void addMovie(Movie movie, String callingUsername) throws CollectionSharingException;

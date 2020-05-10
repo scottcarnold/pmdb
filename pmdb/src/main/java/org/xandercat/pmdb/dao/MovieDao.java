@@ -10,6 +10,8 @@ public interface MovieDao {
 	
 	public List<Movie> getMoviesForCollection(int collectionId);
 	
+	public List<Movie> searchMoviesForCollection(int collectionId, String searchString);
+	
 	public Movie getMovie(int id);
 	
 	public void addMovie(Movie movie);

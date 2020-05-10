@@ -1,5 +1,8 @@
 package org.xandercat.pmdb.config;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
@@ -21,5 +24,10 @@ public class AppConfig {
 		PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer = new PropertySourcesPlaceholderConfigurer();
 		propertySourcesPlaceholderConfigurer.setLocation(propertiesResource);
 		return propertySourcesPlaceholderConfigurer;
+	}
+	
+	@Bean
+	public Client restJsonClient() {
+		return ClientBuilder.newBuilder().build();
 	}
 }

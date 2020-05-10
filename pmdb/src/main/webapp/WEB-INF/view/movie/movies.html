@@ -9,8 +9,12 @@
 			<div class="panel panel-info">
 				<div class="panel-heading">
 					<p th:text="'Movie Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</p>
-					<p>There are <span th:text="${movies.size()}">0</span> movies in the collection.</p>
+					<p>Showing <span th:text="${movies.size()}">0</span> out of <span th:text="${totalMoviesInCollection}">0</span> movies in the collection.</p>
 					<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/addMovie}">Add New Movie</a>
+					<form th:action="@{/movies/search}" th:object="${searchForm}" method="post" class="form-horizontal">
+						<div th:replace="form/input ::text('Search this collection', 'searchString')"></div>
+						<div th:replace="form/input :: submit('Search')"></div>
+					</form>
 				</div>
 				<table class="table table-striped">
 					<thead>

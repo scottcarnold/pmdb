@@ -24,6 +24,12 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
+	public List<Movie> searchMoviesForCollection(int collectionId, String searchString, String callingUsername)	throws CollectionSharingException {
+		collectionService.assertCollectionViewable(collectionId, callingUsername);
+		return movieDao.searchMoviesForCollection(collectionId, searchString);
+	}
+
+	@Override
 	public Movie getMovie(int id, String callingUsername) throws CollectionSharingException {
 		Movie movie = movieDao.getMovie(id);
 		if (movie != null) {
