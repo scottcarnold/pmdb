@@ -27,7 +27,7 @@ public class AppConfig {
 	}
 	
 	@Bean
-	public Client restJsonClient() {
+	public Client restClient() {
 		return ClientBuilder.newBuilder().build();
 	}
 }

@@ -40,10 +40,10 @@ public class ImdbRestService {
 	private String apiKeyHeaderValue;
 	
 	@Autowired
-	private Client restJsonClient;
+	private Client restClient;
 	
 	private Builder builder(List<Pair<String>> queryParams) {
-		WebTarget webTarget = restJsonClient.target(hostUrl);
+		WebTarget webTarget = restClient.target(hostUrl);
 		for (Pair<String> queryParam : queryParams) {
 			webTarget = webTarget.queryParam(queryParam.getFirst(), queryParam.getSecond());
 		}
