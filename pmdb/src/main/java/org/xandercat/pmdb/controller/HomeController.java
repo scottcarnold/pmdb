@@ -1,7 +1,6 @@
 package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -70,8 +69,7 @@ public class HomeController {
 			if (!StringUtils.isEmptyOrWhitespace(searchString)) {
 				movies = movieService.searchMoviesForCollection(defaultMovieCollection.getId(), searchString, principal.getName());
 			}
-			List<String> attrColumns = new ArrayList<String>();
-			attrColumns.add("Rated");
+			List<String> attrColumns = movieService.getTableColumnPreferences(principal.getName());
 			model.addAttribute("movies", movies); 
 			model.addAttribute("attrColumns", attrColumns);
 		} catch (CollectionSharingException e) {

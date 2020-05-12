@@ -19,7 +19,7 @@
 				</li>
 				<!-- <div><p class="dragAttr dropAttr" data-index="0">Rated</p></div> -->
 				<li class="list-group-item"><form th:action="@{/movies/addColumnPreference}" method="post" class="form-inline">
-						<label for="addColumnSelect" th:text="'Add To Table'">Label</label>
+						<label for="addColumnSelect" th:text="'Add Column For Attribute'">Label</label>
 						<select type="text" th:id="'addColumnSelect'" name="attributeName" class="form-control">
 							<option th:each="tableColumnOption : ${tableColumnOptions}" th:value="${tableColumnOption}" th:text="${tableColumnOption}"/>
 						</select>
@@ -27,6 +27,7 @@
 					</form>
 				</li>
 			</ul>
+			<a href="#" th:href="@{/}">Return To Movie List</a>
 			<script type="text/javascript">
 				$(".dragAttr").draggable({
 					revert: function(event, ui) {
