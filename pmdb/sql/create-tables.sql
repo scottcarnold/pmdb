@@ -61,3 +61,11 @@ CREATE TABLE movie_attributes(
     CONSTRAINT fk_movie_attributes_movie FOREIGN KEY(movie_id) REFERENCES movie(id)	ON DELETE CASCADE,
     CONSTRAINT ix_movie_attr_name UNIQUE INDEX (movie_id, attribute_name)
 );
+
+CREATE TABLE movie_attributes_table_columns(
+    username      VARCHAR(50) NOT NULL,
+    idx           INTEGER NOT NULL,
+    attribute_name VARCHAR(50),
+    CONSTRAINT fk_movie_attributes_order_users FOREIGN KEY(username) REFERENCES users(username),
+    CONSTRAINT ix_mao_username_idx UNIQUE INDEX (username, idx) 
+);

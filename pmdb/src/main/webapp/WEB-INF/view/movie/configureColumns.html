@@ -7,14 +7,37 @@
 		<h1>CONFIGURE MOVIE COLUMNS PAGE</h1>
 		<div layout:fragment="content">
 			<h1>Configure Columns For Movie Table</h1>
+			<p>TIP: For columns already in the list, you can drag and drop to reorder them.</p>
 			<ul class="list-group">
-			<div><p class="dragAttr dropAttr" data-index="0">Rated</p></div>
-			<div><p class="dragAttr dropAttr" data-index="1">Director</p></div>
-			<div><p class="dragAttr dropAttr" data-index="2">Genre</p></div>
-			<div><p>Add Column</p></div>
-			
+			    <!--  floating button to right causes container to collapse; this is undone with overflow: auto on container element -->
+				<li th:each="pref,iterStat : ${tableColumnPreferences}" class="list-group-item dragAttr dropAttr" th:attr="data-index='__${iterStat.index}__'" style="overflow: auto">
+					<span th:text="${pref}"></span>
+					<form th:action="@{/movies/deleteColumnPreference}" method="post" class="form-inline" style="display: inline">
+						<input type="hidden" name="deleteIndex" th:value="${iterStat.index}"/>
+						<button type="submit" class="btn btn-default" style="float: inline-end">Delete</button>
+					</form>
+				</li>
+				<!-- <div><p class="dragAttr dropAttr" data-index="0">Rated</p></div> -->
+				<li class="list-group-item"><form th:action="@{/movies/addColumnPreference}" method="post" class="form-inline">
+						<label for="addColumnSelect" th:text="'Add To Table'">Label</label>
+						<select type="text" th:id="'addColumnSelect'" name="attributeName" class="form-control">
+							<option th:each="tableColumnOption : ${tableColumnOptions}" th:value="${tableColumnOption}" th:text="${tableColumnOption}"/>
+						</select>
+						<button type="submit" class="btn btn-default">Add</button>
+					</form>
+				</li>
+			</ul>
 			<script type="text/javascript">
-				$(".dragAttr").draggable();
+				$(".dragAttr").draggable({
+					revert: function(event, ui) {
+						$(this).data("uiDraggable").originalPosition = {
+							top: 0,
+							left: 0
+						};
+						return !event;
+					},
+					stack: ".dragAttr"
+				});
 				$(".dropAttr").droppable({
 					drop: function(event, ui) {
 						var dropIndex = $(this).data("index");

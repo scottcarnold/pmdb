@@ -234,4 +234,144 @@ public class MovieDaoImpl implements MovieDao {
 			}			
 		});
 	}
+
+	@Override
+	public List<String> getTableColumnPreferences(String username) {
+		return getTableColumnPreferences(username, null, null);
+	}
+
+	private List<String> getTableColumnPreferences(String username, Integer fromIdx, Integer toIdx) {
+		final StringBuilder sql = new StringBuilder("SELECT attribute_name FROM movie_attributes_table_columns WHERE username = ?");
+		if (fromIdx != null) {
+			sql.append(" AND idx >= ?");
+		}
+		if (toIdx != null) {
+			sql.append(" AND idx <= ?");
+		}
+		sql.append(" ORDER BY idx");
+		final List<String> tableColumnPreferences = new ArrayList<String>();
+		jdbcTemplate.query(sql.toString(), new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				int i=0;
+				ps.setString(++i, username);
+				if (fromIdx != null) {
+					ps.setInt(++i, fromIdx.intValue());
+				}
+				if (toIdx != null) {
+					ps.setInt(++i, toIdx.intValue());
+				}
+			}
+		}, new RowCallbackHandler() {
+			@Override
+			public void processRow(ResultSet rs) throws SQLException {
+				tableColumnPreferences.add(rs.getString(1));
+			}
+		});
+		return tableColumnPreferences;
+	}
+	
+	@Override
+	public Integer getMaxTableColumnPreferenceIndex(String username) {
+		final String maxSql = "SELECT MAX(idx) FROM movie_attributes_table_columns WHERE username = ?";
+		final List<Integer> max = new ArrayList<Integer>();
+		jdbcTemplate.query(maxSql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setString(1, username);
+			}
+		}, new RowCallbackHandler() {
+			@Override
+			public void processRow(ResultSet rs) throws SQLException {
+				int maxIdx = rs.getInt(1);
+				if (!rs.wasNull()) {
+					max.add(Integer.valueOf(maxIdx));
+				}
+			}
+		});
+		return (max.size() == 0)? null : max.get(0);
+	}
+
+	@Override
+	public void addTableColumnPreference(String attributeName, String username) {
+		final String insertSql = "INSERT INTO movie_attributes_table_columns(username, idx, attribute_name) VALUES (?, ?, ?)";
+		Integer max = getMaxTableColumnPreferenceIndex(username);
+		final int nextIdx = (max != null)? max.intValue() + 1 : 0;
+		jdbcTemplate.update(insertSql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setString(1, username);
+				ps.setInt(2, nextIdx);
+				ps.setString(3, attributeName);
+			}
+		});
+	}
+
+	@Override
+	public void reorderTableColumnPreference(int sourceIdx, int targetIdx, String username) {
+		if (sourceIdx == targetIdx) {
+			return;
+		}
+		updateTableColumnPreferenceIndex(sourceIdx, -1, username); // temporary holding index
+		if (sourceIdx < targetIdx) {
+			for (int i=sourceIdx+1; i<=targetIdx; i++) {
+				updateTableColumnPreferenceIndex(i, i-1, username);
+			}
+		} else {
+			for (int i=sourceIdx-1; i>=targetIdx; i--) {
+				updateTableColumnPreferenceIndex(i, i+1, username);
+			}
+		}
+		updateTableColumnPreferenceIndex(-1, targetIdx, username);
+	}
+
+	private void updateTableColumnPreferenceIndex(int fromIdx, int toIdx, String username) {
+		final String sql = "UPDATE movie_attributes_table_columns SET idx = ? WHERE username = ? AND idx = ?";
+		jdbcTemplate.update(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setInt(1, toIdx);
+				ps.setString(2, username);
+				ps.setInt(3, fromIdx);
+			}
+		});
+	}
+	
+	@Override
+	public void deleteTableColumnPreference(int sourceIdx, String username) {
+		List<String> shiftPreferences = getTableColumnPreferences(username, sourceIdx+1, null);
+		final String sql = "DELETE FROM movie_attributes_table_columns WHERE username = ? AND idx >= ?";
+		int rowsAffected = jdbcTemplate.update(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setString(1, username);
+				ps.setInt(2, sourceIdx);
+			}
+		});
+		if (rowsAffected > 0) {
+			for (String preference : shiftPreferences) {
+				addTableColumnPreference(preference, username);
+			}
+		}
+	}
+
+	@Override
+	public List<String> getAttributeKeysForCollection(int collectionId) {
+		final String sql = "SELECT DISTINCT(attribute_name) FROM movie"
+				+ " INNER JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
+				+ " WHERE movie.collection_id = ?";
+		final List<String> attributeKeys = new ArrayList<String>();
+		jdbcTemplate.query(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setInt(1, collectionId);
+			}
+		}, new RowCallbackHandler() {
+			@Override
+			public void processRow(ResultSet rs) throws SQLException {
+				attributeKeys.add(rs.getString(1));
+			}
+		});
+		return attributeKeys;
+	}
 }

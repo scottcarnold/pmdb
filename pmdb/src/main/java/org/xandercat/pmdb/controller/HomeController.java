@@ -25,6 +25,7 @@ import org.xandercat.pmdb.form.movie.MovieForm;
 import org.xandercat.pmdb.form.movie.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.MovieService;
+import org.xandercat.pmdb.util.PmdbException;
 import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller
@@ -162,13 +163,47 @@ public class HomeController {
 	}
 	
 	@RequestMapping("/movies/configureColumns")
-	public String configureColumns() {
+	public String configureColumns(Model model, Principal principal) {
+		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		List<String> tableColumnOptions = null;
+		try {
+			tableColumnOptions = movieService.getAttributeKeysForCollection(movieCollection.getId(), principal.getName());
+		} catch (CollectionSharingException e) {
+			LOGGER.error("User " + principal.getName() + " cannot configure columns for collection " + movieCollection.getId(), e);
+			ViewUtil.setErrorMessage(model, "Columns cannot be configured.");
+			return home(model, principal);
+		}
+		List<String> tableColumnPreferences = movieService.getTableColumnPreferences(principal.getName());
+		tableColumnOptions.removeAll(tableColumnPreferences); // remove ones already in preference list
+		model.addAttribute("tableColumnPreferences", tableColumnPreferences);
+		model.addAttribute("tableColumnOptions", tableColumnOptions);
 		return "movie/configureColumns";
 	}
 	
 	@RequestMapping("/movies/reorderColumns")
-	public String reorderColumns(Model model, @RequestParam int dragIndex, @RequestParam int dropIndex) {
-		ViewUtil.setMessage(model, "Requested drag from " + dragIndex + " to " + dropIndex);
-		return configureColumns();
+	public String reorderColumns(Model model, Principal principal, @RequestParam int dragIndex, @RequestParam int dropIndex) {
+		LOGGER.debug("Requested drag from " + dragIndex + " to " + dropIndex);
+		try {
+			movieService.reorderTableColumnPreference(dragIndex, dropIndex, principal.getName());
+			// not going to set success messages here as it would reduce usability of the interface and be of little value
+		} catch (PmdbException e) {
+			LOGGER.error("Unable to reorder columns.", e);
+			ViewUtil.setErrorMessage(model, "Table columns could not be reordered.");
+		}
+		return configureColumns(model, principal);
+	}
+	
+	@RequestMapping("/movies/addColumnPreference")
+	public String addColumnPreference(Model model, Principal principal, @RequestParam String attributeName) {
+		movieService.addTableColumnPreference(attributeName, principal.getName());
+		// not going to set success messages here as it would reduce usability of the interface and be of little value
+		return configureColumns(model, principal);
+	}
+	
+	@RequestMapping("/movies/deleteColumnPreference")
+	public String deleteColumnPreference(Model model, Principal principal, @RequestParam int deleteIndex) {
+		movieService.deleteTableColumnPreference(deleteIndex, principal.getName());
+		// not going to set success messages here as it would reduce usability of the interface and be of little value
+		return configureColumns(model, principal);		
 	}
 }
