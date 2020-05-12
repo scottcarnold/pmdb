@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/layout}">
+	<head>
+		<title>PMDB</title>
+	</head>
+	<body>
+		<h1>CONFIGURE MOVIE COLUMNS PAGE</h1>
+		<div layout:fragment="content">
+			<h1>Configure Columns For Movie Table</h1>
+			<ul class="list-group">
+			<div><p class="dragAttr dropAttr" data-index="0">Rated</p></div>
+			<div><p class="dragAttr dropAttr" data-index="1">Director</p></div>
+			<div><p class="dragAttr dropAttr" data-index="2">Genre</p></div>
+			<div><p>Add Column</p></div>
+			
+			<script type="text/javascript">
+				$(".dragAttr").draggable();
+				$(".dropAttr").droppable({
+					drop: function(event, ui) {
+						var dropIndex = $(this).data("index");
+						var dragIndex = $(ui.draggable).data("index");
+						window.location.replace("/pmdb/movies/reorderColumns/?dragIndex=" + dragIndex + "&dropIndex=" + dropIndex);
+					}
+				});
+			</script>
+		</div>
+	</body>
+</html>

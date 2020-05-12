@@ -4,11 +4,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Component;
 import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.util.CIString;
 
 @Component
 public class MovieDaoImpl implements MovieDao {
@@ -61,15 +62,22 @@ public class MovieDaoImpl implements MovieDao {
 
 	@Override
 	public List<Movie> searchMoviesForCollection(int collectionId, String searchString) {
-		final String sql = "SELECT id, title FROM movie WHERE collection_id = ? "
-				+ " AND LOWER(title) like ?"
+		final String lcSearchString = searchString.trim().toLowerCase();
+		final String sql = "SELECT id, title FROM movie "
+				+ " INNER JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
+				+ " WHERE collection_id = ? "
+				+ " AND (LOWER(title) like ?"
+				+ " OR LOWER(attribute_name) like ?"
+				+ " OR LOWER(attribute_value) like ?)"
 				+ " ORDER BY title";
 		final List<Movie> movies = new ArrayList<Movie>();
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
 				ps.setInt(1, collectionId);
-				ps.setString(2, "%" + searchString.trim() + "%");
+				ps.setString(2, "%" + lcSearchString + "%");
+				ps.setString(3, "%" + lcSearchString + "%");
+				ps.setString(4, "%" + lcSearchString + "%");
 			}
 		}, new RowCallbackHandler() {
 			@Override
@@ -124,8 +132,8 @@ public class MovieDaoImpl implements MovieDao {
 		});
 		int id = jdbcTemplate.queryForObject(getIdSql, Integer.class);
 		movie.setId(id);
-		for (Map.Entry<String, String> entry : movie.getAttributes().entrySet()) {
-			addMovieAttribute(id, entry.getKey(), entry.getValue());
+		for (Map.Entry<CIString, String> entry : movie.getAttributes().entrySet()) {
+			addMovieAttribute(id, entry.getKey().toString(), entry.getValue());
 		}
 	}
 
@@ -140,26 +148,26 @@ public class MovieDaoImpl implements MovieDao {
 			}
 		});
 		// do some set logic to figure out attributes
-		Map<String, String> oldAttributes = getMovieAttributes(movie.getId());
-		Set<String> oldKeys = oldAttributes.keySet();
-		Set<String> newKeys = movie.getAttributes().keySet();
-		Set<String> addKeys = new HashSet<String>();
-		Set<String> deleteKeys = new HashSet<String>();
-		Set<String> updateKeys = new HashSet<String>();
+		Map<CIString, String> oldAttributes = getMovieAttributes(movie.getId());
+		Set<CIString> oldKeys = oldAttributes.keySet();
+		Set<CIString> newKeys = movie.getAttributes().keySet();
+		Set<CIString> addKeys = new HashSet<CIString>();
+		Set<CIString> deleteKeys = new HashSet<CIString>();
+		Set<CIString> updateKeys = new HashSet<CIString>();
 		addKeys.addAll(newKeys);
 		addKeys.removeAll(oldKeys);
 		deleteKeys.addAll(oldKeys);
 		deleteKeys.removeAll(newKeys);
 		updateKeys.addAll(oldKeys);
 		updateKeys.removeAll(deleteKeys);
-		for (String key : deleteKeys) {
-			deleteMovieAttribute(movie.getId(), key);
+		for (CIString key : deleteKeys) {
+			deleteMovieAttribute(movie.getId(), key.toString());
 		}
-		for (String key : addKeys) {
-			addMovieAttribute(movie.getId(), key, movie.getAttributes().get(key));
+		for (CIString key : addKeys) {
+			addMovieAttribute(movie.getId(), key.toString(), movie.getAttributes().get(key));
 		}
-		for (String key : updateKeys) {
-			updateMovieAttribute(movie.getId(), key, movie.getAttributes().get(key));
+		for (CIString key : updateKeys) {
+			updateMovieAttribute(movie.getId(), key.toString(), movie.getAttributes().get(key));
 		}
 	}
 
@@ -175,9 +183,9 @@ public class MovieDaoImpl implements MovieDao {
 		});
 	}
 	
-	public Map<String, String> getMovieAttributes(int id) {
+	public TreeMap<CIString, String> getMovieAttributes(int id) {
 		final String sql = "SELECT attribute_name, attribute_value FROM movie_attributes WHERE movie_id = ?";
-		final Map<String, String> movieAttributes = new HashMap<String, String>();
+		final TreeMap<CIString, String> movieAttributes = new TreeMap<CIString, String>();
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
@@ -186,7 +194,7 @@ public class MovieDaoImpl implements MovieDao {
 		}, new RowCallbackHandler() {
 			@Override
 			public void processRow(ResultSet rs) throws SQLException {
-				movieAttributes.put(rs.getString(1), rs.getString(2));
+				movieAttributes.put(new CIString(rs.getString(1)), rs.getString(2));
 			}
 		});
 		return movieAttributes;
@@ -205,24 +213,24 @@ public class MovieDaoImpl implements MovieDao {
 	}
 	
 	public void deleteMovieAttribute(int id, String key) {
-		final String sql = "DELETE FROM movie_attributes WHERE movie_id = ? AND attribute_name = ?";
+		final String sql = "DELETE FROM movie_attributes WHERE movie_id = ? AND LOWER(attribute_name) = ?";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
 				ps.setInt(1, id);
-				ps.setString(2, key);
+				ps.setString(2, key.toLowerCase());
 			}
 		});		
 	}
 	
 	public void updateMovieAttribute(int id, String key, String value) {
-		final String sql = "UPDATE movie_attributes SET attribute_value = ? WHERE movie_id = ? AND attribute_name = ?";
+		final String sql = "UPDATE movie_attributes SET attribute_value = ? WHERE movie_id = ? AND LOWER(attribute_name) = ?";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
 				ps.setString(1, value);
 				ps.setInt(2, id);
-				ps.setString(3, key);
+				ps.setString(3, key.toLowerCase());
 			}			
 		});
 	}

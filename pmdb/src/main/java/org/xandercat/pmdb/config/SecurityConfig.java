@@ -41,6 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.authorizeRequests()
 				.antMatchers("/login*").anonymous()  // note -- you actually can't visit the login pages after logging in with this setup
 				.antMatchers("/css/**").permitAll()
+				.antMatchers("/fonts/**").permitAll()
 				.antMatchers("/js/**").permitAll()
 				.antMatchers("/useradmin/**").hasRole("ADMIN")
 				.antMatchers("/**").hasRole("USER")

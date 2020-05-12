@@ -1,6 +1,7 @@
 package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -14,6 +15,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
@@ -67,7 +69,10 @@ public class HomeController {
 			if (!StringUtils.isEmptyOrWhitespace(searchString)) {
 				movies = movieService.searchMoviesForCollection(defaultMovieCollection.getId(), searchString, principal.getName());
 			}
+			List<String> attrColumns = new ArrayList<String>();
+			attrColumns.add("Rated");
 			model.addAttribute("movies", movies); 
+			model.addAttribute("attrColumns", attrColumns);
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to retrieve movies for default movie collection.", e);
 			ViewUtil.setErrorMessage(model, "Unable to get movies for the collection.");
@@ -137,7 +142,7 @@ public class HomeController {
 		return home(model, principal);
 	}
 	
-	@RequestMapping("/movies/deleteMovie")
+	@RequestMapping(value="/movies/deleteMovie", method=RequestMethod.POST)
 	public String deleteMovie(Model model, Principal principal, @RequestParam int movieId) {
 		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		try {
@@ -154,5 +159,16 @@ public class HomeController {
 		}
 		ViewUtil.setMessage(model, "Movie deleted.");
 		return home(model, principal);
+	}
+	
+	@RequestMapping("/movies/configureColumns")
+	public String configureColumns() {
+		return "movie/configureColumns";
+	}
+	
+	@RequestMapping("/movies/reorderColumns")
+	public String reorderColumns(Model model, @RequestParam int dragIndex, @RequestParam int dropIndex) {
+		ViewUtil.setMessage(model, "Requested drag from " + dragIndex + " to " + dropIndex);
+		return configureColumns();
 	}
 }

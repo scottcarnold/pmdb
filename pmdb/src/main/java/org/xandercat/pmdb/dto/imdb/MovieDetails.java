@@ -39,7 +39,7 @@ public class MovieDetails {
 	private String imdbRating;
 	@XmlAttribute
 	private String imdbVotes;
-	@XmlAttribute
+	@XmlAttribute(name="imdbID")
 	private String imdbId;
 	@XmlAttribute
 	private String type;

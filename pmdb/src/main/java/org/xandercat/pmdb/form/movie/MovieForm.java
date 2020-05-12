@@ -8,6 +8,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.util.CIString;
 import org.xandercat.pmdb.util.ReflectionUtil;
 
 @Validated
@@ -94,8 +95,8 @@ public class MovieForm {
 		this.title = movie.getTitle();
 		this.collectionId = movie.getCollectionId();
 		int index = 0;
-		for (Map.Entry<String, String> entry : movie.getAttributes().entrySet()) {
-			setAttrKey(index, entry.getKey());
+		for (Map.Entry<CIString, String> entry : movie.getAttributes().entrySet()) {
+			setAttrKey(index, entry.getKey().toString());
 			setAttrValue(index++, entry.getValue());
 		}
 	}
@@ -107,7 +108,7 @@ public class MovieForm {
 			String key = getAttrKey(i);
 			String value = getAttrValue(i);
 			if (!StringUtils.isEmptyOrWhitespace(key) && !StringUtils.isEmptyOrWhitespace(value)) {
-				movie.getAttributes().put(key, value);
+				movie.getAttributes().put(new CIString(key), value);
 			}
 		}
 		return movie;

@@ -11,6 +11,7 @@
 					<h3 th:text="'Movie Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</h3>
 					<p>Showing <span th:text="${movies.size()}">0</span> out of <span th:text="${totalMoviesInCollection}">0</span> movies in the collection.</p>
 					<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/addMovie}">Add New Movie</a>
+					<a href="#" th:href="@{/movies/configureColumns}">Configure Columns</a>
 					<form th:action="@{/movies/search}" th:object="${searchForm}" method="post" class="form-inline">
 						<label for="inputId" th:attr="for='search-input'" th:text="'Search this collection'">Label</label>
 						<input type="text" th:id="'search-input'" th:field="*{searchString}" class="form-control"/>
@@ -21,15 +22,20 @@
 					<thead>
 					<tr>
 						<th>Title</th>
+						<th th:each="columnName : ${attrColumns}"><span th:text="${columnName}"></span><span class="glyphicon glyphicon-remove" aria-label="Remove Column"></span></th>
 						<th>Action</th>
 					</tr>
 					</thead>
 					<tbody>
 					<tr th:each="movie : ${movies}">
 						<td th:text="${movie.title}">Movie Title</td>
+						<td th:each="columnName : ${attrColumns}" th:text="${movie.getAttributeValue('__${columnName}__')}"></td>
 						<td>
-							<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/editMovie(movieId=${movie.id})}">Edit</a>
-							<a id="deleteMovieLink" href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/deleteMovie(movieId=${movie.id})}">Delete</a> 
+							<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/editMovie(movieId=${movie.id})}" class="btn btn-default" role="button">Edit</a> 
+							<form th:if="${defaultMovieCollection.editable}" th:action="@{/movies/deleteMovie}" method="post" style="display: inline">
+								<input type="hidden" name="movieId" th:value="${movie.id}"/>
+								<button type="submit" class="confirmDelete btn btn-default">Delete</button>
+							</form>
 						</td>
 					</tr>
 					</tbody>
@@ -39,27 +45,25 @@
 				<p>Are you sure you wish to delete this movie?</p>
 			</div>
 			<script type="text/javascript">
+			var currentForm;
 			$(document).ready(function() {  
 					$( "#confirmDeleteDialog" ).dialog({
-						autoOpen: false, modal: true
-					});
-					$("#deleteMovieLink").click(function(e) {
-					    e.preventDefault();
-					    var targetUrl = $(this).attr("href");
-
-					    $("#confirmDeleteDialog").dialog({
+						autoOpen: false, modal: true,
 					      buttons : {
-					        "Confirm" : function() {
-					          window.location.href = targetUrl;
-					        },
-					        "Cancel" : function() {
-					          $(this).dialog("close");
-					        }
-					      }
-					    });
-						$("#confirmDeleteDialog").dialog("open");
-						return false;
+						        "Confirm" : function() {
+						          $(this).dialog("close");
+						          currentForm.submit();
+						        },
+						        "Cancel" : function() {
+						          $(this).dialog("close");
+						        }
+						      }
 					});
+			        $(".confirmDelete").click(function() {
+			            currentForm = $(this).closest('form');
+			            $("#confirmDeleteDialog").dialog('open');
+			            return false;
+			          });
 			} );	
 			
 			</script>

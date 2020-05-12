@@ -43,7 +43,6 @@
 							<a href="#" th:href="@{/collections/changeDefaultCollection(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Set Active</a>
 							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editCollection(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Edit Name</a>
 							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editSharing(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Sharing</a>
-<!-- 							<a id="deleteCollectionLink" href="#" th:if="${movieCollection.editable}" th:href="@{/collections/deleteCollection(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Delete</a>  -->
 							<form th:action="@{/collections/deleteCollection}" method="post" style="display: inline">
 								<input type="hidden" name="collectionId" th:value="${movieCollection.id}"/>
 								<button type="submit" class="confirmDelete btn btn-default">Delete</button>
