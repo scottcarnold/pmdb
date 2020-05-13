@@ -239,9 +239,16 @@ public class CollectionController {
 			shareWithUser = userService.getUserByEmail(shareCollectionForm.getUsernameOrEmail());
 		}
 		if (shareWithUser == null) {
+			//TODO: Future educational activity -- see about using SpringConstraintValidationFactory to create a Spring wired validator for this
 			result.rejectValue("usernameOrEmail", "{validation.UserReference.message}", "Invalid user reference.");
 		}
 		if (result.hasErrors()) {
+			MovieCollection movieCollection = null;
+			try {
+				movieCollection = collectionService.getViewableMovieCollection(shareCollectionForm.getCollectionId(), principal.getName());
+			} catch (CollectionSharingException e) {
+			}
+			model.addAttribute("movieCollection", movieCollection);
 			return "collection/shareCollection";
 		}
 		try {

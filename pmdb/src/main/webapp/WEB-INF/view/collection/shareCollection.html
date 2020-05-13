@@ -6,10 +6,11 @@
 	<body>
 		<h1>SHARE COLLECTION PAGE</h1>
 		<div layout:fragment="content">
-			<h1>Movie Collections: Share Collection <span th:text="${movieCollection.name}"></span></h1>
+			<h1>Share Collection: <span th:text="${movieCollection.name}"></span></h1>
 			<form th:action="@{/collections/shareCollectionSubmit}" th:object="${shareCollectionForm}" method="post" class="form-horizontal">
 				<div th:replace="form/input :: hidden('collectionId')"></div>
 				<div th:replace="form/input :: text('Share With (Username or Email Address)', 'usernameOrEmail')"></div>
+				<div th:replace="form/input :: checkbox('Allow User To Edit This Collection', 'editable')"></div>
 				<div th:replace="form/input :: submit('Share Movie Collection')"></div>
 			</form>
 		</div>

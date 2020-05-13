@@ -8,10 +8,11 @@
 		<div layout:fragment="content">
 			<div class="panel panel-info">
 				<div class="panel-heading">
+					<h3>Movie Collection: <span th:text="${movieCollection.name}"></span></h3>
 					<p>You have shared this collection with <span th:text="${collectionPermissions.size()}">0</span> other user(s).</p>
 					<a href="#" th:href="@{/collections/shareCollection(collectionId=${movieCollection.id})}">Share Collection With Another User</a>
 				</div>
-				<table class="table table-striped">
+				<table th:if="${collectionPermissions.size() > 0}" class="table table-striped">
 					<thead>
 					<tr>
 						<th>Shared With User</th>
@@ -30,15 +31,15 @@
 							<form th:action="@{/collections/revokePermission}" method="post" style="display: inline">
 								<input type="hidden" name="collectionId" th:value="${movieCollection.id}"/>
 								<input type="hidden" name="username" th:value="${collectionPermission.username}"/>
-								<button type="submit" class="confirmDelete btn btn-default">Delete</button>
+								<button type="submit" class="confirmDelete btn btn-default">Stop Sharing</button>
 							</form>
 						</td>
 					</tr>
 					</tbody>
 				</table>
 			</div>
-			<div id="confirmDeleteDialog" title="Confirm Delete">
-				<p>Are you sure you wish to rescind/revoke this collection share?</p>
+			<div id="confirmDeleteDialog" title="Confirm Sharing Change">
+				<p>Are you sure you wish to stop sharing your collection with this user?</p>
 			</div>
 			<script type="text/javascript">
 			var currentForm;

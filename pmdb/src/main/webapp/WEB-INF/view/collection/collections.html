@@ -43,7 +43,7 @@
 							<a href="#" th:href="@{/collections/changeDefaultCollection(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Set Active</a>
 							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editCollection(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Edit Name</a>
 							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editSharing(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Sharing</a>
-							<form th:action="@{/collections/deleteCollection}" method="post" style="display: inline">
+							<form th:if="${movieCollection.editable}" th:action="@{/collections/deleteCollection}" method="post" style="display: inline">
 								<input type="hidden" name="collectionId" th:value="${movieCollection.id}"/>
 								<button type="submit" class="confirmDelete btn btn-default">Delete</button>
 							</form>
@@ -54,7 +54,8 @@
 			</div>
 			<div th:if="${shareOffers}" class="panel panel-success">
 				<div class="panel-heading">
-					<p>You have <span th:text="${shareOffers.size()}">0</span> movie collection share request(s) pending.</p>
+					<p style="display: inline">You have <span th:text="${shareOffers.size()}">0</span> movie collection share request(s) pending.</p>
+					<span style="float: right" class="glyphicon glyphicon-star" aria-hidden="true"></span>
 				</div>
 				<table class="table table-striped">
 					<thead>
