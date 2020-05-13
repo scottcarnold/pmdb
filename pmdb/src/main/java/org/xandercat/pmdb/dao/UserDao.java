@@ -15,6 +15,8 @@ public interface UserDao {
 	
 	public PmdbUser getUser(String username);
 	
+	public PmdbUser getUserByEmail(String email);
+	
 	public void updateLastAccess(String username);
 	
 	public int getUserCount();

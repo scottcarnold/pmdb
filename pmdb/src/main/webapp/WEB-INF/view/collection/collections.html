@@ -52,6 +52,30 @@
 					</tbody>
 				</table>
 			</div>
+			<div th:if="${shareOffers}" class="panel panel-success">
+				<div class="panel-heading">
+					<p>You have <span th:text="${shareOffers.size()}">0</span> movie collection share request(s) pending.</p>
+				</div>
+				<table class="table table-striped">
+					<thead>
+					<tr>
+						<th>Collection Name</th>
+						<th>Collection Owner</th>
+						<th>Action</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="movieCollection : ${shareOffers}">
+						<td th:text="${movieCollection.name}">Collection Name</td>
+						<td th:text="${movieCollection.owner}">Collection Owner</td>
+						<td>
+							<a href="#" th:href="@{/collections/acceptShareOffer(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Accept</a>
+							<a href="#" th:href="@{/collections/declineShareOffer(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Decline</a>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
 			<div id="confirmDeleteDialog" title="Confirm Delete">
 				<p>Deleting this collection will delete all of the movie entries associated with it.  Are you sure 
 				you wish to delete the entire movie collection?</p>

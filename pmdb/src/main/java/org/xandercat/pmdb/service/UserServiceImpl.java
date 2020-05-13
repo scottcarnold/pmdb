@@ -22,11 +22,14 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private AuthDao authDao;
 	
-
-
 	@Override
 	public PmdbUser getUser(String username) {
 		return userDao.getUser(username);
+	}
+
+	@Override
+	public PmdbUser getUserByEmail(String email) {
+		return userDao.getUserByEmail(email);
 	}
 
 	@Override

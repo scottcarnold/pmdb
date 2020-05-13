@@ -17,6 +17,8 @@ public interface UserService {
 	 */
 	public PmdbUser getUser(String username);
 	
+	public PmdbUser getUserByEmail(String email);
+	
 	/**
 	 * Add a new user.  This method should save any stored authorities.  However, the password in the user
 	 * object is meant to be the encrypted form which is why the unencrypted password exists as a separate

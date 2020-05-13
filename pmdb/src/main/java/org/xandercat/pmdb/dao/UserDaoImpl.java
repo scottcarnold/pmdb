@@ -140,6 +140,41 @@ public class UserDaoImpl implements UserDao {
 	}
 
 	@Override
+	public PmdbUser getUserByEmail(String email) {
+		LOGGER.info("Request to get user by email: " + email);
+		PmdbUser pmdbUser = new PmdbUser();
+		final String sql = "SELECT users.username, password, enabled, firstName, lastName, email, createdTs, updatedTs, lastAccessTs FROM users"
+				+ " INNER JOIN user_details ON users.username = user_details.username"
+				+ " WHERE user_details.email = ?";
+		final int[] count = new int[] {0};
+		jdbcTemplate.query(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setString(1, email);
+			}
+		}, new RowCallbackHandler() {
+			@Override
+			public void processRow(ResultSet rs) throws SQLException {
+				count[0]++;
+				pmdbUser.setUsername(rs.getString(1));
+				try {
+					pmdbUser.setPassword(new String(rs.getBytes(2), "UTF-8"));
+				} catch (UnsupportedEncodingException e) {
+					LOGGER.error("Unable to read password hash from database.", e);
+				} 
+				pmdbUser.setEnabled(rs.getBoolean(3));
+				pmdbUser.setFirstName(rs.getString(4));
+				pmdbUser.setLastName(rs.getString(5));
+				pmdbUser.setEmail(rs.getString(6));
+				pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));
+				pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));
+				pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));
+			}
+		});
+		return (count[0] != 1)? null : pmdbUser;
+	}
+	
+	@Override
 	public void updateLastAccess(String username) {
 		final String sql = "UPDATE user_details SET lastAccessTs = ? WHERE username = ?";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {

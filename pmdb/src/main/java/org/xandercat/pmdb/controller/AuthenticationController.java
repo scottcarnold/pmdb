@@ -1,5 +1,7 @@
 package org.xandercat.pmdb.controller;
 
+import javax.servlet.http.HttpSession;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +13,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller
 public class AuthenticationController {
@@ -23,6 +27,9 @@ public class AuthenticationController {
 	
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private CollectionService collectionService;
 	
 	@RequestMapping(value="/login.html", method=RequestMethod.GET)
 	public String login(Model model) {
@@ -38,11 +45,16 @@ public class AuthenticationController {
 	}
 	
 	@RequestMapping(value="/afterLogin.html", method=RequestMethod.GET)
-	public String loginProcess() {
+	public String loginProcess(HttpSession session) {
 		UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 		PmdbUser user = (PmdbUser) authentication.getPrincipal();
 		LOGGER.info("User logged in: " + user.getUsername());
 		userService.updateLastAccess(user.getUsername());
+		try {
+			ViewUtil.updateNumShareOffers(collectionService, session, user.getUsername());
+		} catch (Exception e) {
+			LOGGER.error("Unable to retrieve number of share offers for user.", e);
+		}
 		return "redirect:/";
 	}
 }

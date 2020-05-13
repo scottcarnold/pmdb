@@ -3,6 +3,7 @@ package org.xandercat.pmdb.controller;
 import java.security.Principal;
 import java.util.List;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 import org.apache.logging.log4j.LogManager;
@@ -15,17 +16,24 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.form.collection.CollectionForm;
+import org.xandercat.pmdb.form.collection.ShareCollectionForm;
 import org.xandercat.pmdb.service.CollectionService;
+import org.xandercat.pmdb.service.UserService;
 import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller
 public class CollectionController {
 
 	private static final Logger LOGGER = LogManager.getLogger(CollectionController.class);
-			
+	
+	@Autowired
+	private UserService userService;
+	
 	@Autowired
 	private CollectionService collectionService;
 	
@@ -42,7 +50,11 @@ public class CollectionController {
 			model.addAttribute("defaultMovieCollection", defaultMovieCollection);
 		}
 		List<MovieCollection> movieCollections = collectionService.getViewableMovieCollections(username);
+		List<MovieCollection> shareOffers = collectionService.getShareOfferMovieCollections(username);
 		model.addAttribute("movieCollections", movieCollections);
+		if (shareOffers.size() > 0) {
+			model.addAttribute("shareOffers", shareOffers);
+		}
 		return "collection/collections";
 	}
 	
@@ -139,7 +151,107 @@ public class CollectionController {
 	
 	@RequestMapping("/collections/editSharing")
 	public String editSharing(Model model, Principal principal, @RequestParam int collectionId) {
-		ViewUtil.setErrorMessage(model, "This function has not yet been implemented in the user interface. In the meantime, an Administrator can set up sharing for you by request.");
+		try {
+			MovieCollection movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());
+			List<CollectionPermission> collectionPermissions = collectionService.getCollectionPermissions(collectionId, principal.getName());
+			model.addAttribute("movieCollection", movieCollection);
+			model.addAttribute("collectionPermissions", collectionPermissions);
+		} catch (CollectionSharingException e) {
+			LOGGER.error("Unable to retrieve collection permissions for collection " + collectionId + " user " + principal.getName(), e);
+			ViewUtil.setErrorMessage(model, "Sharing is not available on the collection.");
+			return collections(model, principal);
+		}
+		return "collection/editSharing";
+	}
+	
+	@RequestMapping("/collections/acceptShareOffer")
+	public String acceptShareOffer(Model model, Principal principal, @RequestParam int collectionId, HttpSession session) {
+		try {
+			collectionService.acceptShareOffer(collectionId, principal.getName());
+			ViewUtil.updateNumShareOffers(collectionService, session, principal.getName());
+			ViewUtil.setMessage(model, "Share offer accepted.");
+		} catch (CollectionSharingException e) {
+			ViewUtil.setErrorMessage(model, "Unable to accept share offer.");
+		}
 		return collections(model, principal);
+	}
+	
+	@RequestMapping("/collections/declineShareOffer")
+	public String declineShareOffer(Model model, Principal principal, @RequestParam int collectionId, HttpSession session) {
+		try {
+			collectionService.declineShareOffer(collectionId, principal.getName());
+			ViewUtil.updateNumShareOffers(collectionService, session, principal.getName());
+			ViewUtil.setMessage(model, "Share offer declined.");
+		} catch (CollectionSharingException e) {
+			ViewUtil.setErrorMessage(model, "Unable to decline share offer.");
+		}
+		return collections(model, principal);
+	}
+	
+	@RequestMapping("/collections/toggleEditPermission")
+	public String toggleEditPermission(Model model, Principal principal, @RequestParam int collectionId, @RequestParam String username) {
+		try {
+			CollectionPermission permission = collectionService.getCollectionPermission(collectionId, username, principal.getName());
+			if (permission == null) {
+				throw new CollectionSharingException("Unable to obtain permission for collection " + collectionId + " user " + username);
+			}
+			collectionService.updateEditable(collectionId, username, !permission.isAllowEdit(), principal.getName());
+			ViewUtil.setMessage(model, "Edit permission updated.");
+		} catch (CollectionSharingException e) {
+			LOGGER.error("Unable to update edit permission for user.", e);
+			ViewUtil.setErrorMessage(model, "Could not update edit permission for user.");
+		}
+		return editSharing(model, principal, collectionId);		
+	}
+	
+	@RequestMapping(value="/collections/revokePermission", method=RequestMethod.POST)
+	public String revokePermission(Model model, Principal principal, @RequestParam int collectionId, @RequestParam String username) {
+		try {
+			collectionService.unshareMovieCollection(collectionId, username, principal.getName());
+			ViewUtil.setMessage(model, "Share revoked.");
+		} catch (CollectionSharingException e) {
+			LOGGER.error("Unable to revoke share.", e);
+			ViewUtil.setErrorMessage(model, "Share could not be revoked.");
+		}
+		return editSharing(model, principal, collectionId);
+	}
+	
+	@RequestMapping("/collections/shareCollection")
+	public String shareCollection(Model model, Principal principal, @RequestParam int collectionId) {
+		try {
+			MovieCollection movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());
+			model.addAttribute("movieCollection", movieCollection);
+		} catch (CollectionSharingException e) {
+			LOGGER.error("Unable to share movie collection.", e);
+			ViewUtil.setErrorMessage(model, "Unable to share movie collection.");
+			return editSharing(model, principal, collectionId);
+		}
+		model.addAttribute("shareCollectionForm", new ShareCollectionForm(collectionId));
+		return "collection/shareCollection";
+	}
+	
+	@RequestMapping("/collections/shareCollectionSubmit")
+	public String shareCollectionSubmit(Model model, Principal principal,
+			@ModelAttribute("shareCollectionForm") @Valid ShareCollectionForm shareCollectionForm,
+			BindingResult result) {
+		PmdbUser shareWithUser = userService.getUser(shareCollectionForm.getUsernameOrEmail());
+		if (shareWithUser == null) {
+			shareWithUser = userService.getUserByEmail(shareCollectionForm.getUsernameOrEmail());
+		}
+		if (shareWithUser == null) {
+			result.rejectValue("usernameOrEmail", "{validation.UserReference.message}", "Invalid user reference.");
+		}
+		if (result.hasErrors()) {
+			return "collection/shareCollection";
+		}
+		try {
+			collectionService.shareMovieCollection(shareCollectionForm.getCollectionId(), 
+					shareWithUser.getUsername(), shareCollectionForm.isEditable(), principal.getName());
+			ViewUtil.setMessage(model, "Offer sent to share collection.");
+		} catch (CollectionSharingException e) {
+			LOGGER.error("Unable to share collection.", e);
+			ViewUtil.setErrorMessage(model, "Unable to share collection.");
+		}
+		return editSharing(model, principal, shareCollectionForm.getCollectionId());
 	}
 }

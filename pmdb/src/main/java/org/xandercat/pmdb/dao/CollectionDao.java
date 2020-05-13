@@ -2,6 +2,7 @@ package org.xandercat.pmdb.dao;
 
 import java.util.List;
 
+import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.MovieCollection;
 
 /**
@@ -14,6 +15,7 @@ public interface CollectionDao {
 
 	public List<MovieCollection> getViewableMovieCollections(String username);
 	
+	public List<MovieCollection> getShareOfferMovieCollections(String username);
 	/**
 	 * Returns the movie collection for the given collectionId.  Editable flag will be 
 	 * set based on provided username.  If username does not have valid permission for
@@ -47,9 +49,22 @@ public interface CollectionDao {
 	
 	public void updateEditable(int collectionId, String username, boolean editable);
 	
-	public void unshareCollection(int collectionId, String username);
+	public boolean unshareCollection(int collectionId, String username);
 	
 	public Integer getDefaultCollectionId(String username);
 	
 	public void setDefaultCollection(String username, int collectionId);
+	
+	public boolean acceptShareOffer(int collectionId, String username);
+	
+	/**
+	 * Return list of collection permissions for the given collection excluding permission for the owner.
+	 * The owner does not need to see their own permission entry.
+	 * 
+	 * @param collectionId
+	 * @return
+	 */
+	public List<CollectionPermission> getCollectionPermissions(int collectionId);
+	
+	public CollectionPermission getCollectionPermission(int collectionId, String username);
 }

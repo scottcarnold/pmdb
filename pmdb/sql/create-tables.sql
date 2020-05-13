@@ -35,6 +35,7 @@ CREATE TABLE collection_permission(
     collection_id INTEGER NOT NULL,
     username      VARCHAR(50) NOT NULL,
     allowEdit     TINYINT(1) NOT NULL,
+    accepted      TINYINT(1) NOT NULL DEFAULT 0,
     CONSTRAINT fk_collection_permission_users FOREIGN KEY(username) REFERENCES users(username),
     CONSTRAINT fk_collection_permission_collection FOREIGN KEY(collection_id) REFERENCES collection(id),
     CONSTRAINT ix_collection_id_username UNIQUE INDEX (collection_id, username)

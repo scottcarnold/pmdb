@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Component;
+import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.MovieCollection;
 
 @Component
@@ -21,14 +22,24 @@ public class CollectionDaoImpl implements CollectionDao {
 	
 	@Override
 	public List<MovieCollection> getViewableMovieCollections(String username) {
+		return getSharedMovieCollections(username, true);
+	}
+	
+	@Override
+	public List<MovieCollection> getShareOfferMovieCollections(String username) {
+		return getSharedMovieCollections(username, false);
+	}
+
+	private List<MovieCollection> getSharedMovieCollections(String username, boolean accepted) {
 		final String sql = "SELECT id, name, owner, allowEdit FROM collection"
 				+ " INNER JOIN collection_permission ON collection.id = collection_permission.collection_id"
-				+ " WHERE username = ?";
+				+ " WHERE username = ? AND accepted = ?";
 		final List<MovieCollection> movieCollections = new ArrayList<MovieCollection>();
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
 				ps.setString(1, username);
+				ps.setBoolean(2, accepted);
 			}
 		}, new RowCallbackHandler() {
 			@Override
@@ -68,6 +79,7 @@ public class CollectionDaoImpl implements CollectionDao {
 		});
 		int collectionId = jdbcTemplate.queryForObject(getIdSql, Integer.class);
 		shareCollection(collectionId, movieCollection.getOwner(), true);
+		acceptShareOffer(collectionId, movieCollection.getOwner());
 		movieCollection.setId(collectionId);
 	}
 
@@ -111,13 +123,14 @@ public class CollectionDaoImpl implements CollectionDao {
 
 	@Override
 	public void shareCollection(int collectionId, String username, boolean editable) {
-		final String sql = "INSERT INTO collection_permission(collection_id, username, allowEdit) VALUES (?, ?, ?)";
+		final String sql = "INSERT INTO collection_permission(collection_id, username, allowEdit, accepted) VALUES (?, ?, ?, ?)";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
 				ps.setInt(1, collectionId);
 				ps.setString(2, username);
 				ps.setBoolean(3, editable);
+				ps.setBoolean(4, false);
 			}
 		});
 	}
@@ -136,7 +149,7 @@ public class CollectionDaoImpl implements CollectionDao {
 	}
 
 	@Override
-	public void unshareCollection(int collectionId, String username) {
+	public boolean unshareCollection(int collectionId, String username) {
 		final String sql = "DELETE FROM collection_permission WHERE collection_id = ? AND username = ?";
 		final String defSql = "DELETE FROM collection_default WHERE collection_id = ? AND username = ?"; // may or may not exist
 		jdbcTemplate.update(defSql, new PreparedStatementSetter() {
@@ -146,13 +159,14 @@ public class CollectionDaoImpl implements CollectionDao {
 				ps.setString(2, username);
 			}
 		});	
-		jdbcTemplate.update(sql, new PreparedStatementSetter() {
+		int rowsAffected = jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
 				ps.setInt(1, collectionId);
 				ps.setString(2, username);
 			}
-		});	
+		});
+		return rowsAffected > 0;
 	}
 
 	@Override
@@ -188,5 +202,53 @@ public class CollectionDaoImpl implements CollectionDao {
 		});
 	}
 
+	@Override
+	public boolean acceptShareOffer(int collectionId, String username) {
+		final String sql = "UPDATE collection_permission SET accepted = 1 WHERE collection_id = ? AND username = ?";
+		int rowsAffected = jdbcTemplate.update(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setInt(1, collectionId);
+				ps.setString(2, username);
+			}
+		});
+		return rowsAffected > 0;
+	}
 
+	@Override
+	public List<CollectionPermission> getCollectionPermissions(int collectionId) {
+		final String ownerSql = "SELECT owner FROM collection WHERE id = ?";
+		String owner = jdbcTemplate.queryForObject(ownerSql, String.class, collectionId);
+		final String sql = "SELECT username, allowEdit, accepted FROM collection_permission WHERE collection_id = ? AND username <> ?";
+		final List<CollectionPermission> permissions = new ArrayList<CollectionPermission>();
+		jdbcTemplate.query(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setInt(1, collectionId);
+				ps.setString(2, owner);
+			}
+		}, new RowCallbackHandler() {
+			@Override
+			public void processRow(ResultSet rs) throws SQLException {
+				CollectionPermission permission = new CollectionPermission();
+				permission.setCollectionId(collectionId);
+				permission.setUsername(rs.getString(1));
+				permission.setAllowEdit(rs.getBoolean(2));
+				permission.setAccepted(rs.getBoolean(3));
+				permissions.add(permission);
+			}
+		});
+		return permissions;
+	}
+
+	@Override
+	public CollectionPermission getCollectionPermission(int collectionId, String username) {
+		List<CollectionPermission> permissions = getCollectionPermissions(collectionId);
+		for (CollectionPermission permission : permissions) {
+			if (permission.getUsername().equals(username)) {
+				return permission;
+			}
+		}
+		return null;
+	}
 }

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/layout}">
+	<head>
+		<title>PMDB</title>
+	</head>
+	<body>
+		<h1>COLLECTION SHARE PAGE</h1>
+		<div layout:fragment="content">
+			<div class="panel panel-info">
+				<div class="panel-heading">
+					<p>You have shared this collection with <span th:text="${collectionPermissions.size()}">0</span> other user(s).</p>
+					<a href="#" th:href="@{/collections/shareCollection(collectionId=${movieCollection.id})}">Share Collection With Another User</a>
+				</div>
+				<table class="table table-striped">
+					<thead>
+					<tr>
+						<th>Shared With User</th>
+						<th>Edit Permission</th>
+						<th>Share Accepted</th>
+						<th>Action</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="collectionPermission : ${collectionPermissions}">
+						<td th:text="${collectionPermission.username}">Username</td>
+						<td th:text="${collectionPermission.allowEdit}">false</td>
+						<td th:text="${collectionPermission.accepted}">true</td>
+						<td>
+							<a href="#" th:href="@{/collections/toggleEditPermission(collectionId=${movieCollection.id},username=${collectionPermission.username})}" class="btn btn-default" role="button">Toggle Edit Permission</a>
+							<form th:action="@{/collections/revokePermission}" method="post" style="display: inline">
+								<input type="hidden" name="collectionId" th:value="${movieCollection.id}"/>
+								<input type="hidden" name="username" th:value="${collectionPermission.username}"/>
+								<button type="submit" class="confirmDelete btn btn-default">Delete</button>
+							</form>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="confirmDeleteDialog" title="Confirm Delete">
+				<p>Are you sure you wish to rescind/revoke this collection share?</p>
+			</div>
+			<script type="text/javascript">
+			var currentForm;
+			$(document).ready(function() {  
+					$( "#confirmDeleteDialog" ).dialog({
+						autoOpen: false, modal: true,
+					      buttons : {
+						        "Confirm" : function() {
+						          $(this).dialog("close");
+						          currentForm.submit();
+						        },
+						        "Cancel" : function() {
+						          $(this).dialog("close");
+						        }
+						      }
+					});
+			        $(".confirmDelete").click(function() {
+			            currentForm = $(this).closest('form');
+			            $("#confirmDeleteDialog").dialog('open');
+			            return false;
+			          });
+			} );	
+			
+			</script>
+		</div>
+	</body>
+</html>
