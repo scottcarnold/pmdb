@@ -12,6 +12,14 @@ import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.util.CIString;
 import org.xandercat.pmdb.util.ReflectionUtil;
 
+/**
+ * Form for movie details. To make it easier to operate within the standard validation framework,
+ * individual fields are used for each attribute index, creating an artificial limit to the number
+ * of supported movie attributes on a system that would otherwise be unlimited.  However, it is easy
+ * to extend the limit by adding more fields.
+ * 
+ * @author Scott Arnold
+ */
 @Validated
 public class MovieForm {
 

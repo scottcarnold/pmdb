@@ -51,6 +51,20 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
+	public void saveMyAccountUser(UserForm userForm, String callingUsername) throws PmdbException {
+		if (!callingUsername.equals(userForm.getUsername())) {
+			throw new PmdbException("Username mismatch. Form has username " + userForm.getUsername() + " while authenticated username is " + callingUsername);
+		}
+		PmdbUser user = userDao.getUser(callingUsername);
+		if (user == null) {
+			throw new PmdbException("User " + callingUsername + " not found.");
+		}
+		userForm.setAdministrator(isAdministrator(callingUsername));
+		userForm.setEnabled(user.isEnabled());
+		saveUser(userForm, false);
+	}
+
+	@Override
 	public void saveUser(UserForm userForm, boolean newUser) throws PmdbException {
 		if (StringUtils.isEmptyOrWhitespace(userForm.getUsername())) {
 			throw new PmdbException("No username provided.");

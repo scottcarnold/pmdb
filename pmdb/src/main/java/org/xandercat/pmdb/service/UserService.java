@@ -28,6 +28,16 @@ public interface UserService {
 	 */
 	public void addUser(PmdbUser user, String unencryptedPassword) throws PmdbException;
 	
+	/**
+	 * Save user from the My Account page. When saved through this method, additional validation is performed
+	 * to ensure user is authentic and no administrator properties have been changed.
+	 * 
+	 * @param userForm
+	 * @param callingUsername
+	 * @throws PmdbException
+	 */
+	public void saveMyAccountUser(UserForm userForm, String callingUsername) throws PmdbException;
+	
 	public void saveUser(UserForm userForm, boolean newUser) throws PmdbException;
 	
 	/**
