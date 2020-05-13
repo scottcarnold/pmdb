@@ -12,10 +12,28 @@
 				<div th:replace="form/input :: hidden('collectionId')"></div>
 				<div th:replace="form/input :: text('Movie Title', 'title')"></div>
 				<div th:each="index : *{keyValueIndicies}">
-					<div th:replace="form/input :: keyValueText('attrKey'+${index}, 'attrValue'+${index})"></div>
+					<div th:replace="form/input :: keyValueText('attrKey'+${index}, 'attrValue'+${index}, *{isAttrPairEmpty(__${index}__)}, true, ${index})"></div>
 				</div>
+				<a id="addAttributeLink" href="#" class="btn btn-default" role="button"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add Attribute</a>
 				<div th:replace="form/input :: submit('Save Movie')"></div>
 			</form>
+			<script type="text/javascript">
+			$(document).ready(function() {  
+				$("#addAttributeLink").click(function (e) {
+					e.preventDefault();
+					$("#movieForm").find(".pmdbHidden").each(function(index, element) {
+						$(this).removeClass("pmdbHidden");
+						return false;
+					});
+				});
+				$(".attributeRemove").click(function (e) {
+					e.preventDefault();
+					var idx = $(this).data("index");
+					$("#attrKey" + idx + "-input").val("");
+					$("#attrValue" + idx + "-input").val("");
+				});
+			});
+			</script>
 		</div>
 	</body>
 </html>

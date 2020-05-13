@@ -10,12 +10,13 @@
 				<div class="panel-heading">
 					<h3 th:text="'Movie Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</h3>
 					<p>Showing <span th:text="${movies.size()}">0</span> out of <span th:text="${totalMoviesInCollection}">0</span> movies in the collection.</p>
-					<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/addMovie}">Add New Movie</a>
-					<a href="#" th:href="@{/movies/configureColumns}">Configure Columns</a>
 					<form th:action="@{/movies/search}" th:object="${searchForm}" method="post" class="form-inline">
 						<label for="inputId" th:attr="for='search-input'" th:text="'Search this collection'">Label</label>
 						<input type="text" th:id="'search-input'" th:field="*{searchString}" class="form-control"/>
 						<button type="submit" th:text="'Search'" class="btn btn-default">Submit</button>
+						<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/imdbsearch}" class="btn btn-default" role="button">Add New Movie (IMDB Search)</a>
+						<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/addMovie}" class="btn btn-default" role="button">Add New Movie</a>
+						<a href="#" th:href="@{/movies/configureColumns}" class="btn btn-default" role="button">Table Settings</a>
 					</form>
 				</div>
 				<table class="table table-striped">

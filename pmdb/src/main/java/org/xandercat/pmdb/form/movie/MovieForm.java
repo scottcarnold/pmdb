@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
 import org.thymeleaf.util.StringUtils;
@@ -22,65 +23,126 @@ public class MovieForm {
 	private int collectionId;
 	
 	private List<String> keyValueIndicies = new ArrayList<String>();
+	
+	@Length(max=50)
 	private String attrKey0;
+	@Length(max=200)
 	private String attrValue0;
+	@Length(max=50)
 	private String attrKey1;
+	@Length(max=200)
 	private String attrValue1;
+	@Length(max=50)
 	private String attrKey2;
+	@Length(max=200)
 	private String attrValue2;
+	@Length(max=50)
 	private String attrKey3;
+	@Length(max=200)
 	private String attrValue3;
+	@Length(max=50)
 	private String attrKey4;
+	@Length(max=200)
 	private String attrValue4;
+	@Length(max=50)
 	private String attrKey5;
+	@Length(max=200)
 	private String attrValue5;
+	@Length(max=50)
 	private String attrKey6;
+	@Length(max=200)
 	private String attrValue6;
+	@Length(max=50)
 	private String attrKey7;
+	@Length(max=200)
 	private String attrValue7;
+	@Length(max=50)
 	private String attrKey8;
+	@Length(max=200)
 	private String attrValue8;
+	@Length(max=50)
 	private String attrKey9;
+	@Length(max=200)
 	private String attrValue9;
+	@Length(max=50)
 	private String attrKey10;
+	@Length(max=200)
 	private String attrValue10;
+	@Length(max=50)
 	private String attrKey11;
+	@Length(max=200)
 	private String attrValue11;
+	@Length(max=50)
 	private String attrKey12;
+	@Length(max=200)
 	private String attrValue12;
+	@Length(max=50)
 	private String attrKey13;
+	@Length(max=200)
 	private String attrValue13;
+	@Length(max=50)
 	private String attrKey14;
+	@Length(max=200)
 	private String attrValue14;
+	@Length(max=50)
 	private String attrKey15;
+	@Length(max=200)
 	private String attrValue15;
+	@Length(max=50)
 	private String attrKey16;
+	@Length(max=200)
 	private String attrValue16;
+	@Length(max=50)
 	private String attrKey17;
+	@Length(max=200)
 	private String attrValue17;
+	@Length(max=50)
 	private String attrKey18;
+	@Length(max=200)
 	private String attrValue18;
+	@Length(max=50)
 	private String attrKey19;
+	@Length(max=200)
 	private String attrValue19;
+	@Length(max=50)
 	private String attrKey20;
+	@Length(max=200)
 	private String attrValue20;
+	@Length(max=50)
 	private String attrKey21;
+	@Length(max=200)
 	private String attrValue21;
+	@Length(max=50)
 	private String attrKey22;
+	@Length(max=200)
 	private String attrValue22;
+	@Length(max=50)
 	private String attrKey23;
+	@Length(max=200)
 	private String attrValue23;
+	@Length(max=50)
 	private String attrKey24;
+	@Length(max=200)
 	private String attrValue24;
+	@Length(max=50)
 	private String attrKey25;
+	@Length(max=200)
 	private String attrValue25;
+	@Length(max=50)
 	private String attrKey26;
+	@Length(max=200)
 	private String attrValue26;
+	@Length(max=50)
 	private String attrKey27;
+	@Length(max=200)
 	private String attrValue27;
+	@Length(max=50)
 	private String attrKey28;
+	@Length(max=200)
 	private String attrValue28;
+	@Length(max=50)
 	private String attrKey29;
+	@Length(max=200)
 	private String attrValue29;
 	
 	public MovieForm() {
@@ -654,5 +716,9 @@ public class MovieForm {
 			ReflectionUtil.invokeSetter(this, "attrValue" + index, String.class, value);
 		} catch (Exception e) {
 		}		
+	}
+	
+	public boolean isAttrPairEmpty(int index) {
+		return StringUtils.isEmptyOrWhitespace(getAttrKey(index)) && StringUtils.isEmptyOrWhitespace(getAttrValue(index));
 	}
 }

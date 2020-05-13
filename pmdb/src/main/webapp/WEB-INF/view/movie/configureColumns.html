@@ -28,7 +28,13 @@
 				</li>
 			</ul>
 			<a href="#" th:href="@{/}">Return To Movie List</a>
+			<div id="pleaseWait">
+				<p>Reordering...</p>
+			</div>
 			<script type="text/javascript">
+				$("#pleaseWait").dialog({
+					autoOpen: false, modal: true
+				});
 				$(".dragAttr").draggable({
 					revert: function(event, ui) {
 						$(this).data("uiDraggable").originalPosition = {
@@ -43,6 +49,7 @@
 					drop: function(event, ui) {
 						var dropIndex = $(this).data("index");
 						var dragIndex = $(ui.draggable).data("index");
+						$("#pleaseWait").dialog("open");
 						window.location.replace("/pmdb/movies/reorderColumns/?dragIndex=" + dragIndex + "&dropIndex=" + dropIndex);
 					}
 				});

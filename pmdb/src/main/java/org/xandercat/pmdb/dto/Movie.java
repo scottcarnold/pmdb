@@ -3,11 +3,15 @@ package org.xandercat.pmdb.dto;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.util.CIString;
 
 public class Movie {
 
+	private static final int MAX_ATTRIBUTE_VALUE_LENGTH = 200;
+	private static final String IMDB_URL_BASE = "https://www.imdb.com/title/";
+	
 	private int id;
 	private String title;
 	private Map<CIString, String> attributes = new TreeMap<CIString, String>();
@@ -18,24 +22,34 @@ public class Movie {
 	public Movie(MovieDetails movieDetails, int collectionId) {
 		this.title = movieDetails.getTitle();
 		this.collectionId = collectionId;
-		this.attributes.put(new CIString("Year"), movieDetails.getYear());
-		this.attributes.put(new CIString("Genre"), movieDetails.getGenre());
-		this.attributes.put(new CIString("Rated"), movieDetails.getRated());
-		this.attributes.put(new CIString("Plot"), movieDetails.getPlot());
-		this.attributes.put(new CIString("Actors"), movieDetails.getActors());
-		this.attributes.put(new CIString("Director"), movieDetails.getDirector());
-		this.attributes.put(new CIString("Awards"), movieDetails.getAwards());
-		this.attributes.put(new CIString("IMDB ID"), movieDetails.getImdbId());
-		this.attributes.put(new CIString("IMDB Rating"), movieDetails.getImdbRating());
-		this.attributes.put(new CIString("IMDB Votes"), movieDetails.getImdbVotes());
-		this.attributes.put(new CIString("Language"), movieDetails.getLanguage());
-		this.attributes.put(new CIString("Metascore"), movieDetails.getMetascore());		
-		this.attributes.put(new CIString("Poster"), movieDetails.getPoster());		
-		this.attributes.put(new CIString("Released"), movieDetails.getReleased());
-		this.attributes.put(new CIString("Runtime"), movieDetails.getRuntime());
-		this.attributes.put(new CIString("Type"), movieDetails.getType());
-		this.attributes.put(new CIString("Country"), movieDetails.getCountry());
+		setAttribute("Year", movieDetails.getYear());
+		setAttribute("Genre", movieDetails.getGenre());
+		setAttribute("Rated", movieDetails.getRated());
+		setAttribute("Plot", movieDetails.getPlot());
+		setAttribute("Actors", movieDetails.getActors());
+		setAttribute("Director", movieDetails.getDirector());
+		setAttribute("Awards", movieDetails.getAwards());
+		if (!StringUtils.isEmptyOrWhitespace(movieDetails.getImdbId())) {
+			setAttribute("IMDB URL", IMDB_URL_BASE + movieDetails.getImdbId());
+		}
+		setAttribute("IMDB Rating", movieDetails.getImdbRating());
+		setAttribute("IMDB Votes", movieDetails.getImdbVotes());
+		setAttribute("Language", movieDetails.getLanguage());
+		setAttribute("Metascore", movieDetails.getMetascore());		
+		setAttribute("Poster", movieDetails.getPoster());		
+		setAttribute("Released", movieDetails.getReleased());
+		setAttribute("Runtime", movieDetails.getRuntime());
+		setAttribute("Type", movieDetails.getType());
+		setAttribute("Country", movieDetails.getCountry());
 		
+	}
+	private void setAttribute(String name, String value) {
+		if (!StringUtils.isEmptyOrWhitespace(value)) {
+			if (value.length() > MAX_ATTRIBUTE_VALUE_LENGTH) {
+				value = value.substring(0, MAX_ATTRIBUTE_VALUE_LENGTH);
+			}
+			this.attributes.put(new CIString(name), value);
+		}
 	}
 	public int getId() {
 		return id;

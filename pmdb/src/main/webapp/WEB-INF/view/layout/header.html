@@ -11,15 +11,17 @@
 					</div>
 					<div id="navbar" class="navbar-collapse collapse">
 						<ul class="nav navbar-nav">
-							<li th:classappend="${viewTab == 'isHomeTab'}? 'active'"><a th:href="@{/}">Home</a></li>
+							<li th:classappend="${viewTab == 'isHomeTab'}? 'active'"><a th:href="@{/}">Home</a>
+								
+							</li>
 							<li th:classappend="${viewTab == 'isCollectionsTab'}? 'active'"><a th:href="@{/collections}">Collections</a></li>
 							<li th:classappend="${viewTab == 'isImdbSearchTab'}? 'active'"><a th:href="@{/imdbsearch}">IMDB Search</a></li>
 							<li th:classappend="${viewTab == 'isUserAdminTab'}? 'active'" sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="@{/useradmin}">User Admin</a></li>
 						</ul>
 						<ul class="nav navbar-nav navbar-right">
 							<li>
-								<!--  logout action has to be a post due to CSRF token -->
-								<form th:action="@{/logout}" method="post"><button type="submit" th:text="'Log Out'" class="btn btn-default">Log Out</button></form>
+								<!--  logout action has to be a post due to CSRF token; margin-top to improve appearance is a little hackish until I can figure out how to center it properly  -->
+								<form th:action="@{/logout}" method="post"><button type="submit" th:text="'Log Out'" class="btn btn-default" style="margin-top: 7px;">Log Out</button></form>
 							</li>
 						</ul>
 					</div>
