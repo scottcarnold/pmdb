@@ -89,8 +89,11 @@ public class HomeController {
 	public String editMovie(Model model, Principal principal, @RequestParam int movieId) {
 		try {
 			Movie movie = movieService.getMovie(movieId, principal.getName());
+			if (movie == null) {
+				throw new PmdbException("Movie ID " + movieId + " could not be retrieved.");
+			}
 			model.addAttribute("movieForm", new MovieForm(movie));
-		} catch (CollectionSharingException e) {
+		} catch (Exception e) {
 			LOGGER.error("Unable to edit movie for ID: " + movieId, e);
 			ViewUtil.setErrorMessage(model, "This movie cannot be edited.");
 			return home(model, principal);
