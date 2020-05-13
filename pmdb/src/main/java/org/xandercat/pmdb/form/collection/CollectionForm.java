@@ -1,5 +1,6 @@
 package org.xandercat.pmdb.form.collection;
 
+import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
 import org.xandercat.pmdb.dto.MovieCollection;
@@ -10,6 +11,7 @@ public class CollectionForm {
 	private int id;
 	
 	@NotBlank
+	@Length(max=100)
 	private String name;
 	
 	public CollectionForm() {

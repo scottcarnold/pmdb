@@ -18,6 +18,7 @@ public class MovieForm {
 	private int id;
 	
 	@NotBlank
+	@Length(max=200)
 	private String title;
 	
 	private int collectionId;

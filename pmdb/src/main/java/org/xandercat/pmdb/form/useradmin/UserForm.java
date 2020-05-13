@@ -1,9 +1,11 @@
 package org.xandercat.pmdb.form.useradmin;
 
+import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.util.Pair;
+import org.xandercat.pmdb.validation.Password;
 import org.xandercat.pmdb.validation.ValuesMatch;
 
 @Validated
@@ -12,13 +14,18 @@ public class UserForm {
 	@Length(min=4, max=50)
 	private String username;
 	
+	@Password
 	@ValuesMatch
 	private Pair<String> passwordPair = new Pair<String>();
 	
+	@Length(max=50)
 	private String firstName;
 	
+	@Length(max=50)
 	private String lastName;
 	
+	@Email
+	@Length(max=200)
 	private String email;
 	
 	private boolean administrator;
