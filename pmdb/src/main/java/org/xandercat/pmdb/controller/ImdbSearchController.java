@@ -63,6 +63,10 @@ public class ImdbSearchController {
 			List<Result> searchResults = searchResult.getResults();
 			model.addAttribute("totalResults", searchResult.getTotalResults());
 			model.addAttribute("searchResults", searchResults);
+			MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+			if (defaultMovieCollection != null) {
+				model.addAttribute("defaultMovieCollection", defaultMovieCollection);
+			}
 		}
 		return "imdbsearch/imdbSearch";
 	}

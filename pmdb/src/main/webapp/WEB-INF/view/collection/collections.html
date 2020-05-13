@@ -8,18 +8,18 @@
 		<div layout:fragment="content">
 			<div th:if="${defaultMovieCollection}" class="panel panel-info">
 				<div class="panel-heading">
-					<p th:text="'Your active movie collection is: ' + ${defaultMovieCollection.name}">Default Movie Collection</p>
+					<h3 th:text="'Movie Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</h3>
 				</div>
-				<p>Your active movie collection will be used by default when managing or searching movies.  Set a movie collection active by the Set Active link in 
-				your list of movie collections.</p>
+				<p class="pmdbPanelParagraph">This is your active movie collection.  The <span th:text="${defaultMovieCollection.name}" style="font-weight: bold"></span> movie collection will be used by default when managing or searching movies.  You can 
+				change your active movie collection in the list of movie collections listed on this page.</p>
 				
 			</div>
 			<div th:if="not ${defaultMovieCollection}" class="panel panel-warning">
 				<div class="panel-heading">
 					<p th:text="'No active movie collection has been set.'">Default Movie Collection Name</p>
 				</div>
-				<p>Your active movie collection will be used by default when managing or searching movies.  Set a movie collection active by the Set Active link in 
-				your list of movie collections.</p>
+				<p class="pmdbPanelParagraph">Set a movie collection active from the list below.  If you do not have any movie collections listed below you wish to work with,
+				add a new movie collection.</p>
 				
 			</div>			
 			<div class="panel panel-info">

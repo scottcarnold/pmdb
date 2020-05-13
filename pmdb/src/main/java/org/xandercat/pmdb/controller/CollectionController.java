@@ -59,9 +59,19 @@ public class CollectionController {
 		if (result.hasErrors()) {
 			return "collection/addCollection";
 		}
+		List<MovieCollection> movieCollections = collectionService.getViewableMovieCollections(principal.getName());
 		MovieCollection movieCollection = new MovieCollection();
 		movieCollection.setName(collectionForm.getName());
 		collectionService.addMovieCollection(movieCollection, principal.getName());
+		if (movieCollections.size() == 0) {
+			// user had no viewable movie collections; set the newly created collection as default
+			try {
+				collectionService.setDefaultMovieCollection(movieCollection.getId(), principal.getName());
+			} catch (CollectionSharingException e) {
+				LOGGER.error("Unable to set newly created movie collection as default.  This shouldn't happen.", e);
+				// despite that this represents an unsettling error, there is no real value in notifying the user, so not setting message here
+			}
+		}
 		ViewUtil.setMessage(model, "Movie collection added.");
 		return collections(model, principal);
 	}

@@ -1,3 +1,6 @@
 .pmdbHidden {
 	display: none;
 }
+.pmdbPanelParagraph {
+	padding: 10px;
+}

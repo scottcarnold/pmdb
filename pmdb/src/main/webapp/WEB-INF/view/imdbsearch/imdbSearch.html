@@ -28,6 +28,7 @@
 				</div>
 			</div>
 			<div th:if="${searchResults}">
+				<p th:text="'Showing ' + ${searchResults.size()} + ' out of ' + ${totalResults} + ' total results.'">Showing 0 of 0 total results.</p>
 				<div th:each="searchResult : ${searchResults}">
 					<div class="panel panel-default">
 						<div class="panel-heading">
@@ -42,7 +43,7 @@
 									<div class="row"><div class="col-md-4">Picture Type:</div><div class="col-md-8" th:text="${searchResult.type}"></div></div>
 									<div class="row"><div class="col-md-4">Year:</div><div class="col-md-8" th:text="${searchResult.year}"></div></div>
 									<div class="row"><div class="col-md-4">IMDB Link:</div><div class="col-md-8"><a th:href="@{https://www.imdb.com/title/{imdbId}(imdbId=${searchResult.imdbID})}" th:text="'https://www.imdb.com/title/' + ${searchResult.imdbID}"></a></div></div>
-									<div class="row"><div class="col-md-12"><a class="btn btn-default" href="#" th:href="@{/imdbsearch/addToCollection(imdbId=${searchResult.imdbID})}" role="button">Add To Movie Collection</a></div></div>
+									<div th:if="${defaultMovieCollection}" class="row"><div class="col-md-12"><a class="btn btn-default" href="#" th:href="@{/imdbsearch/addToCollection(imdbId=${searchResult.imdbID})}" role="button">Add To Movie Collection</a></div></div>
 								</div>
 							</div>
 						</div>
