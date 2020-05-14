@@ -5,11 +5,16 @@
 	<body>
 		<div th:fragment="header">
 			<nav class="navbar navbar-default">
+				<button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#pmdbNavbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
 				<div class="container-fluid">
 					<div class="navbar-header">
 						<a class="navbar-brand">PMDB</a>
 					</div>
-					<div id="navbar" class="navbar-collapse collapse">
+					<div id="pmdbNavbar" class="navbar-collapse collapse">
 						<ul class="nav navbar-nav">
 							<li th:classappend="${viewTab == 'isHomeTab'}? 'active'"><a th:href="@{/}">Home</a></li>
 							<li th:classappend="${viewTab == 'isCollectionsTab'}? 'active'"><a th:href="@{/collections}">Collections <span th:if="${session.numShareOffers}" th:text="${session.numShareOffers}" class="badge">1</span></a></li>

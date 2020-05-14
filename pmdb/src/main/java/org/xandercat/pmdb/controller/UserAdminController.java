@@ -83,10 +83,10 @@ public class UserAdminController {
 		}
 		try {
 			userService.saveUser(userForm, true);
-			model.addAttribute("message", "User " + userForm.getUsername() + " saved.");
+			ViewUtil.setMessage(model, "User " + userForm.getUsername() + " saved.");
 		} catch (PmdbException e) {
 			LOGGER.error("Unexpected error when saving new user.", e);
-			model.addAttribute("message", "An unexpected error occurred while attempting to save user. User could not be saved.");
+			ViewUtil.setErrorMessage(model, "An unexpected error occurred while attempting to save user. User could not be saved.");
 		}
 		return userAdmin(model);
 	}
@@ -100,10 +100,10 @@ public class UserAdminController {
 		}
 		try {
 			userService.saveUser(userForm, false);
-			model.addAttribute("message", "User " + userForm.getUsername() + " saved.");
+			ViewUtil.setMessage(model, "User " + userForm.getUsername() + " saved.");
 		} catch (PmdbException e) {
 			LOGGER.error("Unexpected error when updating user.", e);
-			model.addAttribute("message", "An unexpected error occurred while attempting to save user. User could not be saved.");
+			ViewUtil.setErrorMessage(model, "An unexpected error occurred while attempting to save user. User could not be saved.");
 		}
 		return userAdmin(model);
 	}
