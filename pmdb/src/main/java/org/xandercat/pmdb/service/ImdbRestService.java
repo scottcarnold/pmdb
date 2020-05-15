@@ -17,10 +17,11 @@ import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.dto.imdb.MovieDetailsWrapper;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
+import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.util.Pair;
 
 @Component
-public class ImdbRestService {
+public class ImdbRestService implements ImdbSearchService {
 	
 	private static final Logger LOGGER = LogManager.getLogger(ImdbRestService.class);
 	
@@ -39,8 +40,14 @@ public class ImdbRestService {
 	@Value("${imdb.rapidapi.key.header.value}")
 	private String apiKeyHeaderValue;
 	
+	@Value("${imdb.calls.per.day.maximum}")
+	private int maxServiceCallsPerDay;
+	
 	@Autowired
 	private Client restClient;
+	
+	@Autowired
+	private ApplicationService applicationService;
 	
 	private Builder builder(List<Pair<String>> queryParams) {
 		WebTarget webTarget = restClient.target(hostUrl);
@@ -52,7 +59,14 @@ public class ImdbRestService {
 			.header(apiKeyHeaderKey, apiKeyHeaderValue);
 	}
 	
-	public SearchResult searchImdb(String title, Integer page, String year) {
+	@Override
+	public SearchResult searchImdb(String title, Integer page, String year) throws ServiceLimitExceededException {
+		int serviceCalls = applicationService.getImdbServiceCallCount();
+		if (serviceCalls >= maxServiceCallsPerDay) {
+			throw new ServiceLimitExceededException(serviceCalls);
+		} else {
+			applicationService.incrementImdbServiceCallCount();
+		}
 		if (StringUtils.isEmptyOrWhitespace(title)) {
 			throw new IllegalArgumentException("Title is required.");
 		}
@@ -69,7 +83,14 @@ public class ImdbRestService {
 		return searchResult;
 	}
 	
-	public MovieDetails getMovieDetails(String imdbId) {
+	@Override
+	public MovieDetails getMovieDetails(String imdbId) throws ServiceLimitExceededException {
+		int serviceCalls = applicationService.getImdbServiceCallCount();
+		if (serviceCalls >= maxServiceCallsPerDay) {
+			throw new ServiceLimitExceededException(serviceCalls);
+		} else {
+			applicationService.incrementImdbServiceCallCount();
+		}
 		List<Pair<String>> queryParams = new ArrayList<Pair<String>>();
 		queryParams.add(new Pair<String>("i", imdbId));
 		queryParams.add(new Pair<String>("r", "xml"));

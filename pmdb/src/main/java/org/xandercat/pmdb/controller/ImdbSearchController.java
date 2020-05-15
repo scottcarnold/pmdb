@@ -2,6 +2,7 @@ package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -21,9 +22,10 @@ import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.dto.imdb.Result;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
 import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.form.imdb.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
-import org.xandercat.pmdb.service.ImdbRestService;
+import org.xandercat.pmdb.service.ImdbSearchService;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.ViewUtil;
 
@@ -33,7 +35,7 @@ public class ImdbSearchController {
 	private static final Logger LOGGER = LogManager.getLogger(ImdbSearchController.class);
 	
 	@Autowired
-	private ImdbRestService imdbRestService;
+	private ImdbSearchService imdbSearchService;
 	
 	@Autowired
 	private MovieService movieService;
@@ -59,13 +61,27 @@ public class ImdbSearchController {
 		if (!result.hasErrors()) {
 			String title = searchForm.getTitle();
 			String year = (StringUtils.isEmptyOrWhitespace(searchForm.getYear()))? null : searchForm.getYear().trim();
-			SearchResult searchResult = imdbRestService.searchImdb(title, Integer.valueOf(1), year);
+			SearchResult searchResult = null;
+			try {
+				searchResult = imdbSearchService.searchImdb(title, Integer.valueOf(1), year);
+			} catch (ServiceLimitExceededException e) {
+				ViewUtil.setErrorMessage(model, "The maximum number of allowed IMDB service calls for today has been reached.  Please retry at a later date.");
+				return "imdbsearch/imdbSearch";
+			}
 			List<Result> searchResults = searchResult.getResults();
 			model.addAttribute("totalResults", searchResult.getTotalResults());
 			model.addAttribute("searchResults", searchResults);
 			MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 			if (defaultMovieCollection != null) {
 				model.addAttribute("defaultMovieCollection", defaultMovieCollection);
+				if (searchResults != null && searchResults.size() > 0) {
+					Set<String> imdbIdsInCollection = movieService.getImdbIdsInDefaultCollection(principal.getName());
+					for (Result r : searchResults) {
+						if (imdbIdsInCollection.contains(r.getImdbID())) {
+							r.setInCollection(true);
+						}
+					}
+				}
 			}
 		}
 		return "imdbsearch/imdbSearch";
@@ -73,16 +89,26 @@ public class ImdbSearchController {
 	
 	@RequestMapping("/imdbsearch/addToCollection")
 	public String addToCollection(Model model, Principal principal, @RequestParam String imdbId) {
-		MovieDetails movieDetails = imdbRestService.getMovieDetails(imdbId);
+		LOGGER.info("Add To Collection called with ID " + imdbId);
+		MovieDetails movieDetails = null;
+		try {
+			movieDetails = imdbSearchService.getMovieDetails(imdbId);
+		} catch (ServiceLimitExceededException e1) {
+			//TODO: Replace this with AJAX
+			ViewUtil.setErrorMessage(model, "Blah");
+			return imdbSearch(model);
+		}
 		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		Movie movie = new Movie(movieDetails, movieCollection.getId());
 		try {
 			movieService.addMovie(movie, principal.getName());
-			ViewUtil.setMessage(model, "Movie added to active movie collection.");
+			//ViewUtil.setMessage(model, "Movie added to active movie collection.");
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to add IMDB movie to collection.", e);
-			ViewUtil.setErrorMessage(model, "Unable to add IMDB movie to collection.");
+			//ViewUtil.setErrorMessage(model, "Unable to add IMDB movie to collection.");
 		}
-		return imdbSearch(model);
+		model.addAttribute("response", imdbId);
+		return "ajax/response";
+		//return imdbSearch(model);
 	}
 }

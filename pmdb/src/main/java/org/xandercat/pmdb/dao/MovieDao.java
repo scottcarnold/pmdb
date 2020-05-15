@@ -41,4 +41,6 @@ public interface MovieDao {
 	public Integer getMaxTableColumnPreferenceIndex(String username);
 	
 	public List<String> getAttributeKeysForCollection(int collectionId);
+	
+	public Set<String> getAttributeValuesForCollection(int collectionId, String attributeName);
 }

@@ -5,6 +5,7 @@ import java.util.TreeMap;
 
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.imdb.MovieDetails;
+import org.xandercat.pmdb.service.ImdbSearchService;
 import org.xandercat.pmdb.util.CIString;
 
 public class Movie {
@@ -29,6 +30,7 @@ public class Movie {
 		setAttribute("Actors", movieDetails.getActors());
 		setAttribute("Director", movieDetails.getDirector());
 		setAttribute("Awards", movieDetails.getAwards());
+		setAttribute(ImdbSearchService.IMDB_ID_KEY, movieDetails.getImdbId());
 		if (!StringUtils.isEmptyOrWhitespace(movieDetails.getImdbId())) {
 			setAttribute("IMDB URL", IMDB_URL_BASE + movieDetails.getImdbId());
 		}

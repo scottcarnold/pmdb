@@ -41,4 +41,6 @@ public interface MovieService {
 	public void deleteTableColumnPreference(int sourceIdx, String username);
 	
 	public List<String> getAttributeKeysForCollection(int collectionId, String callingUsername) throws CollectionSharingException; 
+	
+	public Set<String> getImdbIdsInDefaultCollection(String callingUsername);
 }

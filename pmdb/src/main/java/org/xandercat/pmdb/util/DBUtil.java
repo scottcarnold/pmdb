@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -21,12 +22,16 @@ public class DBUtil {
 		ps.setTimestamp(parameterIndex, timestamp, GMT_CALENDAR);
 	}
 	
+	public static void setLocalDate(PreparedStatement ps, int parameterIndex, LocalDate date) throws SQLException {
+		ps.setDate(parameterIndex, java.sql.Date.valueOf(date));
+	}
+	
 	public static Date getDateFromGMTTimestamp(ResultSet rs, int columnIndex) throws SQLException {
 		Timestamp ts = getTimestampFromGMTTimestamp(rs, columnIndex);
 		return (ts == null)? null : new Date(ts.getTime());
 	}
+	
 	public static Timestamp getTimestampFromGMTTimestamp(ResultSet rs, int columnIndex) throws SQLException {
 		return rs.getTimestamp(columnIndex, GMT_CALENDAR);
 	}
-
 }

@@ -70,3 +70,10 @@ CREATE TABLE movie_attributes_table_columns(
     CONSTRAINT fk_movie_attributes_order_users FOREIGN KEY(username) REFERENCES users(username),
     CONSTRAINT ix_mao_username_idx UNIQUE INDEX (username, idx) 
 );
+
+CREATE TABLE application_attributes(
+    attribute_name VARCHAR(50) NOT NULL,
+    attribute_value VARCHAR(200) NOT NULL,
+    attribute_date DATE NOT NULL,
+    CONSTRAINT ix_aa_name_date UNIQUE INDEX (attribute_name, attribute_date) 
+);

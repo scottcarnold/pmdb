@@ -18,6 +18,8 @@ public class Result {
 	@XmlAttribute
 	private String poster;
 	
+	private boolean inCollection;
+	
 	public String getTitle() {
 		return title;
 	}
@@ -47,5 +49,11 @@ public class Result {
 	}
 	public void setPoster(String poster) {
 		this.poster = poster;
+	}
+	public boolean isInCollection() {
+		return inCollection;
+	}
+	public void setInCollection(boolean inCollection) {
+		this.inCollection = inCollection;
 	}
 }

@@ -11,8 +11,10 @@
 					IMDB Search Limitations
 				</div>
 				<div class="panel-body">
-					<p>Due to contractual limits, IMDB search results are currently being limited to only the first page of search results
-					with only basic movie information.  For more information on any particular movie, follow the provided IMDB movie links.</p>
+					<p>Due to limits of the service contract with IMDB, there is a maximum number of IMDB service calls that can be made per day.
+					If that limit is reached, you will not be able to use the IMDB Search service again until the next day.  To help prevent
+					reaching this limit too quickly, IMDB search results are currently being limited to only the first page of search results.
+					If you do not see what you are looking for on the first page, try refining your search.</p>
 				</div>
 			</div>
 			<div class="panel panel-info">
@@ -37,19 +39,37 @@
 						<div class="panel-body">
 							<div class="row">
 								<div class="col-md-4">
-									<img th:src="${searchResult.poster}" alt="Movie Poster"/>
+									<img th:if="${searchResult.poster}" th:src="${searchResult.poster}" alt="Movie Poster" width="150" height="222"/>
 								</div>
 								<div class="col-md-8">
 									<div class="row"><div class="col-md-4">Picture Type:</div><div class="col-md-8" th:text="${searchResult.type}"></div></div>
 									<div class="row"><div class="col-md-4">Year:</div><div class="col-md-8" th:text="${searchResult.year}"></div></div>
 									<div class="row"><div class="col-md-4">IMDB Link:</div><div class="col-md-8"><a th:href="@{https://www.imdb.com/title/{imdbId}(imdbId=${searchResult.imdbID})}" th:text="'https://www.imdb.com/title/' + ${searchResult.imdbID}"></a></div></div>
-									<div th:if="${defaultMovieCollection != null and defaultMovieCollection.editable}" class="row"><div class="col-md-12"><a class="btn btn-default" href="#" th:href="@{/imdbsearch/addToCollection(imdbId=${searchResult.imdbID})}" role="button">Add To Movie Collection</a></div></div>
+									<div class="row"><div class="col-md-12"><p th:id="${searchResult.imdbID}" th:classappend="${!searchResult.inCollection}? pmdbInvisible" style="color: green; font-weight: bold"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> In Your Movie Collection</p></div></div>
+									<div th:if="${defaultMovieCollection != null and defaultMovieCollection.editable}" class="row"><div class="col-md-12">
+										<!-- <a class="btn btn-default addToMovieCollection" href="#" th:href="@{/imdbsearch/addToCollection(imdbId=${searchResult.imdbID})}" role="button">Add To Movie Collection</a> -->
+										<button type="button" th:id="${searchResult.imdbID} + '-button'" class="btn btn-default addToMovieCollection" th:attr="data-href='/pmdb/imdbsearch/addToCollection?imdbId=__${searchResult.imdbID}__'">Add To Movie Collection</button>
+									</div></div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
+			<script type="text/javascript">
+			$(document).ready(function() {  
+				$(".addToMovieCollection").click(function (e) {
+					e.preventDefault();
+					$(this).attr("disabled", true);
+					$.ajax({
+						url: $(this).data("href")
+					}).done(function (data) {
+						$("#" + data).removeClass("pmdbInvisible");
+						$("#" + data + "-button").attr("disabled", false);
+					});
+				});
+			});
+			</script>
 		</div>
 	</body>
 </html>

@@ -375,4 +375,25 @@ public class MovieDaoImpl implements MovieDao {
 		});
 		return attributeKeys;
 	}
+
+	@Override
+	public Set<String> getAttributeValuesForCollection(int collectionId, String attributeName) {
+		final String sql = "SELECT DISTINCT(attribute_value) FROM movie"
+				+ " INNER JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
+				+ " WHERE movie.collection_id = ? AND attribute_name = ?";
+		final Set<String> attributeValues = new HashSet<String>();
+		jdbcTemplate.query(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setInt(1, collectionId);
+				ps.setString(2, attributeName);
+			}
+		}, new RowCallbackHandler() {
+			@Override
+			public void processRow(ResultSet rs) throws SQLException {
+				attributeValues.add(rs.getString(1));
+			}
+		});
+		return attributeValues;
+	}
 }

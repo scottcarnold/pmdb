@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.xandercat.pmdb.dao.MovieDao;
 import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.util.CIStringComparator;
 import org.xandercat.pmdb.util.PmdbException;
@@ -101,5 +102,11 @@ public class MovieServiceImpl implements MovieService {
 		List<String> attributeKeys = movieDao.getAttributeKeysForCollection(collectionId);
 		Collections.sort(attributeKeys, ciStringComparator);
 		return attributeKeys;
+	}
+
+	@Override
+	public Set<String> getImdbIdsInDefaultCollection(String callingUsername) {
+		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(callingUsername);
+		return movieDao.getAttributeValuesForCollection(defaultMovieCollection.getId(), ImdbSearchService.IMDB_ID_KEY);
 	}
 }
