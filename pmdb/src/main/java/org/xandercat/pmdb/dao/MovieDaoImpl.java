@@ -37,9 +37,9 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
-	public List<Movie> getMoviesForCollection(int collectionId) {
+	public Set<Movie> getMoviesForCollection(int collectionId) {
 		final String sql = "SELECT id, title FROM movie WHERE collection_id = ? ORDER BY title";
-		final List<Movie> movies = new ArrayList<Movie>();
+		final Set<Movie> movies = new HashSet<Movie>();
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
@@ -61,7 +61,7 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
-	public List<Movie> searchMoviesForCollection(int collectionId, String searchString) {
+	public Set<Movie> searchMoviesForCollection(int collectionId, String searchString) {
 		final String lcSearchString = searchString.trim().toLowerCase();
 		final String sql = "SELECT id, title FROM movie "
 				+ " INNER JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
@@ -70,7 +70,7 @@ public class MovieDaoImpl implements MovieDao {
 				+ " OR LOWER(attribute_name) like ?"
 				+ " OR LOWER(attribute_value) like ?)"
 				+ " ORDER BY title";
-		final List<Movie> movies = new ArrayList<Movie>();
+		final Set<Movie> movies = new HashSet<Movie>();
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
@@ -359,7 +359,8 @@ public class MovieDaoImpl implements MovieDao {
 	public List<String> getAttributeKeysForCollection(int collectionId) {
 		final String sql = "SELECT DISTINCT(attribute_name) FROM movie"
 				+ " INNER JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
-				+ " WHERE movie.collection_id = ?";
+				+ " WHERE movie.collection_id = ?"
+				+ " ORDER BY LOWER(attribute_name)";
 		final List<String> attributeKeys = new ArrayList<String>();
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override

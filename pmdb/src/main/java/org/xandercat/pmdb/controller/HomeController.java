@@ -1,7 +1,9 @@
 package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -43,6 +45,19 @@ public class HomeController {
 		return ViewUtil.TAB_HOME;
 	}
 	
+	@ModelAttribute("attributeNames")
+	public List<String> getAttributeNames(Principal principal) {
+		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		if (defaultMovieCollection != null) {
+			try {
+				return movieService.getAttributeKeysForCollection(defaultMovieCollection.getId(), principal.getName());
+			} catch (CollectionSharingException e) {
+				LOGGER.error("Unable to add collection attribute names to model.", e);
+			}			
+		}
+		return new ArrayList<String>();
+	}
+	
 	@GetMapping("/")
 	public String home(Model model, Principal principal) {
 		model.addAttribute("searchForm", new SearchForm());
@@ -64,7 +79,7 @@ public class HomeController {
 		}
 		model.addAttribute("defaultMovieCollection", defaultMovieCollection);
 		try {
-			List<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.getId(), principal.getName());
+			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.getId(), principal.getName());
 			model.addAttribute("totalMoviesInCollection", movies.size());
 			if (!StringUtils.isEmptyOrWhitespace(searchString)) {
 				movies = movieService.searchMoviesForCollection(defaultMovieCollection.getId(), searchString, principal.getName());
@@ -82,6 +97,8 @@ public class HomeController {
 	@RequestMapping("/movies/addMovie")
 	public String addMovie(Model model) {
 		model.addAttribute("movieForm", new MovieForm());
+		
+		//model.addAttribute("attributeNames", movieService.getAttributeKeysForCollection(collectionId, principal.getName()));
 		return "movie/addMovie";
 	}
 	
@@ -93,6 +110,7 @@ public class HomeController {
 				throw new PmdbException("Movie ID " + movieId + " could not be retrieved.");
 			}
 			model.addAttribute("movieForm", new MovieForm(movie));
+			//model.addAttribute("attributeNames", attributeNames);
 		} catch (Exception e) {
 			LOGGER.error("Unable to edit movie for ID: " + movieId, e);
 			ViewUtil.setErrorMessage(model, "This movie cannot be edited.");
@@ -106,6 +124,7 @@ public class HomeController {
 			@ModelAttribute("movieForm") @Valid MovieForm movieForm,
 			BindingResult result) {
 		if (result.hasErrors()) {
+			//model.addAttribute("attributeNames", attributeNames);
 			return "movie/addMovie";
 		}
 		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
@@ -127,6 +146,7 @@ public class HomeController {
 			@ModelAttribute("movieForm") @Valid MovieForm movieForm,
 			BindingResult result) {
 		if (result.hasErrors()) {
+			//model.addAttribute("attributeNames", attributeNames);
 			return "movie/editMovie";
 		}
 		try {

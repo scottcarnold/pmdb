@@ -3,6 +3,7 @@ package org.xandercat.pmdb.service;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -24,13 +25,13 @@ public class MovieServiceImpl implements MovieService {
 	private CollectionService collectionService;
 	
 	@Override
-	public List<Movie> getMoviesForCollection(int collectionId, String callingUsername) throws CollectionSharingException {
+	public Set<Movie> getMoviesForCollection(int collectionId, String callingUsername) throws CollectionSharingException {
 		collectionService.assertCollectionViewable(collectionId, callingUsername);
 		return movieDao.getMoviesForCollection(collectionId);
 	}
 
 	@Override
-	public List<Movie> searchMoviesForCollection(int collectionId, String searchString, String callingUsername)	throws CollectionSharingException {
+	public Set<Movie> searchMoviesForCollection(int collectionId, String searchString, String callingUsername)	throws CollectionSharingException {
 		collectionService.assertCollectionViewable(collectionId, callingUsername);
 		return movieDao.searchMoviesForCollection(collectionId, searchString);
 	}

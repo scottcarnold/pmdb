@@ -6,6 +6,11 @@ body {
 .pmdbHidden {
 	display: none;
 }
+
+.pmdbInvisible {
+	visibility: hidden;	
+}
+
 .pmdbPanelParagraph {
 	padding: 10px;
 }

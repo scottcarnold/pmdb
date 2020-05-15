@@ -7,10 +7,12 @@
 		<h1>CONFIGURE MOVIE COLUMNS PAGE</h1>
 		<div layout:fragment="content">
 			<h1>Configure Columns For Movie Table</h1>
-			<p>TIP: For columns already in the list, you can drag and drop to reorder them.</p>
+			<p>TIP: In addition to the up and down controls, you can drag and drop to reorder.</p>
 			<ul class="list-group">
 			    <!--  floating button to right causes container to collapse; this is undone with overflow: auto on container element -->
 				<li th:each="pref,iterStat : ${tableColumnPreferences}" class="list-group-item dragAttr dropAttr" th:attr="data-index='__${iterStat.index}__'" style="overflow: auto">
+					<a th:classappend="${iterStat.index == 0}? pmdbInvisible" href="#" th:href="@{/movies/reorderColumns(dragIndex=${iterStat.index},dropIndex=${iterStat.index - 1})}" style="padding-left: 10px; padding-right: 10px;"><span class="glyphicon glyphicon-menu-up" aria-hidden="true"></span></a>
+					<a th:classappend="${iterStat.count == tableColumnPreferences.size()}? pmdbInvisible" href="#" th:href="@{/movies/reorderColumns(dragIndex=${iterStat.index},dropIndex=${iterStat.index + 1})}" style="padding-left: 10px; padding-right: 10px;"><span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span></a>
 					<span th:text="${pref}"></span>
 					<form th:action="@{/movies/deleteColumnPreference}" method="post" class="form-inline" style="display: inline">
 						<input type="hidden" name="deleteIndex" th:value="${iterStat.index}"/>

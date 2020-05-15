@@ -1,6 +1,7 @@
 package org.xandercat.pmdb.dao;
 
 import java.util.List;
+import java.util.Set;
 
 import org.xandercat.pmdb.dto.Movie;
 
@@ -8,9 +9,9 @@ public interface MovieDao {
 
 	public void deleteMoviesForCollection(int collectionId);
 	
-	public List<Movie> getMoviesForCollection(int collectionId);
+	public Set<Movie> getMoviesForCollection(int collectionId);
 	
-	public List<Movie> searchMoviesForCollection(int collectionId, String searchString);
+	public Set<Movie> searchMoviesForCollection(int collectionId, String searchString);
 	
 	public Movie getMovie(int id);
 	
