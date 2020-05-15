@@ -14,3 +14,11 @@ body {
 .pmdbPanelParagraph {
 	padding: 10px;
 }
+
+.fieldError {
+	background-color: #FFF5F5;
+}
+
+.fieldErrorMessage {
+	color: red;
+}

@@ -79,6 +79,7 @@ public class CollectionController {
 			// user had no viewable movie collections; set the newly created collection as default
 			try {
 				collectionService.setDefaultMovieCollection(movieCollection.getId(), principal.getName());
+				return "redirect:/";  // after setting a new default collection, immediately go to movie list for that collection
 			} catch (CollectionSharingException e) {
 				LOGGER.error("Unable to set newly created movie collection as default.  This shouldn't happen.", e);
 				// despite that this represents an unsettling error, there is no real value in notifying the user, so not setting message here
@@ -92,11 +93,12 @@ public class CollectionController {
 	public String changeDefaultCollection(Model model, Principal principal, @RequestParam int collectionId) {
 		try {
 			collectionService.setDefaultMovieCollection(collectionId, principal.getName());
+			return "redirect:/";  // after setting a new default collection, immediately go to movie list for that collection			
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to set default movie collection", e);
 			ViewUtil.setErrorMessage(model, "Default movie collection could not be set.");
+			return collections(model, principal);
 		}
-		return collections(model, principal);
 	}
 	
 	@RequestMapping("/collections/editCollection")
@@ -214,6 +216,18 @@ public class CollectionController {
 			ViewUtil.setErrorMessage(model, "Share could not be revoked.");
 		}
 		return editSharing(model, principal, collectionId);
+	}
+	
+	@RequestMapping(value="/collections/revokeMyPermission", method=RequestMethod.POST)
+	public String revokeMyPermission(Model model, Principal principal, @RequestParam int collectionId) {
+		try {
+			collectionService.unshareMovieCollection(collectionId, principal.getName(), principal.getName());
+			ViewUtil.setMessage(model, "Removed access to collection.");
+		} catch (CollectionSharingException e) {
+			LOGGER.error("User unable to remove their own permission to a collection.", e);
+			ViewUtil.setErrorMessage(model, "Access cannot be removed.");
+		}
+		return collections(model, principal);
 	}
 	
 	@RequestMapping("/collections/shareCollection")

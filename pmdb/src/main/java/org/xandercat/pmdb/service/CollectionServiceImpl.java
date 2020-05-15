@@ -53,7 +53,7 @@ public class CollectionServiceImpl implements CollectionService {
 
 	@Override
 	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) {
-		movieCollection.setOwner(callingUsername); // enforce that movie collection owner is the calling username
+		movieCollection.setOwner(callingUsername, callingUsername); // enforce that movie collection owner is the calling username
 		collectionDao.addMovieCollection(movieCollection);
 	}
 
@@ -70,7 +70,7 @@ public class CollectionServiceImpl implements CollectionService {
 	@Override
 	public void deleteMovieCollection(int collectionId, String callingUsername) throws CollectionSharingException {
 		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
-		if (movieCollection == null || !movieCollection.getOwner().contentEquals(callingUsername)) { // only owner can delete collection
+		if (movieCollection == null || !movieCollection.getOwner().equals(callingUsername)) { // only owner can delete collection
 			throw new CollectionSharingException("User does not have required permission to delete collection.");
 		}
 		movieDao.deleteMoviesForCollection(collectionId);
@@ -85,7 +85,12 @@ public class CollectionServiceImpl implements CollectionService {
 
 	@Override
 	public void unshareMovieCollection(int collectionId, String unshareWithUsername, String callingUsername) throws CollectionSharingException {
-		MovieCollection movieCollection = assertCollectionEditable(collectionId, callingUsername);
+		MovieCollection movieCollection = null;
+		if (callingUsername.equals(unshareWithUsername)) {
+			movieCollection = assertCollectionViewable(collectionId, callingUsername);
+		} else {
+			movieCollection = assertCollectionEditable(collectionId, callingUsername);
+		}
 		if (movieCollection.getOwner().equals(unshareWithUsername)) {
 			throw new CollectionSharingException("Collection owner permissions cannot be revoked.");
 		}

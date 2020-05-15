@@ -47,7 +47,7 @@ public class CollectionDaoImpl implements CollectionDao {
 				MovieCollection movieCollection = new MovieCollection();
 				movieCollection.setId(rs.getInt(1));
 				movieCollection.setName(rs.getString(2));
-				movieCollection.setOwner(rs.getString(3));
+				movieCollection.setOwner(rs.getString(3), username);
 				movieCollection.setEditable(rs.getBoolean(4));
 				movieCollections.add(movieCollection);
 			}

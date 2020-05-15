@@ -8,7 +8,7 @@
 				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
 				<div class="col-md-8">
 					<input type="text" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError"/>
-					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}">Errors</p>
+					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}" class="fieldErrorMessage">Errors</p>
 				</div>
 			</div>
 		</div>
@@ -26,14 +26,14 @@
 							</ul>
 						</div>
 					</div>
-					<p th:if="${#fields.hasErrors('__${keyFieldName}__')}" th:errors="*{__${keyFieldName}__}">Errors</p>
+					<p th:if="${#fields.hasErrors('__${keyFieldName}__')}" th:errors="*{__${keyFieldName}__}" class="fieldErrorMessage">Errors</p>
 				</div>
 				<div class="col-md-8">
 					<div class="input-group">
 						<input type="text" th:id="${valueFieldName} + '-input'" th:field="*{__${valueFieldName}__}" class="form-control" th:errorclass="fieldError"/>
 						<a href="#" th:if="${removeLink}" th:attr="data-index='__${attrIndex}__'" class="attributeRemove input-group-addon"><span class="glyphicon glyphicon-remove" aria-hidden="true" style="color: red"></span></a>
 					</div>
-					<p th:if="${#fields.hasErrors('__${valueFieldName}__')}" th:errors="*{__${valueFieldName}__}">Errors</p>
+					<p th:if="${#fields.hasErrors('__${valueFieldName}__')}" th:errors="*{__${valueFieldName}__}" class="fieldErrorMessage">Errors</p>
 				</div>
 			</div>
 		</div>
@@ -42,7 +42,7 @@
 				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
 				<div class="col-md-8">
 					<input type="text" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError" disabled/>
-					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}">Errors</p>
+					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}" class="fieldErrorMessage">Errors</p>
 				</div>
 			</div>
 		</div>
@@ -51,7 +51,7 @@
 				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
 				<div class="col-md-8">
 					<input type="password" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError"/>
-					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}">Errors</p>
+					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}" class="fieldErrorMessage">Errors</p>
 				</div>
 			</div>
 		</div>
@@ -60,7 +60,7 @@
 				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
 				<div class="col-md-8">
 					<input type="password" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError"/>
-					<p th:if="${#fields.hasErrors('__${validatedFieldName}__')}" th:errors="*{__${validatedFieldName}__}">Errors</p>
+					<p th:if="${#fields.hasErrors('__${validatedFieldName}__')}" th:errors="*{__${validatedFieldName}__}" class="fieldErrorMessage">Errors</p>
 				</div>
 			</div>
 		</div>
