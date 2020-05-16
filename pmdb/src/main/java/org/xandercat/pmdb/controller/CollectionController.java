@@ -324,4 +324,11 @@ public class CollectionController {
 			LOGGER.error("Unable to export collections to Excel.", e);
 		}
 	}
+	
+	@RequestMapping("/collections/import")
+	public String importCollections(Model model, Principal principal) {
+		ViewUtil.setErrorMessage(model, "Import functionality has not been implemented yet.");
+		return collections(model, principal);
+		//return "collection/import";
+	}
 }

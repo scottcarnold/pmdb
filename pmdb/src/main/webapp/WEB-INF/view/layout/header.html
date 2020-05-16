@@ -19,7 +19,7 @@
 							<li th:classappend="${viewTab == 'isHomeTab'}? 'active'"><a th:href="@{/}">Home</a></li>
 							<li th:classappend="${viewTab == 'isCollectionsTab'}? 'active'"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Collections <span th:if="${session.numShareOffers}" th:text="${session.numShareOffers}" class="badge">1</span><span class="caret"></span></a>
 								<ul class="dropdown-menu">
-									<li><a th:href="@{/collections}">Manage Collections</a></li>
+									<li><a th:href="@{/collections}">Manage Collections <span th:if="${session.numShareOffers}" th:text="${session.numShareOffers}" class="badge">1</span></a></li>
 									<li role="separator" class="divider"></li>
 									<li><a th:href="@{/collections/export}">Export To Excel</a></li>
 									<li><a th:href="@{/collections/import}">Import From Excel</a></li>
