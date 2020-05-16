@@ -10,7 +10,7 @@
 				<div class="panel-heading">
 					<h3 th:text="'Movie Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</h3>
 					<p>Filtered to <span th:text="${movies.size()}">0</span> out of <span th:text="${totalMoviesInCollection}">0</span> movies in the collection.</p>
-					<form th:action="@{/movies/search}" th:object="${searchForm}" method="post" class="form-inline">
+					<form id="cSearchForm" th:action="@{/movies/search}" th:object="${searchForm}" method="post" class="form-inline">
 						<label for="inputId" th:attr="for='search-input'" th:text="'Search this collection'">Label</label>
 						<span class="glyphicon glyphicon-play" aria-hidden="true"></span>
 						<input type="text" th:id="'search-input'" th:field="*{searchString}" class="form-control"/>
@@ -18,6 +18,7 @@
 						<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/imdbsearch}" class="btn btn-default" role="button">Add Movie (IMDB Search)</a>
 						<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/addMovie}" class="btn btn-default" role="button">Add Movie</a>
 						<a href="#" th:href="@{/movies/configureColumns}" class="btn btn-default" role="button">Table Settings</a>
+						<label th:if="${defaultMovieCollection.editable}"><input type="checkbox" id="editModeCheckbox" th:field="*{editMode}"> Edit Mode</label>
 					</form>
 				</div>
 				<table id="movieTable" class="table table-striped">
@@ -25,14 +26,14 @@
 					<tr>
 						<th>Title</th>
 						<th th:each="columnName : ${attrColumns}"><span th:text="${columnName}"></span></th>
-						<th>Action</th>
+						<th th:if="${editMode}">Action</th>
 					</tr>
 					</thead>
 					<tbody>
 					<tr th:each="movie : ${movies}">
 						<td th:text="${movie.title}" th:attr="data-order='__${movie.title}__'">Movie Title</td>
 						<td th:each="columnName : ${attrColumns}" th:text="${movie.getAttributeDisplayValue('__${columnName}__')}" th:attr="data-order='' + ${movie.getAttributeSortValue('__${columnName}__')}"></td>
-						<td>
+						<td th:if="${defaultMovieCollection.editable and editMode}">
 							<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/editMovie(movieId=${movie.id})}" class="btn btn-default" role="button">Edit</a> 
 							<form th:if="${defaultMovieCollection.editable}" th:action="@{/movies/deleteMovie}" method="post" style="display: inline">
 								<input type="hidden" name="movieId" th:value="${movie.id}"/>
@@ -46,7 +47,7 @@
 			<div id="confirmDeleteDialog" title="Confirm Delete">
 				<p>Are you sure you wish to delete this movie?</p>
 			</div>
-			<script type="text/javascript">
+			<script th:if="${defaultMovieCollection.editable and editMode}" type="text/javascript">
 			var currentForm;
 			$(document).ready(function() {  
 					$( "#confirmDeleteDialog" ).dialog({
@@ -74,6 +75,22 @@
 			        });
 			} );	
 			
+			</script>
+			<script th:if="not ${defaultMovieCollection.editable and editMode}" type="text/javascript">
+			var currentForm;
+			$(document).ready(function() {  
+			        $("#movieTable").DataTable({
+			        	searching: false
+			        });
+			} );	
+			</script>
+			<script th:if="${defaultMovieCollection.editable}" type="text/javascript">
+			var currentForm;
+			$(document).ready(function() {  
+			        $("#editModeCheckbox").click(function () {
+			        	$("#cSearchForm").submit();
+			        });
+			} );	
 			</script>
 		</div>
 	</body>

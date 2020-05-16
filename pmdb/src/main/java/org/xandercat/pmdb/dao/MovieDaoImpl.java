@@ -64,10 +64,9 @@ public class MovieDaoImpl implements MovieDao {
 	public Set<Movie> searchMoviesForCollection(int collectionId, String searchString) {
 		final String lcSearchString = searchString.trim().toLowerCase();
 		final String sql = "SELECT id, title FROM movie "
-				+ " INNER JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
+				+ " LEFT JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
 				+ " WHERE collection_id = ? "
 				+ " AND (LOWER(title) like ?"
-				+ " OR LOWER(attribute_name) like ?"
 				+ " OR LOWER(attribute_value) like ?)"
 				+ " ORDER BY title";
 		final Set<Movie> movies = new HashSet<Movie>();
@@ -77,7 +76,6 @@ public class MovieDaoImpl implements MovieDao {
 				ps.setInt(1, collectionId);
 				ps.setString(2, "%" + lcSearchString + "%");
 				ps.setString(3, "%" + lcSearchString + "%");
-				ps.setString(4, "%" + lcSearchString + "%");
 			}
 		}, new RowCallbackHandler() {
 			@Override
