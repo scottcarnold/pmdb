@@ -3,8 +3,8 @@ package org.xandercat.pmdb.service;
 import java.util.List;
 
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.UserForm;
-import org.xandercat.pmdb.util.PmdbException;
 
 public interface UserService {
 

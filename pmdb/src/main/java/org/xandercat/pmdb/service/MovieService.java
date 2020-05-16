@@ -5,7 +5,7 @@ import java.util.Set;
 
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.exception.CollectionSharingException;
-import org.xandercat.pmdb.util.PmdbException;
+import org.xandercat.pmdb.exception.PmdbException;
 
 public interface MovieService {
 

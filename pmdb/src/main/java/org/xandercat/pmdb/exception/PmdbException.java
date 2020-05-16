@@ -1,4 +1,4 @@
-package org.xandercat.pmdb.util;
+package org.xandercat.pmdb.exception;
 
 public class PmdbException extends Exception {
 

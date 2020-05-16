@@ -3,7 +3,7 @@ package org.xandercat.pmdb.dao;
 import java.util.List;
 
 import org.xandercat.pmdb.dto.PmdbUser;
-import org.xandercat.pmdb.util.PmdbException;
+import org.xandercat.pmdb.exception.PmdbException;
 
 public interface UserDao {
 

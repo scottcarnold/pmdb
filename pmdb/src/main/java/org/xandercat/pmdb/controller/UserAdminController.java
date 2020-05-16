@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.SearchForm;
 import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.service.UserService;
-import org.xandercat.pmdb.util.PmdbException;
 import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller

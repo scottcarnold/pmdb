@@ -10,8 +10,8 @@ import org.xandercat.pmdb.config.PmdbGrantedAuthority;
 import org.xandercat.pmdb.dao.AuthDao;
 import org.xandercat.pmdb.dao.UserDao;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.UserForm;
-import org.xandercat.pmdb.util.PmdbException;
 
 @Component
 public class UserServiceImpl implements UserService {

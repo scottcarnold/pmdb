@@ -11,8 +11,8 @@ import org.xandercat.pmdb.dao.MovieDao;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.util.CIStringComparator;
-import org.xandercat.pmdb.util.PmdbException;
 
 @Component
 public class MovieServiceImpl implements MovieService {

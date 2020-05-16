@@ -22,11 +22,11 @@ import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.movie.MovieForm;
 import org.xandercat.pmdb.form.movie.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.MovieService;
-import org.xandercat.pmdb.util.PmdbException;
 import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller

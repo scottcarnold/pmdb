@@ -18,8 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.util.DBUtil;
-import org.xandercat.pmdb.util.PmdbException;
 
 @Component
 public class UserDaoImpl implements UserDao {
