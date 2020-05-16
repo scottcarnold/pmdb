@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.dto.FormattedMovie;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.movie.MovieForm;
@@ -28,6 +29,7 @@ import org.xandercat.pmdb.form.movie.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.format.Transformers;
 
 @Controller
 public class HomeController {
@@ -85,7 +87,8 @@ public class HomeController {
 				movies = movieService.searchMoviesForCollection(defaultMovieCollection.getId(), searchString, principal.getName());
 			}
 			List<String> attrColumns = movieService.getTableColumnPreferences(principal.getName());
-			model.addAttribute("movies", movies); 
+			Set<FormattedMovie> formattedMovies = Transformers.getFormattedMovies(movies, attrColumns);
+			model.addAttribute("movies", formattedMovies); 
 			model.addAttribute("attrColumns", attrColumns);
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to retrieve movies for default movie collection.", e);
@@ -97,8 +100,6 @@ public class HomeController {
 	@RequestMapping("/movies/addMovie")
 	public String addMovie(Model model) {
 		model.addAttribute("movieForm", new MovieForm());
-		
-		//model.addAttribute("attributeNames", movieService.getAttributeKeysForCollection(collectionId, principal.getName()));
 		return "movie/addMovie";
 	}
 	
@@ -110,7 +111,6 @@ public class HomeController {
 				throw new PmdbException("Movie ID " + movieId + " could not be retrieved.");
 			}
 			model.addAttribute("movieForm", new MovieForm(movie));
-			//model.addAttribute("attributeNames", attributeNames);
 		} catch (Exception e) {
 			LOGGER.error("Unable to edit movie for ID: " + movieId, e);
 			ViewUtil.setErrorMessage(model, "This movie cannot be edited.");
@@ -124,7 +124,6 @@ public class HomeController {
 			@ModelAttribute("movieForm") @Valid MovieForm movieForm,
 			BindingResult result) {
 		if (result.hasErrors()) {
-			//model.addAttribute("attributeNames", attributeNames);
 			return "movie/addMovie";
 		}
 		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
@@ -146,7 +145,6 @@ public class HomeController {
 			@ModelAttribute("movieForm") @Valid MovieForm movieForm,
 			BindingResult result) {
 		if (result.hasErrors()) {
-			//model.addAttribute("attributeNames", attributeNames);
 			return "movie/editMovie";
 		}
 		try {

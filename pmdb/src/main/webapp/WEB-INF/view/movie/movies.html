@@ -9,7 +9,7 @@
 			<div class="panel panel-info">
 				<div class="panel-heading">
 					<h3 th:text="'Movie Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</h3>
-					<p>Filtered by search to <span th:text="${movies.size()}">0</span> out of <span th:text="${totalMoviesInCollection}">0</span> movies in the collection.</p>
+					<p>Filtered to <span th:text="${movies.size()}">0</span> out of <span th:text="${totalMoviesInCollection}">0</span> movies in the collection.</p>
 					<form th:action="@{/movies/search}" th:object="${searchForm}" method="post" class="form-inline">
 						<label for="inputId" th:attr="for='search-input'" th:text="'Search this collection'">Label</label>
 						<span class="glyphicon glyphicon-play" aria-hidden="true"></span>
@@ -30,8 +30,8 @@
 					</thead>
 					<tbody>
 					<tr th:each="movie : ${movies}">
-						<td th:text="${movie.title}">Movie Title</td>
-						<td th:each="columnName : ${attrColumns}" th:text="${movie.getAttributeValue('__${columnName}__')}"></td>
+						<td th:text="${movie.title}" th:attr="data-order='__${movie.title}__'">Movie Title</td>
+						<td th:each="columnName : ${attrColumns}" th:text="${movie.getAttributeDisplayValue('__${columnName}__')}" th:attr="data-order='' + ${movie.getAttributeSortValue('__${columnName}__')}"></td>
 						<td>
 							<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/editMovie(movieId=${movie.id})}" class="btn btn-default" role="button">Edit</a> 
 							<form th:if="${defaultMovieCollection.editable}" th:action="@{/movies/deleteMovie}" method="post" style="display: inline">
