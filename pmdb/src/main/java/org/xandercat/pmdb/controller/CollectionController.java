@@ -1,8 +1,11 @@
 package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
@@ -11,19 +14,26 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.xandercat.pmdb.dto.CollectionPermission;
+import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.form.Option;
 import org.xandercat.pmdb.form.collection.CollectionForm;
+import org.xandercat.pmdb.form.collection.ExportForm;
+import org.xandercat.pmdb.form.collection.ExportType;
 import org.xandercat.pmdb.form.collection.ShareCollectionForm;
 import org.xandercat.pmdb.service.CollectionService;
+import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.ExcelPorter;
 import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller
@@ -36,6 +46,9 @@ public class CollectionController {
 	
 	@Autowired
 	private CollectionService collectionService;
+	
+	@Autowired
+	private MovieService movieService;
 	
 	@ModelAttribute("viewTab")
 	public String getViewTab() {
@@ -274,5 +287,41 @@ public class CollectionController {
 			ViewUtil.setErrorMessage(model, "Unable to share collection.");
 		}
 		return editSharing(model, principal, shareCollectionForm.getCollectionId());
+	}
+	
+	@RequestMapping("/collections/export")
+	public String export(Model model, Principal principal) {
+		model.addAttribute("exportForm", new ExportForm());
+		List<MovieCollection> movieCollections = collectionService.getViewableMovieCollections(principal.getName());
+		model.addAttribute("collectionOptions", ViewUtil.getOptions(movieCollections, "id", "name"));
+		model.addAttribute("typeOptions", ViewUtil.getOptions(ExportType.class));
+		return "collection/export";
+	}
+	
+	@RequestMapping(value="/collections/exportSubmit", method=RequestMethod.POST)
+	public void exportSubmit(Model model, Principal principal,
+			@ModelAttribute("exportForm") ExportForm exportForm, HttpServletResponse response) {
+		try {
+			ExportType exportType = ExportType.valueOf(exportForm.getType());
+			ExcelPorter.Format format = ExcelPorter.Format.XLSX;
+			if (exportType == ExportType.XLS) {
+				format = ExcelPorter.Format.XLS;
+			}  
+			ExcelPorter excelPorter = new ExcelPorter(format);
+			response.setContentType(excelPorter.getContentType());
+			response.setHeader("Content-Disposition", "attachment; filename=\"" + excelPorter.getFilename("PMDBExport") + "\"");
+			List<String> collectionIdStrings = exportForm.getCollections();
+			for (String collectionIdString : collectionIdStrings) {
+				int collectionId = Integer.parseInt(collectionIdString);
+				MovieCollection movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());
+				Set<Movie> movies = movieService.getMoviesForCollection(collectionId, principal.getName());
+				List<String> attributeKeys = movieService.getAttributeKeysForCollection(collectionId, principal.getName());
+				excelPorter.addSheet(movieCollection, movies, attributeKeys);
+			}
+			excelPorter.closeWorkbook(response.getOutputStream());
+			response.flushBuffer();
+		} catch (Exception e) {
+			LOGGER.error("Unable to export collections to Excel.", e);
+		}
 	}
 }

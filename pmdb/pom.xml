@@ -13,6 +13,7 @@
 		<org.springframework.version>5.2.5.RELEASE</org.springframework.version>
 		<org.springframework.security.version>5.2.3.RELEASE</org.springframework.security.version>
 		<jersey.version>2.26</jersey.version>
+		<apache.poi.version>4.1.2</apache.poi.version>
 		<failOnMissingWebXml>false</failOnMissingWebXml>
 	</properties>
 	<dependencies>
@@ -101,6 +102,26 @@
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-jaxb</artifactId>
 			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>${apache.poi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>${apache.poi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml-schemas</artifactId>
+			<version>${apache.poi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-scratchpad</artifactId>
+			<version>${apache.poi.version}</version>
 		</dependency>
 	</dependencies>
 	<build>

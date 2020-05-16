@@ -73,6 +73,26 @@
 				</div>
 			</div>
 		</div>
+		<div th:fragment="selectMultiple (label, fieldName, options)">
+			<div class="form-group">
+				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
+				<div class="col-md-8">
+					<select th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" multiple="multiple" class="form-control">
+						<option th:each="option : ${options}" th:value="${option.value}" th:text="${option.text}">option</option>
+					</select>
+				</div>
+			</div>
+		</div>
+		<div th:fragment="radio (fieldName, options)">
+			<div class="form-group">
+				<div class="col-md-offset-4 col-md-8">
+						<div th:each="option : ${options}" class="radio">
+							<input th:id="${fieldName} + '-' + ${option.value}" type="radio" th:field="*{__${fieldName}__}" th:value="${option.value}"/>
+							<label th:for="${fieldName} + '-' + ${option.value}" th:text="${option.text}">Option</label>
+						</div>
+				</div>
+			</div>
+		</div>
 		<div th:fragment="hidden (fieldName)">
 			<input type="hidden" th:field="*{__${fieldName}__}"/>
 		</div>
