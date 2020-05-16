@@ -44,7 +44,7 @@
 					</tbody>
 				</table>
 			</div>
-			<div id="confirmDeleteDialog" title="Confirm Delete">
+			<div th:if="${defaultMovieCollection.editable and editMode}" id="confirmDeleteDialog" title="Confirm Delete">
 				<p>Are you sure you wish to delete this movie?</p>
 			</div>
 			<script th:if="${defaultMovieCollection.editable and editMode}" type="text/javascript">
