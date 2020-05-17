@@ -1,16 +1,22 @@
 package org.xandercat.pmdb.dao;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowCallbackHandler;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.MovieCollection;
 
@@ -67,17 +73,20 @@ public class CollectionDaoImpl implements CollectionDao {
 	}
 
 	@Override
+	@Transactional
 	public void addMovieCollection(MovieCollection movieCollection) {
 		final String sql = "INSERT INTO collection (name, owner) VALUES (?, ?)";
-		final String getIdSql = "SELECT LAST_INSERT_ID()";
-		jdbcTemplate.update(sql, new PreparedStatementSetter() {
+		KeyHolder keyHolder = new GeneratedKeyHolder();
+		jdbcTemplate.update(new PreparedStatementCreator() {
 			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
+			public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+				PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 				ps.setString(1, movieCollection.getName());
-				ps.setString(2, movieCollection.getOwner());
+				ps.setString(2, movieCollection.getOwner());				
+				return ps;
 			}
-		});
-		int collectionId = jdbcTemplate.queryForObject(getIdSql, Integer.class);
+		}, keyHolder);
+		int collectionId = keyHolder.getKey().intValue();
 		shareCollection(collectionId, movieCollection.getOwner(), true);
 		acceptShareOffer(collectionId, movieCollection.getOwner());
 		movieCollection.setId(collectionId);
@@ -96,8 +105,8 @@ public class CollectionDaoImpl implements CollectionDao {
 	}
 
 	@Override
+	@Transactional
 	public void deleteMovieCollection(int collectionId) {
-		// TODO: should do these three operations as a transaction
 		final String sql = "DELETE FROM collection WHERE id = ?";
 		final String shareSql = "DELETE FROM collection_permission WHERE collection_id = ?";
 		final String defSql = "DELETE FROM collection_default WHERE collection_id = ?";
@@ -149,6 +158,7 @@ public class CollectionDaoImpl implements CollectionDao {
 	}
 
 	@Override
+	@Transactional
 	public boolean unshareCollection(int collectionId, String username) {
 		final String sql = "DELETE FROM collection_permission WHERE collection_id = ? AND username = ?";
 		final String defSql = "DELETE FROM collection_default WHERE collection_id = ? AND username = ?"; // may or may not exist
@@ -216,6 +226,7 @@ public class CollectionDaoImpl implements CollectionDao {
 	}
 
 	@Override
+	@Transactional
 	public List<CollectionPermission> getCollectionPermissions(int collectionId) {
 		final String ownerSql = "SELECT owner FROM collection WHERE id = ?";
 		String owner = jdbcTemplate.queryForObject(ownerSql, String.class, collectionId);

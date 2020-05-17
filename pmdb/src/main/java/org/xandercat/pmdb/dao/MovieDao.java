@@ -1,5 +1,6 @@
 package org.xandercat.pmdb.dao;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +17,8 @@ public interface MovieDao {
 	public Movie getMovie(int id);
 	
 	public void addMovie(Movie movie);
+	
+	public void addMovies(Collection<Movie> movies);
 	
 	public void updateMovie(Movie movie);
 	

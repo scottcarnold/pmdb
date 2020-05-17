@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +20,8 @@ import org.xandercat.pmdb.util.ExcelPorter;
 @Component
 public class CollectionServiceImpl implements CollectionService {
 
+	private static final Logger LOGGER = LogManager.getLogger(CollectionServiceImpl.class);
+	
 	@Autowired
 	private CollectionDao collectionDao;
 	
@@ -164,11 +168,13 @@ public class CollectionServiceImpl implements CollectionService {
 
 	@Override
 	public void importCollection(MultipartFile mFile, String collectionName, List<String> sheetNames, List<String> columnNames, String callingUsername) throws IOException {
+		long startTime = System.currentTimeMillis();
 		ExcelPorter excelImporter = new ExcelPorter(mFile.getInputStream(), mFile.getOriginalFilename());
 		List<Movie> movies = new ArrayList<Movie>();
 		for (String sheetName : sheetNames) {
 			movies.addAll(excelImporter.getMoviesForSheet(sheetName, columnNames));
 		}
+		long parseTime = System.currentTimeMillis();
 		MovieCollection movieCollection = new MovieCollection();
 		movieCollection.setName(collectionName);
 		movieCollection.setOwner(callingUsername, callingUsername);
@@ -176,7 +182,9 @@ public class CollectionServiceImpl implements CollectionService {
 		collectionDao.addMovieCollection(movieCollection);
 		for (Movie movie : movies) {
 			movie.setCollectionId(movieCollection.getId());
-			movieDao.addMovie(movie);
 		}
+		movieDao.addMovies(movies);
+		long storeTime = System.currentTimeMillis();
+		LOGGER.info("Time to parse: " + String.valueOf(parseTime - startTime) + "ms; Time to store: " + String.valueOf(storeTime - parseTime) + " ms");
 	}
 }

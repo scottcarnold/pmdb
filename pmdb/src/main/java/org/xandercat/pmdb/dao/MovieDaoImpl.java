@@ -1,9 +1,12 @@
 package org.xandercat.pmdb.dao;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,9 +15,13 @@ import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowCallbackHandler;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.util.CIString;
 import org.xandercat.pmdb.util.format.FormatUtil;
@@ -119,24 +126,40 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
+	@Transactional
 	public void addMovie(Movie movie) {
+		addMovieInternal(movie);
+	}
+	
+	@Override
+	@Transactional
+	public void addMovies(Collection<Movie> movies) {
+		for (Movie movie : movies) {
+			addMovieInternal(movie);
+		}
+	}
+	
+	private void addMovieInternal(Movie movie) {
 		final String sql = "INSERT INTO movie(title, collection_id) VALUES (?, ?)";
-		final String getIdSql = "SELECT LAST_INSERT_ID()";
-		jdbcTemplate.update(sql, new PreparedStatementSetter() {
+		KeyHolder keyHolder = new GeneratedKeyHolder();
+		jdbcTemplate.update(new PreparedStatementCreator() {
 			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
+			public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+				PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 				ps.setString(1, movie.getTitle());
 				ps.setInt(2, movie.getCollectionId());
+				return ps;
 			}
-		});
-		int id = jdbcTemplate.queryForObject(getIdSql, Integer.class);
+		}, keyHolder);
+		int id = keyHolder.getKey().intValue();
 		movie.setId(id);
 		for (Map.Entry<CIString, String> entry : movie.getAttributes().entrySet()) {
 			addMovieAttribute(id, entry.getKey().toString(), entry.getValue());
 		}
 	}
-
+	
 	@Override
+	@Transactional
 	public void updateMovie(Movie movie) {
 		final String sql = "UPDATE movie SET title = ? WHERE id = ?";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
@@ -311,6 +334,7 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
+	@Transactional
 	public void reorderTableColumnPreference(int sourceIdx, int targetIdx, String username) {
 		if (sourceIdx == targetIdx) {
 			return;
