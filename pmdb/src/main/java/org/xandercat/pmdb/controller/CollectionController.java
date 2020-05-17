@@ -1,7 +1,6 @@
 package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -14,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.MimeTypeUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,7 +23,6 @@ import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.CollectionSharingException;
-import org.xandercat.pmdb.form.Option;
 import org.xandercat.pmdb.form.collection.CollectionForm;
 import org.xandercat.pmdb.form.collection.ExportForm;
 import org.xandercat.pmdb.form.collection.ExportType;
@@ -291,16 +288,29 @@ public class CollectionController {
 	
 	@RequestMapping("/collections/export")
 	public String export(Model model, Principal principal) {
-		model.addAttribute("exportForm", new ExportForm());
 		List<MovieCollection> movieCollections = collectionService.getViewableMovieCollections(principal.getName());
+		if (movieCollections.size() == 0) {
+			ViewUtil.setErrorMessage(model, "There are no collections that can be exported.");
+			return collections(model, principal);
+		}
+		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		int exportCollectionId = movieCollections.get(0).getId();
+		if (defaultMovieCollection != null) {
+			exportCollectionId = defaultMovieCollection.getId();
+		}
+		model.addAttribute("exportForm", new ExportForm(exportCollectionId, ExportType.XLSX));
 		model.addAttribute("collectionOptions", ViewUtil.getOptions(movieCollections, "id", "name"));
 		model.addAttribute("typeOptions", ViewUtil.getOptions(ExportType.class));
 		return "collection/export";
 	}
 	
 	@RequestMapping(value="/collections/exportSubmit", method=RequestMethod.POST)
-	public void exportSubmit(Model model, Principal principal,
+	public String exportSubmit(Model model, Principal principal,
 			@ModelAttribute("exportForm") ExportForm exportForm, HttpServletResponse response) {
+		if (exportForm.getCollections() == null || exportForm.getCollections().size() == 0) {
+			ViewUtil.setErrorMessage(model, "You must select at least 1 collection to export.");
+			return export(model, principal);
+		}
 		try {
 			ExportType exportType = ExportType.valueOf(exportForm.getType());
 			ExcelPorter.Format format = ExcelPorter.Format.XLSX;
@@ -323,6 +333,7 @@ public class CollectionController {
 		} catch (Exception e) {
 			LOGGER.error("Unable to export collections to Excel.", e);
 		}
+		return export(model, principal);
 	}
 	
 	@RequestMapping("/collections/import")
