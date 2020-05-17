@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -87,28 +88,27 @@ public class ImdbSearchController {
 		return "imdbsearch/imdbSearch";
 	}
 	
-	@RequestMapping("/imdbsearch/addToCollection")
+	@RequestMapping(value="/imdbsearch/addToCollection", produces=MediaType.APPLICATION_JSON_VALUE)
 	public String addToCollection(Model model, Principal principal, @RequestParam String imdbId) {
 		LOGGER.info("Add To Collection called with ID " + imdbId);
 		MovieDetails movieDetails = null;
 		try {
 			movieDetails = imdbSearchService.getMovieDetails(imdbId);
 		} catch (ServiceLimitExceededException e1) {
-			//TODO: Replace this with AJAX
-			ViewUtil.setErrorMessage(model, "Blah");
-			return imdbSearch(model);
+			return ViewUtil.ajaxResponse(model, 
+					"Service limit exceeded. You will not be able to add any more movies to your collection today through the IMDB Search function.",
+					new String[] {"imdbId"}, new String[] {imdbId});
 		}
 		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		Movie movie = new Movie(movieDetails, movieCollection.getId());
 		try {
 			movieService.addMovie(movie, principal.getName());
-			//ViewUtil.setMessage(model, "Movie added to active movie collection.");
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to add IMDB movie to collection.", e);
-			//ViewUtil.setErrorMessage(model, "Unable to add IMDB movie to collection.");
+			return ViewUtil.ajaxResponse(model, 
+					"You cannot add movies to the collection.",
+					new String[] {"imdbId"}, new String[] {imdbId});
 		}
-		model.addAttribute("response", imdbId);
-		return "ajax/response";
-		//return imdbSearch(model);
+		return ViewUtil.ajaxResponse(model, new String[] {"imdbId"}, new String[] {imdbId});
 	}
 }

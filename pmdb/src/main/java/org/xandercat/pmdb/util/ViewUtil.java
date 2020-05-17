@@ -2,13 +2,16 @@ package org.xandercat.pmdb.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpSession;
 
 import org.springframework.ui.Model;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.form.Option;
 import org.xandercat.pmdb.service.CollectionService;
 
@@ -136,5 +139,51 @@ public class ViewUtil {
 			options.add(new Option(s, s));
 		}
 		return options;
+	}
+	
+	public static String ajaxResponse(Model model, String errorMessage, String[] keys, String[] values) {
+		Map<String, String> responseValues = new HashMap<String, String>();
+		for (int i=0; i<keys.length; i++) {
+			responseValues.put(keys[i], values[i]);
+		}
+		return ajaxResponse(model, errorMessage, responseValues);
+	}
+	
+	//TODO: Replace the raw construction of a JSON response with a JSON framework generated response
+	public static String ajaxResponse(Model model, String errorMessage, Map<String, String> responseValues) {
+		if (StringUtils.isEmptyOrWhitespace(errorMessage)) {
+			model.addAttribute("isOk", "true");
+			model.addAttribute("errorMessage", errorMessage);
+		} else {
+			model.addAttribute("isOk", "false");
+			model.addAttribute("errorMessage", "");
+		}		
+		if (responseValues == null || responseValues.size() == 0) {
+			model.addAttribute("content", "\"\"");
+		} else {
+			StringBuilder sb = new StringBuilder();
+			sb.append("{");
+			boolean first = true;
+			for (Map.Entry<String, String> entry : responseValues.entrySet()) {
+				if (first) {
+					first = false;
+				} else {
+					sb.append(", ");
+				}
+				//TODO: both key and value need to be escaped
+				sb.append("\"").append(entry.getKey()).append("\" : \"").append(entry.getValue()).append("\"");
+			}
+			sb.append("}");
+			model.addAttribute("content", sb.toString());
+		}
+		return "ajax/response";
+	}
+	
+	public static String ajaxResponse(Model model, Map<String, String> responseValues) {
+		return ajaxResponse(model, null, responseValues);
+	}
+	
+	public static String ajaxResponse(Model model, String[] keys, String[] values) {
+		return ajaxResponse(model, null, keys, values);
 	}
 }
