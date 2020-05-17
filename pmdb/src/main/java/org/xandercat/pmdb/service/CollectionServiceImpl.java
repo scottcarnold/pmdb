@@ -1,14 +1,19 @@
 package org.xandercat.pmdb.service;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 import org.xandercat.pmdb.dao.CollectionDao;
 import org.xandercat.pmdb.dao.MovieDao;
 import org.xandercat.pmdb.dto.CollectionPermission;
+import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.util.ExcelPorter;
 
 @Component
 public class CollectionServiceImpl implements CollectionService {
@@ -155,5 +160,23 @@ public class CollectionServiceImpl implements CollectionService {
 			throw new CollectionSharingException("User can only view sharing permissions of collections they are the owner of.");
 		}
 		return collectionDao.getCollectionPermission(collectionId, username);
+	}
+
+	@Override
+	public void importCollection(MultipartFile mFile, String collectionName, List<String> sheetNames, List<String> columnNames, String callingUsername) throws IOException {
+		ExcelPorter excelImporter = new ExcelPorter(mFile.getInputStream(), mFile.getOriginalFilename());
+		List<Movie> movies = new ArrayList<Movie>();
+		for (String sheetName : sheetNames) {
+			movies.addAll(excelImporter.getMoviesForSheet(sheetName, columnNames));
+		}
+		MovieCollection movieCollection = new MovieCollection();
+		movieCollection.setName(collectionName);
+		movieCollection.setOwner(callingUsername, callingUsername);
+		movieCollection.setEditable(true);
+		collectionDao.addMovieCollection(movieCollection);
+		for (Movie movie : movies) {
+			movie.setCollectionId(movieCollection.getId());
+			movieDao.addMovie(movie);
+		}
 	}
 }

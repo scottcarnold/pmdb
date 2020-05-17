@@ -8,7 +8,7 @@
 		<div layout:fragment="content">
 			<h1>Movie Collections: Export</h1>
 			<form th:action="@{/collections/exportSubmit}" th:object="${exportForm}" method="post" class="form-horizontal">
-				<div th:replace="form/input :: selectMultiple('Collection', 'collections', ${collectionOptions})"></div>
+				<div th:replace="form/input :: selectMultiple('Collection', 'collections', ${collectionOptions}, 5)"></div>
 				<div th:replace="form/input :: radio('type', ${typeOptions})"></div>
 				<div th:replace="form/input :: submit('Export')"></div>
 			</form>

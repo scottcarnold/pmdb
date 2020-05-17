@@ -31,8 +31,9 @@
 					</thead>
 					<tbody>
 					<tr th:each="movie : ${movies}">
-						<td th:text="${movie.title}" th:attr="data-order='__${movie.title}__'">Movie Title</td>
-						<td th:each="columnName : ${attrColumns}" th:text="${movie.getAttributeDisplayValue('__${columnName}__')}" th:attr="data-order='' + ${movie.getAttributeSortValue('__${columnName}__')}"></td>
+						<td th:text="${movie.title}" th:attr="data-order=${movie.title}">Movie Title</td>
+						<!--/* System wide, attribute names are not allowed to have special characters, so it's safe to preprocess the column names */-->
+						<td th:each="columnName : ${attrColumns}" th:text="${movie.getAttributeDisplayValue('__${columnName}__')}" th:attr="data-order=${movie.getAttributeSortValue('__${columnName}__')}"></td>
 						<td th:if="${defaultMovieCollection.editable and editMode}">
 							<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/editMovie(movieId=${movie.id})}" class="btn btn-default" role="button">Edit</a> 
 							<form th:if="${defaultMovieCollection.editable}" th:action="@{/movies/deleteMovie}" method="post" style="display: inline">

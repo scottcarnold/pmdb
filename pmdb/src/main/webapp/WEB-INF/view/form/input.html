@@ -82,13 +82,14 @@
 				</div>
 			</div>
 		</div>
-		<div th:fragment="selectMultiple (label, fieldName, options)">
+		<div th:fragment="selectMultiple (label, fieldName, options, size)">
 			<div class="form-group">
 				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
 				<div class="col-md-8">
-					<select th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" multiple="multiple" class="form-control">
+					<select th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" multiple="multiple" class="form-control" th:attr="size='__${size}__'">
 						<option th:each="option : ${options}" th:value="${option.value}" th:text="${option.text}">option</option>
 					</select>
+					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}" class="fieldErrorMessage">Errors</p>
 				</div>
 			</div>
 		</div>

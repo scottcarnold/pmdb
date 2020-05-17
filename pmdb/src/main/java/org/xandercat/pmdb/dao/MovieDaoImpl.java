@@ -17,6 +17,7 @@ import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Component;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.util.CIString;
+import org.xandercat.pmdb.util.format.FormatUtil;
 
 @Component
 public class MovieDaoImpl implements MovieDao {
@@ -199,6 +200,10 @@ public class MovieDaoImpl implements MovieDao {
 	}
 	
 	public void addMovieAttribute(int id, String key, String value) {
+		if (!FormatUtil.isAlphaNumeric(key, false)) {
+			// due to need to pass keys around in templates and elsewhere, make life easier by enforcing no special characters in attribute keys
+			throw new IllegalArgumentException("Attribute keys must be alphanumeric, containing only letters, numbers, and spaces.");
+		}
 		final String sql = "INSERT INTO movie_attributes (movie_id, attribute_name, attribute_value) VALUES (?, ?, ?)";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override

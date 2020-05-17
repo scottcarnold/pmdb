@@ -1,7 +1,9 @@
 package org.xandercat.pmdb.service;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
 import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.exception.CollectionSharingException;
@@ -42,4 +44,5 @@ public interface CollectionService {
 	
 	public CollectionPermission getCollectionPermission(int collectionId, String username, String callingUsername) throws CollectionSharingException;
 	
+	public void importCollection(MultipartFile mFile, String collectionName, List<String> sheetNames, List<String> columnNames, String callingUsername) throws IOException;
 }

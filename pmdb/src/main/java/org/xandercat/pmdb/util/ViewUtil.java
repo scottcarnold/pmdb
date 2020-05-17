@@ -23,6 +23,8 @@ public class ViewUtil {
 	public static String SESSION_NUM_SHARE_OFFERS_KEY = "numShareOffers";
 	public static String SESSION_MOVIES_EDIT_MODE_KEY = "moviesEditMode";
 	public static String SESSION_COLLECTION_UPLOAD_FILE = "importedCollectionFile";
+	public static String SESSION_COLLECTION_UPLOAD_SHEETS = "importedCollectionSheetNames";
+	public static String SESSION_COLLECTION_UPLOAD_COLUMNS = "importedCollectionColumnNames";
 	
 	public static void setErrorMessage(Model model, String errorMessage) {
 		model.addAttribute("alertErrorMessage", errorMessage);
@@ -60,13 +62,26 @@ public class ViewUtil {
 	public static MultipartFile getImportedCollectionFile(HttpSession session) {
 		return (MultipartFile) session.getAttribute(SESSION_COLLECTION_UPLOAD_FILE);
 	}
+
+	@SuppressWarnings("unchecked")
+	public static List<String> getImportedCollectionSheets(HttpSession session) {
+		return (List<String>) session.getAttribute(SESSION_COLLECTION_UPLOAD_SHEETS);
+	}
 	
-	public static void setImportedCollectionFile(HttpSession session, MultipartFile multipartFile) {
+	@SuppressWarnings("unchecked")
+	public static List<String> getImportedCollectionColumns(HttpSession session) {
+		return (List<String>) session.getAttribute(SESSION_COLLECTION_UPLOAD_COLUMNS);
+	}
+	public static void setImportedCollectionFile(HttpSession session, MultipartFile multipartFile, List<String> sheets, List<String> columns) {
 		session.setAttribute(SESSION_COLLECTION_UPLOAD_FILE, multipartFile);
+		session.setAttribute(SESSION_COLLECTION_UPLOAD_SHEETS, sheets);
+		session.setAttribute(SESSION_COLLECTION_UPLOAD_COLUMNS, columns);
 	}
 	
 	public static void clearImportedCollectionFile(HttpSession session) {
 		session.removeAttribute(SESSION_COLLECTION_UPLOAD_FILE);
+		session.removeAttribute(SESSION_COLLECTION_UPLOAD_SHEETS);
+		session.removeAttribute(SESSION_COLLECTION_UPLOAD_COLUMNS);
 	}
 	
 	/**
@@ -108,6 +123,13 @@ public class ViewUtil {
 		return options;
 	}
 	
+	/**
+	 * Shortcut method to return list of options for the given collection of strings.  Each String 
+	 * will be used for both the value and text of it's returned option.
+	 * 
+	 * @param strings strings to create options for
+	 * @return options for the strings
+	 */
 	public static List<Option> getOptions(Collection<String> strings) {
 		List<Option> options = new ArrayList<Option>();
 		for (String s : strings) {

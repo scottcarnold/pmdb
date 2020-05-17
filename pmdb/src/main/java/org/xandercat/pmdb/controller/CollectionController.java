@@ -350,20 +350,48 @@ public class CollectionController {
 	public String importCollectionsSubmit(Model model, Principal principal, HttpSession session,
 			@ModelAttribute("importForm") ImportForm importForm) {
 		MultipartFile mFile = importForm.getFile();
+		List<String> sheetNames = null;
+		List<String> columnNames = null;
 		try {
 			ExcelPorter excelPorter = new ExcelPorter(mFile.getInputStream(), mFile.getOriginalFilename());
 			if (excelPorter.getSheetNames().size() == 0) {
 				ViewUtil.setErrorMessage(model, "Unable to find movies table on any of the workbook sheets.  Make sure your movies table has a header row and that the header for the movie title has the word \"title\" in it.");
 				return importCollections(model, principal);
 			}
-			model.addAttribute("sheetOptions", ViewUtil.getOptions(excelPorter.getSheetNames()));
-			model.addAttribute("columnOptions", ViewUtil.getOptions(excelPorter.getAllColumnNames()));
-			model.addAttribute("importOptionsForm", new ImportOptionsForm());
+			sheetNames = excelPorter.getSheetNames();
+			columnNames = excelPorter.getAllColumnNames();
+			model.addAttribute("sheetOptions", ViewUtil.getOptions(sheetNames));
+			model.addAttribute("columnOptions", ViewUtil.getOptions(columnNames));
+			model.addAttribute("importOptionsForm", new ImportOptionsForm(excelPorter.getSheetNames(), excelPorter.getAllColumnNames()));
 		} catch (IOException ioe) {
 			ViewUtil.setErrorMessage(model, "File could not be successfully uploaded.");
 			return importCollections(model, principal);
 		}
-		ViewUtil.setImportedCollectionFile(session, mFile);
+		ViewUtil.setImportedCollectionFile(session, mFile, sheetNames, columnNames);
 		return "collection/importOptions";
+	}
+	
+	@RequestMapping("/collections/importOptionsSubmit")
+	public String importOptionsSubmit(Model model, Principal principal, HttpSession session,
+			@ModelAttribute("importOptionsForm") @Valid ImportOptionsForm importOptionsForm,
+			BindingResult result) {
+		if (result.hasErrors()) {
+			List<String> sheets = ViewUtil.getImportedCollectionSheets(session);
+			List<String> columns = ViewUtil.getImportedCollectionColumns(session);
+			model.addAttribute("sheetOptions", ViewUtil.getOptions(sheets));
+			model.addAttribute("columnOptions", ViewUtil.getOptions(columns));
+			return "collection/importOptions";
+		}
+		MultipartFile mFile = ViewUtil.getImportedCollectionFile(session);
+		try {
+			collectionService.importCollection(mFile, importOptionsForm.getCollectionName(), 
+					importOptionsForm.getSheetNames(), importOptionsForm.getColumnNames(), principal.getName());
+			ViewUtil.setMessage(model, "Collection imported.");
+		} catch (IOException e) {
+			LOGGER.error("Unable to import collection from Excel.", e);
+			ViewUtil.setErrorMessage(model, "Your collection could not be imported.");
+		}
+		ViewUtil.clearImportedCollectionFile(session);
+		return collections(model, principal);
 	}
 }
