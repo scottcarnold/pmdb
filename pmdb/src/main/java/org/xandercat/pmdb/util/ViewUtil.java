@@ -7,6 +7,8 @@ import java.util.List;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.ui.Model;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.xandercat.pmdb.form.Option;
 import org.xandercat.pmdb.service.CollectionService;
 
@@ -20,9 +22,14 @@ public class ViewUtil {
 	
 	public static String SESSION_NUM_SHARE_OFFERS_KEY = "numShareOffers";
 	public static String SESSION_MOVIES_EDIT_MODE_KEY = "moviesEditMode";
+	public static String SESSION_COLLECTION_UPLOAD_FILE = "importedCollectionFile";
 	
 	public static void setErrorMessage(Model model, String errorMessage) {
 		model.addAttribute("alertErrorMessage", errorMessage);
+	}
+	
+	public static void setErrorMessage(RedirectAttributes redirectAttributes, String errorMessage) {
+		redirectAttributes.addFlashAttribute("alertErrorMessage", errorMessage);
 	}
 	
 	public static void setMessage(Model model, String message) {
@@ -48,6 +55,18 @@ public class ViewUtil {
 		} else {
 			session.removeAttribute(SESSION_MOVIES_EDIT_MODE_KEY);
 		}
+	}
+	
+	public static MultipartFile getImportedCollectionFile(HttpSession session) {
+		return (MultipartFile) session.getAttribute(SESSION_COLLECTION_UPLOAD_FILE);
+	}
+	
+	public static void setImportedCollectionFile(HttpSession session, MultipartFile multipartFile) {
+		session.setAttribute(SESSION_COLLECTION_UPLOAD_FILE, multipartFile);
+	}
+	
+	public static void clearImportedCollectionFile(HttpSession session) {
+		session.removeAttribute(SESSION_COLLECTION_UPLOAD_FILE);
 	}
 	
 	/**
@@ -85,6 +104,14 @@ public class ViewUtil {
 		List<Option> options = new ArrayList<Option>();
 		for (Enum<?> e : enumType.getEnumConstants()) {
 			options.add(new Option(e.name(), e.toString()));
+		}
+		return options;
+	}
+	
+	public static List<Option> getOptions(Collection<String> strings) {
+		List<Option> options = new ArrayList<Option>();
+		for (String s : strings) {
+			options.add(new Option(s, s));
 		}
 		return options;
 	}

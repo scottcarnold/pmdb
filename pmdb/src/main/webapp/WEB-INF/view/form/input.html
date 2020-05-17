@@ -64,6 +64,15 @@
 				</div>
 			</div>
 		</div>
+		<div th:fragment="file (label, fieldName)">
+			<div class="form-group">
+				<label for="inputId" th:attr="for=${fieldName} + '-input'" th:text="${label}" class="col-md-4 control-label">Label</label>
+				<div class="col-md-8">
+					<input type="file" th:id="${fieldName} + '-input'" th:field="*{__${fieldName}__}" class="form-control" th:errorclass="fieldError"/>
+					<p th:if="${#fields.hasErrors('__${fieldName}__')}" th:errors="*{__${fieldName}__}" class="fieldErrorMessage">Errors</p>
+				</div>
+			</div>
+		</div>
 		<div th:fragment="checkbox (label, fieldName)">
 			<div class="form-group">
 				<div class="col-md-offset-4 col-md-8">

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/layout}">
+	<head>
+		<title>PMDB</title>
+	</head>
+	<body>
+		<h1>EXPORT COLLECTION PAGE</h1>
+		<div layout:fragment="content">
+			<h1>Movie Collections: Import Options</h1>
+			<form th:action="@{/collections/importOptionsSubmit}" th:object="${importOptionsForm}" method="post" class="form-horizontal">
+				<div th:replace="form/input :: text('Movie Collection Name', 'collectionName')"></div>
+				<div th:replace="form/input :: selectMultiple('Include Sheets', 'sheetNames', ${sheetOptions})"></div>
+				<div th:replace="form/input :: selectMultiple('Include Columns', 'columnNames', ${columnOptions})"></div>
+				<div th:replace="form/input :: submit('Export')"></div>
+			</form>
+		</div>
+	</body>
+</html>

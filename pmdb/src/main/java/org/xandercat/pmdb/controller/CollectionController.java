@@ -1,5 +1,6 @@
 package org.xandercat.pmdb.controller;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 import java.util.Set;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
@@ -26,6 +28,8 @@ import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.form.collection.CollectionForm;
 import org.xandercat.pmdb.form.collection.ExportForm;
 import org.xandercat.pmdb.form.collection.ExportType;
+import org.xandercat.pmdb.form.collection.ImportForm;
+import org.xandercat.pmdb.form.collection.ImportOptionsForm;
 import org.xandercat.pmdb.form.collection.ShareCollectionForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.MovieService;
@@ -328,7 +332,7 @@ public class CollectionController {
 				List<String> attributeKeys = movieService.getAttributeKeysForCollection(collectionId, principal.getName());
 				excelPorter.addSheet(movieCollection, movies, attributeKeys);
 			}
-			excelPorter.closeWorkbook(response.getOutputStream());
+			excelPorter.writeWorkbook(response.getOutputStream());
 			response.flushBuffer();
 		} catch (Exception e) {
 			LOGGER.error("Unable to export collections to Excel.", e);
@@ -338,8 +342,28 @@ public class CollectionController {
 	
 	@RequestMapping("/collections/import")
 	public String importCollections(Model model, Principal principal) {
-		ViewUtil.setErrorMessage(model, "Import functionality has not been implemented yet.");
-		return collections(model, principal);
-		//return "collection/import";
+		model.addAttribute("importForm", new ImportForm());
+		return "collection/import";
+	}
+	
+	@RequestMapping("/collections/importSubmit")
+	public String importCollectionsSubmit(Model model, Principal principal, HttpSession session,
+			@ModelAttribute("importForm") ImportForm importForm) {
+		MultipartFile mFile = importForm.getFile();
+		try {
+			ExcelPorter excelPorter = new ExcelPorter(mFile.getInputStream(), mFile.getOriginalFilename());
+			if (excelPorter.getSheetNames().size() == 0) {
+				ViewUtil.setErrorMessage(model, "Unable to find movies table on any of the workbook sheets.  Make sure your movies table has a header row and that the header for the movie title has the word \"title\" in it.");
+				return importCollections(model, principal);
+			}
+			model.addAttribute("sheetOptions", ViewUtil.getOptions(excelPorter.getSheetNames()));
+			model.addAttribute("columnOptions", ViewUtil.getOptions(excelPorter.getAllColumnNames()));
+			model.addAttribute("importOptionsForm", new ImportOptionsForm());
+		} catch (IOException ioe) {
+			ViewUtil.setErrorMessage(model, "File could not be successfully uploaded.");
+			return importCollections(model, principal);
+		}
+		ViewUtil.setImportedCollectionFile(session, mFile);
+		return "collection/importOptions";
 	}
 }

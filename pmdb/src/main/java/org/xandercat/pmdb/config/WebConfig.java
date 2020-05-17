@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -63,7 +65,7 @@ public class WebConfig implements WebMvcConfigurer {
 	
 	@Bean
 	public SpringResourceTemplateResolver templateResolver() {
-		LOGGER.info("WebConfig templateResolver bean creation called");
+		LOGGER.debug("WebConfig templateResolver bean creation called");
 		SpringResourceTemplateResolver templateResolver = new SpringResourceTemplateResolver();
 		templateResolver.setApplicationContext(applicationContext);
 		templateResolver.setTemplateMode(TemplateMode.HTML); // should be default; just being more explicit here
@@ -74,7 +76,7 @@ public class WebConfig implements WebMvcConfigurer {
 	
 	@Bean
 	public SpringTemplateEngine templateEngine(SpringResourceTemplateResolver templateResolver) {
-		LOGGER.info("WebConfig templateEngine bean creation called");
+		LOGGER.debug("WebConfig templateEngine bean creation called");
 		SpringTemplateEngine templateEngine = new SpringTemplateEngine();
 		templateEngine.setTemplateResolver(templateResolver);
 		templateEngine.addDialect(new LayoutDialect()); // for Thymeleaf hierarchical layout
@@ -83,15 +85,20 @@ public class WebConfig implements WebMvcConfigurer {
 		return templateEngine;
 	}
 	
+	@Bean
+	public MultipartResolver multipartResolver() {
+		return new StandardServletMultipartResolver(); // for file upload support
+	}
+	
 	@Override
 	public void addViewControllers(ViewControllerRegistry registry) {
-		LOGGER.info("WebConfig addViewControllers called");
+		LOGGER.debug("WebConfig addViewControllers called");
 		//registry.addViewController("/").setViewName("home");  // can essentially set up noop controllers with this if desired
 	}
 
 	@Override
 	public void configureViewResolvers(ViewResolverRegistry registry) {
-		LOGGER.info("WebConfig configureViewResolvers called");
+		LOGGER.debug("WebConfig configureViewResolvers called");
 		ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
 		SpringTemplateEngine templateEngine = applicationContext.getBean(SpringTemplateEngine.class);
 		if (templateEngine == null) {

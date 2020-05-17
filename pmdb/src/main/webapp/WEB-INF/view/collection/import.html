@@ -7,8 +7,8 @@
 		<h1>IMPORT COLLECTION PAGE</h1>
 		<div layout:fragment="content">
 			<h1>Movie Collections: Import</h1>
-			<form th:action="@{/collections/importSubmit}" th:object="${importForm}" method="post" class="form-horizontal">
-				
+			<form th:action="@{/collections/importSubmit}" th:object="${importForm}" method="post" enctype="multipart/form-data" class="form-horizontal">
+				<div th:replace="form/input :: file('Excel File', 'file')"></div>
 				<div th:replace="form/input :: submit('Import')"></div>
 			</form>
 		</div>
