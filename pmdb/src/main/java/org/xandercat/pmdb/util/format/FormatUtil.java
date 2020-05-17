@@ -18,8 +18,8 @@ public class FormatUtil {
 		final String acceptableCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ";
 		StringBuilder sb = new StringBuilder();
 		for (int i=0; i<s.length(); i++) {
-			if (acceptableCharacters.indexOf(sb.charAt(i)) > 0) {
-				sb.append(sb.charAt(i));
+			if (acceptableCharacters.indexOf(s.charAt(i)) > 0) {
+				sb.append(s.charAt(i));
 			}
 		}
 		return sb.toString();

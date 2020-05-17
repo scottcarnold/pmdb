@@ -387,7 +387,7 @@ public class CollectionController {
 			collectionService.importCollection(mFile, importOptionsForm.getCollectionName(), 
 					importOptionsForm.getSheetNames(), importOptionsForm.getColumnNames(), principal.getName());
 			ViewUtil.setMessage(model, "Collection imported.");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			LOGGER.error("Unable to import collection from Excel.", e);
 			ViewUtil.setErrorMessage(model, "Your collection could not be imported.");
 		}

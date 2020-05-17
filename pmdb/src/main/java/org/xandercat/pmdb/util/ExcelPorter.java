@@ -233,7 +233,7 @@ public class ExcelPorter {
 						CIString ciHeading = new CIString(heading);
 						int dupIdx = 2;
 						while (headers.contains(ciHeading)) {
-							heading = origHeading + " (" + dupIdx + ")";
+							heading = origHeading + " " + dupIdx;
 							ciHeading = new CIString(heading);
 							dupIdx++;
 						}
