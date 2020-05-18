@@ -16,7 +16,6 @@ public class JsonResponseTest {
 		JsonResponse jsonResponse = new JsonResponse();
 		jsonResponse.setContent(jsonContent);
 		String mr = new ObjectMapper().writeValueAsString(jsonResponse);
-		System.out.println(mr);
 		assertEquals("{\"ok\":true,\"errorMessage\":null,\"content\":{\"one\":\"two\"}}", mr);
 	}
 

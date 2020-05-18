@@ -92,7 +92,7 @@ public class ImdbSearchController {
 	
 	@RequestMapping(value="/imdbsearch/addToCollection", produces=MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody JsonResponse addToCollection(Model model, Principal principal, @RequestParam String imdbId) {
-		LOGGER.info("Add To Collection called with ID " + imdbId);
+		LOGGER.debug("Add To Collection called with ID " + imdbId);
 		JsonResponse response = new JsonResponse();
 		response.put("imdbId", imdbId);
 		MovieDetails movieDetails = null;
