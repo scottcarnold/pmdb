@@ -1,5 +1,6 @@
 package org.xandercat.pmdb.config;
 
+import java.util.List;
 import java.util.Locale;
 
 import org.apache.logging.log4j.LogManager;
@@ -11,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import org.springframework.web.servlet.LocaleResolver;
@@ -27,6 +30,8 @@ import org.thymeleaf.spring5.SpringTemplateEngine;
 import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 import org.thymeleaf.templatemode.TemplateMode;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import nz.net.ultraq.thymeleaf.LayoutDialect;
 
@@ -107,7 +112,14 @@ public class WebConfig implements WebMvcConfigurer {
 		viewResolver.setTemplateEngine(templateEngine);
 		registry.viewResolver(viewResolver);
 	}
-
+	
+	@Override
+	public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+		ObjectMapper objectMapper = new ObjectMapper();
+		MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper); // for JSON responses
+		converters.add(converter);
+	}
+	
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		LocaleChangeInterceptor localeChangeInterceptor = applicationContext.getBean(LocaleChangeInterceptor.class);

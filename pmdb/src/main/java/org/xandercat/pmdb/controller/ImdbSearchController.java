@@ -16,6 +16,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
@@ -29,6 +30,7 @@ import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.ImdbSearchService;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.ajax.JsonResponse;
 
 @Controller
 public class ImdbSearchController {
@@ -89,15 +91,17 @@ public class ImdbSearchController {
 	}
 	
 	@RequestMapping(value="/imdbsearch/addToCollection", produces=MediaType.APPLICATION_JSON_VALUE)
-	public String addToCollection(Model model, Principal principal, @RequestParam String imdbId) {
+	public @ResponseBody JsonResponse addToCollection(Model model, Principal principal, @RequestParam String imdbId) {
 		LOGGER.info("Add To Collection called with ID " + imdbId);
+		JsonResponse response = new JsonResponse();
+		response.put("imdbId", imdbId);
 		MovieDetails movieDetails = null;
 		try {
 			movieDetails = imdbSearchService.getMovieDetails(imdbId);
 		} catch (ServiceLimitExceededException e1) {
-			return ViewUtil.ajaxResponse(model, 
-					"Service limit exceeded. You will not be able to add any more movies to your collection today through the IMDB Search function.",
-					new String[] {"imdbId"}, new String[] {imdbId});
+			response.setOk(false);
+			response.setErrorMessage("Service limit exceeded. You will not be able to add any more movies to your collection today through the IMDB Search function.");
+			return response;
 		}
 		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		Movie movie = new Movie(movieDetails, movieCollection.getId());
@@ -105,10 +109,10 @@ public class ImdbSearchController {
 			movieService.addMovie(movie, principal.getName());
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to add IMDB movie to collection.", e);
-			return ViewUtil.ajaxResponse(model, 
-					"You cannot add movies to the collection.",
-					new String[] {"imdbId"}, new String[] {imdbId});
+			response.setOk(false);
+			response.setErrorMessage("You cannot add movies to the collection.");
+			return response;
 		}
-		return ViewUtil.ajaxResponse(model, new String[] {"imdbId"}, new String[] {imdbId});
+		return response;
 	}
 }

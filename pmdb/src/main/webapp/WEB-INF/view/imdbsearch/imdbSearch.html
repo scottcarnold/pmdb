@@ -64,7 +64,7 @@
 						dataType: "json",
 						url: $(this).data("href")
 					}).done(function (data) {
-						if (data.isOk) {
+						if (data.ok) {
 							$("#" + data.content.imdbId).removeClass("pmdbInvisible");
 						} else {
 							$("<div>").html(data.errorMessage).dialog({
