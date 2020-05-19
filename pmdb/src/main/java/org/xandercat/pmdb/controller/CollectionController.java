@@ -24,6 +24,7 @@ import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.form.collection.CollectionForm;
 import org.xandercat.pmdb.form.collection.ExportForm;
@@ -88,7 +89,14 @@ public class CollectionController {
 		List<MovieCollection> movieCollections = collectionService.getViewableMovieCollections(principal.getName());
 		MovieCollection movieCollection = new MovieCollection();
 		movieCollection.setName(collectionForm.getName());
-		collectionService.addMovieCollection(movieCollection, principal.getName());
+		movieCollection.setCloud(collectionForm.isCloud());
+		try {
+			collectionService.addMovieCollection(movieCollection, principal.getName());
+		} catch (CloudServicesException e1) {
+			LOGGER.error("Unable to save movie collection to cloud.", e1);
+			ViewUtil.setErrorMessage(model, "Movie collection could not be added to the cloud.");
+			return "collection/addCollection";
+		}
 		if (movieCollections.size() == 0) {
 			// user had no viewable movie collections; set the newly created collection as default
 			try {
@@ -104,7 +112,7 @@ public class CollectionController {
 	}
 	
 	@RequestMapping("/collections/changeDefaultCollection")
-	public String changeDefaultCollection(Model model, Principal principal, @RequestParam int collectionId) {
+	public String changeDefaultCollection(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
 			collectionService.setDefaultMovieCollection(collectionId, principal.getName());
 			return "redirect:/";  // after setting a new default collection, immediately go to movie list for that collection			
@@ -116,7 +124,7 @@ public class CollectionController {
 	}
 	
 	@RequestMapping("/collections/editCollection")
-	public String editCollection(Model model, Principal principal, @RequestParam int collectionId) {
+	public String editCollection(Model model, Principal principal, @RequestParam String collectionId) {
 		MovieCollection movieCollection = null;
 		try {
 			movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());
@@ -140,9 +148,10 @@ public class CollectionController {
 		MovieCollection movieCollection = new MovieCollection();
 		movieCollection.setId(collectionForm.getId());
 		movieCollection.setName(collectionForm.getName());
+		movieCollection.setCloud(collectionForm.isCloud()); // this isn't really used, as it will only update the name
 		try {
 			collectionService.updateMovieCollection(movieCollection, principal.getName());
-		} catch (CollectionSharingException e) {
+		} catch (CollectionSharingException | CloudServicesException e) {
 			LOGGER.error("Unable to save collection.", e);
 			ViewUtil.setErrorMessage(model, "Unable to save movie collection.");
 			return collections(model, principal);
@@ -152,11 +161,10 @@ public class CollectionController {
 	}
 	
 	@RequestMapping(value="/collections/deleteCollection", method=RequestMethod.POST)
-	public String deleteCollection(Model model, Principal principal, @RequestParam int collectionId) {
+	public String deleteCollection(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
 			collectionService.deleteMovieCollection(collectionId, principal.getName());
-			
-		} catch (CollectionSharingException e) {
+		} catch (CollectionSharingException | CloudServicesException e) {
 			LOGGER.error("Unable to delete collection.", e);
 			ViewUtil.setErrorMessage(model, "Unable to delete movie collection.");
 			return collections(model, principal);
@@ -166,7 +174,7 @@ public class CollectionController {
 	}
 	
 	@RequestMapping("/collections/editSharing")
-	public String editSharing(Model model, Principal principal, @RequestParam int collectionId) {
+	public String editSharing(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
 			MovieCollection movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());
 			List<CollectionPermission> collectionPermissions = collectionService.getCollectionPermissions(collectionId, principal.getName());
@@ -181,7 +189,7 @@ public class CollectionController {
 	}
 	
 	@RequestMapping("/collections/acceptShareOffer")
-	public String acceptShareOffer(Model model, Principal principal, @RequestParam int collectionId, HttpSession session) {
+	public String acceptShareOffer(Model model, Principal principal, @RequestParam String collectionId, HttpSession session) {
 		try {
 			collectionService.acceptShareOffer(collectionId, principal.getName());
 			ViewUtil.updateNumShareOffers(collectionService, session, principal.getName());
@@ -193,7 +201,7 @@ public class CollectionController {
 	}
 	
 	@RequestMapping("/collections/declineShareOffer")
-	public String declineShareOffer(Model model, Principal principal, @RequestParam int collectionId, HttpSession session) {
+	public String declineShareOffer(Model model, Principal principal, @RequestParam String collectionId, HttpSession session) {
 		try {
 			collectionService.declineShareOffer(collectionId, principal.getName());
 			ViewUtil.updateNumShareOffers(collectionService, session, principal.getName());
@@ -205,7 +213,7 @@ public class CollectionController {
 	}
 	
 	@RequestMapping("/collections/toggleEditPermission")
-	public String toggleEditPermission(Model model, Principal principal, @RequestParam int collectionId, @RequestParam String username) {
+	public String toggleEditPermission(Model model, Principal principal, @RequestParam String collectionId, @RequestParam String username) {
 		try {
 			CollectionPermission permission = collectionService.getCollectionPermission(collectionId, username, principal.getName());
 			if (permission == null) {
@@ -221,7 +229,7 @@ public class CollectionController {
 	}
 	
 	@RequestMapping(value="/collections/revokePermission", method=RequestMethod.POST)
-	public String revokePermission(Model model, Principal principal, @RequestParam int collectionId, @RequestParam String username) {
+	public String revokePermission(Model model, Principal principal, @RequestParam String collectionId, @RequestParam String username) {
 		try {
 			collectionService.unshareMovieCollection(collectionId, username, principal.getName());
 			ViewUtil.setMessage(model, "Share revoked.");
@@ -233,7 +241,7 @@ public class CollectionController {
 	}
 	
 	@RequestMapping(value="/collections/revokeMyPermission", method=RequestMethod.POST)
-	public String revokeMyPermission(Model model, Principal principal, @RequestParam int collectionId) {
+	public String revokeMyPermission(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
 			collectionService.unshareMovieCollection(collectionId, principal.getName(), principal.getName());
 			ViewUtil.setMessage(model, "Removed access to collection.");
@@ -245,7 +253,7 @@ public class CollectionController {
 	}
 	
 	@RequestMapping("/collections/shareCollection")
-	public String shareCollection(Model model, Principal principal, @RequestParam int collectionId) {
+	public String shareCollection(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
 			MovieCollection movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());
 			model.addAttribute("movieCollection", movieCollection);
@@ -298,7 +306,7 @@ public class CollectionController {
 			return collections(model, principal);
 		}
 		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
-		int exportCollectionId = movieCollections.get(0).getId();
+		String exportCollectionId = movieCollections.get(0).getId();
 		if (defaultMovieCollection != null) {
 			exportCollectionId = defaultMovieCollection.getId();
 		}
@@ -324,9 +332,8 @@ public class CollectionController {
 			ExcelPorter excelPorter = new ExcelPorter(format);
 			response.setContentType(excelPorter.getContentType());
 			response.setHeader("Content-Disposition", "attachment; filename=\"" + excelPorter.getFilename("PMDBExport") + "\"");
-			List<String> collectionIdStrings = exportForm.getCollections();
-			for (String collectionIdString : collectionIdStrings) {
-				int collectionId = Integer.parseInt(collectionIdString);
+			List<String> collectionIds = exportForm.getCollections();
+			for (String collectionId : collectionIds) {
 				MovieCollection movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());
 				Set<Movie> movies = movieService.getMoviesForCollection(collectionId, principal.getName());
 				List<String> attributeKeys = movieService.getAttributeKeysForCollection(collectionId, principal.getName());

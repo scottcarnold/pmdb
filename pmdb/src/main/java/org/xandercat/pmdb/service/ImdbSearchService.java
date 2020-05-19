@@ -6,7 +6,7 @@ import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 
 public interface ImdbSearchService {
 
-	public static final String IMDB_ID_KEY = "IMDB ID";
+	public static final String IMDB_ID_KEY = "Imdb Id";
 	
 	public SearchResult searchImdb(String title, Integer page, String year) throws ServiceLimitExceededException;
 	

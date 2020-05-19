@@ -30,6 +30,7 @@ import org.xandercat.pmdb.form.movie.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.format.FormatUtil;
 import org.xandercat.pmdb.util.format.Transformers;
 
 @Controller
@@ -109,7 +110,7 @@ public class HomeController {
 	}
 	
 	@RequestMapping("/movies/editMovie")
-	public String editMovie(Model model, Principal principal, @RequestParam int movieId, HttpSession session) {
+	public String editMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
 		try {
 			Movie movie = movieService.getMovie(movieId, principal.getName());
 			if (movie == null) {
@@ -168,11 +169,11 @@ public class HomeController {
 	}
 	
 	@RequestMapping(value="/movies/deleteMovie", method=RequestMethod.POST)
-	public String deleteMovie(Model model, Principal principal, @RequestParam int movieId, HttpSession session) {
+	public String deleteMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
 		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		try {
 			Movie movie = movieService.getMovie(movieId, principal.getName());
-			if (movie.getCollectionId() != movieCollection.getId()) {
+			if (!movie.getCollectionId().equals(movieCollection.getId())) {
 				ViewUtil.setErrorMessage(model, "Movies can only be deleted from your currently active collection.");
 				return home(model, principal, session);
 			}

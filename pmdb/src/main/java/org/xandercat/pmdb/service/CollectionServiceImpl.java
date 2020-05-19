@@ -7,13 +7,17 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import org.xandercat.pmdb.dao.CollectionDao;
+import org.xandercat.pmdb.dao.CollectionDaoCrudOps;
 import org.xandercat.pmdb.dao.MovieDao;
 import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.util.ExcelPorter;
 
@@ -23,19 +27,35 @@ public class CollectionServiceImpl implements CollectionService {
 	private static final Logger LOGGER = LogManager.getLogger(CollectionServiceImpl.class);
 	
 	@Autowired
+	@Qualifier("localCollectionDao")
 	private CollectionDao collectionDao;
 	
 	@Autowired
+	@Qualifier("awsCollectionDao")
+	private CollectionDaoCrudOps awsCollectionDao;
+	
+	@Autowired
+	@Qualifier("localMovieDao")
 	private MovieDao movieDao;
+	
+	@Value("${aws.enable:false}")
+	private boolean awsEnabled;
+	
+	private void assertCloudReady(MovieCollection movieCollection) throws CloudServicesException {
+		if (!awsEnabled && movieCollection.isCloud()) {
+			throw new CloudServicesException("Cloud services are disabled.");
+		}
+		return;
+	}
 	
 	@Override
 	public MovieCollection getDefaultMovieCollection(String username) {
-		Integer collectionId = collectionDao.getDefaultCollectionId(username);
+		String collectionId = collectionDao.getDefaultCollectionId(username);
 		return (collectionId == null)? null : collectionDao.getViewableMovieCollection(collectionId, username);
 	}
 
 	@Override
-	public void setDefaultMovieCollection(int collectionId, String callingUsername) throws CollectionSharingException {
+	public void setDefaultMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException {
 		assertCollectionViewable(collectionId, callingUsername);		
 		collectionDao.setDefaultCollection(callingUsername, collectionId);
 		
@@ -52,7 +72,7 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 
 	@Override
-	public MovieCollection getViewableMovieCollection(int collectionId, String callingUsername)	throws CollectionSharingException {
+	public MovieCollection getViewableMovieCollection(String collectionId, String callingUsername)	throws CollectionSharingException {
 		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
 		if (movieCollection == null) {
 			throw new CollectionSharingException("User does not have permission to view collection.");
@@ -61,39 +81,54 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 
 	@Override
-	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) {
+	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) throws CloudServicesException {
 		movieCollection.setOwner(callingUsername, callingUsername); // enforce that movie collection owner is the calling username
+		assertCloudReady(movieCollection);
+		//TODO: Need to consider error control, especially considering the mirroring of movie collections (check other methods too)
 		collectionDao.addMovieCollection(movieCollection);
+		if (movieCollection.isCloud()) {
+			awsCollectionDao.addMovieCollection(movieCollection);
+		}
 	}
 
 	@Override
-	public void updateMovieCollection(MovieCollection movieCollection, String callingUsername) throws CollectionSharingException {
+	public void updateMovieCollection(MovieCollection movieCollection, String callingUsername) throws CollectionSharingException, CloudServicesException {
 		MovieCollection viewableMovieCollection = collectionDao.getViewableMovieCollection(movieCollection.getId(), callingUsername);
 		if (viewableMovieCollection == null || !viewableMovieCollection.isEditable()) { // collection must be editable
 			throw new CollectionSharingException("User does not have required permission to update collection.");
 		}
+		assertCloudReady(viewableMovieCollection);
 		viewableMovieCollection.setName(movieCollection.getName());
 		collectionDao.updateMovieCollection(viewableMovieCollection);
+		if (viewableMovieCollection.isCloud()) {
+			awsCollectionDao.updateMovieCollection(viewableMovieCollection);
+		}
 	}
 
 	@Override
-	public void deleteMovieCollection(int collectionId, String callingUsername) throws CollectionSharingException {
+	public void deleteMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException, CloudServicesException {
 		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
 		if (movieCollection == null || !movieCollection.getOwner().equals(callingUsername)) { // only owner can delete collection
 			throw new CollectionSharingException("User does not have required permission to delete collection.");
 		}
-		movieDao.deleteMoviesForCollection(collectionId);
+		assertCloudReady(movieCollection);
+		if (movieCollection.isCloud()) {
+			//TODO: Delete the movies
+			awsCollectionDao.deleteMovieCollection(collectionId);
+		} else {
+			movieDao.deleteMoviesForCollection(collectionId);
+		}
 		collectionDao.deleteMovieCollection(collectionId);
 	}
 
 	@Override
-	public void shareMovieCollection(int collectionId, String shareWithUsername, boolean editable, String callingUsername) throws CollectionSharingException {
+	public void shareMovieCollection(String collectionId, String shareWithUsername, boolean editable, String callingUsername) throws CollectionSharingException {
 		assertCollectionEditable(collectionId, callingUsername);
 		collectionDao.shareCollection(collectionId, shareWithUsername, editable);
 	}
 
 	@Override
-	public void unshareMovieCollection(int collectionId, String unshareWithUsername, String callingUsername) throws CollectionSharingException {
+	public void unshareMovieCollection(String collectionId, String unshareWithUsername, String callingUsername) throws CollectionSharingException {
 		MovieCollection movieCollection = null;
 		if (callingUsername.equals(unshareWithUsername)) {
 			movieCollection = assertCollectionViewable(collectionId, callingUsername);
@@ -107,7 +142,7 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 
 	@Override
-	public void updateEditable(int collectionId, String updateUsername, boolean editable, String callingUsername) throws CollectionSharingException {
+	public void updateEditable(String collectionId, String updateUsername, boolean editable, String callingUsername) throws CollectionSharingException {
 		MovieCollection movieCollection = assertCollectionEditable(collectionId, callingUsername);
 		if (movieCollection.getOwner().equals(updateUsername)) {
 			throw new CollectionSharingException("Collection owner permissions cannot be changed.");
@@ -117,21 +152,21 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 
 	@Override
-	public void acceptShareOffer(int collectionId, String callingUsername) throws CollectionSharingException {
+	public void acceptShareOffer(String collectionId, String callingUsername) throws CollectionSharingException {
 		if (!collectionDao.acceptShareOffer(collectionId, callingUsername)) {
 			throw new CollectionSharingException("Unable to accept share offer for collection " + collectionId + " user " + callingUsername);
 		}
 	}
 
 	@Override
-	public void declineShareOffer(int collectionId, String callingUsername) throws CollectionSharingException {
+	public void declineShareOffer(String collectionId, String callingUsername) throws CollectionSharingException {
 		if (!collectionDao.unshareCollection(collectionId, callingUsername)) {
 			throw new CollectionSharingException("Unable to decline share offer for collection " + collectionId + " user " + callingUsername);
 		}
 	}
 	
 	@Override
-	public MovieCollection assertCollectionViewable(int collectionId, String callingUsername) throws CollectionSharingException {
+	public MovieCollection assertCollectionViewable(String collectionId, String callingUsername) throws CollectionSharingException {
 		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
 		if (movieCollection == null) { // collection must be viewable
 			throw new CollectionSharingException("User does not have required permission to update share permission.");
@@ -140,7 +175,7 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 
 	@Override
-	public MovieCollection assertCollectionEditable(int collectionId, String callingUsername) throws CollectionSharingException {
+	public MovieCollection assertCollectionEditable(String collectionId, String callingUsername) throws CollectionSharingException {
 		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
 		if (movieCollection == null || !movieCollection.isEditable()) { // collection must be editable
 			throw new CollectionSharingException("User does not have required permission to update share permission.");
@@ -149,7 +184,7 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 
 	@Override
-	public List<CollectionPermission> getCollectionPermissions(int collectionId, String callingUsername) throws CollectionSharingException {
+	public List<CollectionPermission> getCollectionPermissions(String collectionId, String callingUsername) throws CollectionSharingException {
 		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
 		if (movieCollection == null || !callingUsername.equals(movieCollection.getOwner())) {
 			throw new CollectionSharingException("User can only view sharing permissions of collections they are the owner of.");
@@ -158,7 +193,7 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 
 	@Override
-	public CollectionPermission getCollectionPermission(int collectionId, String username, String callingUsername) throws CollectionSharingException {
+	public CollectionPermission getCollectionPermission(String collectionId, String username, String callingUsername) throws CollectionSharingException {
 		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
 		if (movieCollection == null || !callingUsername.equals(movieCollection.getOwner())) {
 			throw new CollectionSharingException("User can only view sharing permissions of collections they are the owner of.");

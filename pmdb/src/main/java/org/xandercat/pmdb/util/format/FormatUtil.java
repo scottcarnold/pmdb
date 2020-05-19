@@ -24,4 +24,24 @@ public class FormatUtil {
 		}
 		return sb.toString();
 	}
+	
+	public static String titleCase(String s) {
+		if (s == null || s.trim().length() == 0) {
+			return s;
+		}
+		StringBuilder sb = new StringBuilder();
+		boolean newWord = true;
+		for (int i=0; i<s.length(); i++) {
+			if (s.charAt(i) != ' ' && newWord) {
+				newWord = false;
+				sb.append(String.valueOf(s.charAt(i)).toUpperCase());
+			} else if (s.charAt(i) == ' ') {
+				newWord = true;
+				sb.append(' ');
+			} else {
+				sb.append(s.charAt(i));
+			}
+		}
+		return sb.toString();
+	}
 }

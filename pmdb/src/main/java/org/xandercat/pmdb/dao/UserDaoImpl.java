@@ -11,13 +11,17 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.util.StringUtils;
+import org.xandercat.pmdb.dao.aws.AwsUserDao;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.dto.PmdbUserCredentials;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.util.DBUtil;
 
@@ -32,7 +36,14 @@ public class UserDaoImpl implements UserDao {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 	
+	@Autowired
+	private AwsUserDao awsUserDao;
+	
+	@Value("${aws.enable:false}")
+	private boolean awsEnabled;
+	
 	@Override
+	@Transactional
 	public void addUser(PmdbUser user, String unencryptedPassword) throws PmdbException {
 		LOGGER.info("Request to add user: " + user.getUsername());
 		if (StringUtils.isEmptyOrWhitespace(user.getUsername())) {
@@ -65,6 +76,10 @@ public class UserDaoImpl implements UserDao {
 				DBUtil.setGMTTimestamp(ps, 6, now);
 			}
 		});
+		if (awsEnabled) {
+			PmdbUserCredentials credentials = new PmdbUserCredentials(user.getUsername(), encryptedPassword.getBytes());
+			awsUserDao.addUserCredentials(credentials);
+		}
 	}
 
 	@Override
@@ -103,7 +118,11 @@ public class UserDaoImpl implements UserDao {
 				ps.setBytes(1, encryptedPassword.getBytes());
 				ps.setString(2, username);
 			}
-		});		
+		});
+		if (awsEnabled) {
+			PmdbUserCredentials credentials = new PmdbUserCredentials(username, encryptedPassword.getBytes());
+			awsUserDao.changeUserPassword(credentials);			
+		}
 	}
 
 	@Override

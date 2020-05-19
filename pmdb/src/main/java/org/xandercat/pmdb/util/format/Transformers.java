@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.xandercat.pmdb.dto.Movie;
-import org.xandercat.pmdb.util.CIString;
 import org.xandercat.pmdb.dto.FormattedMovie;
 
 /**
@@ -35,9 +34,9 @@ public class Transformers {
 				selectors.get(attributeName).test(movie.getAttributeValue(attributeName));
 			}
 		}
-		Map<CIString, DataTransformer<?>> transformerMap = new HashMap<CIString, DataTransformer<?>>();
+		Map<String, DataTransformer<?>> transformerMap = new HashMap<String, DataTransformer<?>>();
 		for (Map.Entry<String, DataTransformerSelector> entry : selectors.entrySet()) {
-			transformerMap.put(new CIString(entry.getKey()), entry.getValue().getDataTransformer());
+			transformerMap.put(entry.getKey(), entry.getValue().getDataTransformer());
 		}
 		for (Movie movie : movies) {
 			FormattedMovie tmovie = new FormattedMovie(movie, transformerMap);

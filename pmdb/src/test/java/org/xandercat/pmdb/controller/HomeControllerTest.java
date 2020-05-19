@@ -43,7 +43,7 @@ public class HomeControllerTest {
 	@BeforeEach
 	public void setup() {
 		defaultMovieCollection = new MovieCollection();
-		defaultMovieCollection.setId(1);
+		defaultMovieCollection.setId("1");
 		defaultMovieCollection.setName("Test Collection");
 		defaultMovieCollection.setOwner("User", "User");
 		MockitoAnnotations.initMocks(this);
@@ -51,7 +51,7 @@ public class HomeControllerTest {
 		when(principal.getName()).thenReturn("User");
 		when(collectionService.getDefaultMovieCollection(any())).thenReturn(defaultMovieCollection);
 		try {
-			when(movieService.getMoviesForCollection(anyInt(), any())).thenReturn(new HashSet<Movie>());
+			when(movieService.getMoviesForCollection(any(), any())).thenReturn(new HashSet<Movie>());
 		} catch (CollectionSharingException e) {
 		}
 	}

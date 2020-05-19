@@ -6,7 +6,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class ShareCollectionForm {
 
-	private int collectionId;
+	private String collectionId;
 	@NotBlank
 	private String usernameOrEmail;
 	private boolean editable;
@@ -14,15 +14,15 @@ public class ShareCollectionForm {
 	public ShareCollectionForm() {
 	}
 	
-	public ShareCollectionForm(int collectionId) {
+	public ShareCollectionForm(String collectionId) {
 		this.collectionId = collectionId;
 	}
 	
-	public int getCollectionId() {
+	public String getCollectionId() {
 		return collectionId;
 	}
 
-	public void setCollectionId(int collectionId) {
+	public void setCollectionId(String collectionId) {
 		this.collectionId = collectionId;
 	}
 

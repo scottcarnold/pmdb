@@ -32,6 +32,7 @@
 					<tr>
 						<th>Collection Name</th>
 						<th>Collection Owner</th>
+						<th>Storage Medium</th>
 						<th>Action</th>
 					</tr>
 					</thead>
@@ -39,6 +40,7 @@
 					<tr th:each="movieCollection : ${movieCollections}">
 						<td th:text="${movieCollection.name}">Collection Name</td>
 						<td th:text="${movieCollection.owner}">Collection Owner</td>
+						<td th:text="${movieCollection.cloud}? 'AWS Cloud' : 'PMDB'">Storage Type</td>
 						<td>
 							<a href="#" th:href="@{/collections/changeDefaultCollection(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Set Active</a>
 							<a href="#" th:if="${movieCollection.editable}" th:href="@{/collections/editCollection(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Edit Name</a>

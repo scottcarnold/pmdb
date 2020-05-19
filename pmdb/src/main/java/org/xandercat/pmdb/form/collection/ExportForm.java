@@ -11,9 +11,9 @@ public class ExportForm {
 	public ExportForm() {
 	}
 	
-	public ExportForm(int defaultCollectionId, ExportType defaultExportType) {
+	public ExportForm(String defaultCollectionId, ExportType defaultExportType) {
 		this.collections = new ArrayList<String>();
-		this.collections.add(String.valueOf(defaultCollectionId));
+		this.collections.add(defaultCollectionId);
 		this.type = defaultExportType.name();
 	}
 	

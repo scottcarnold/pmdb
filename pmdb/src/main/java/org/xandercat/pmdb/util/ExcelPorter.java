@@ -64,14 +64,14 @@ public class ExcelPorter {
 		private int rowIdx;
 		private int colStartIdx;
 		private int titleIdx;
-		private List<CIString> headers; 
-		public HeaderRow(int rowIdx, int colStartIdx, int titleIdx, List<CIString> headers) {
+		private List<String> headers; 
+		public HeaderRow(int rowIdx, int colStartIdx, int titleIdx, List<String> headers) {
 			this.rowIdx = rowIdx;
 			this.colStartIdx = colStartIdx;
 			this.titleIdx = titleIdx;
 			this.headers = headers;
 		}
-		public int getIndex(CIString header) {
+		public int getIndex(String header) {
 			int idx = headers.indexOf(header);
 			return (idx < 0)? -1 : colStartIdx + idx;
 		}
@@ -124,11 +124,11 @@ public class ExcelPorter {
 		this.sheetNames.retainAll(headerRows.keySet());
 		
 		// combine headers for all sheets to create master list of column names
-		Set<CIString> allColumnCINames = new HashSet<CIString>();
+		Set<String> allColumnCINames = new HashSet<String>();
 		for (HeaderRow headerRow : headerRows.values()) {
 			allColumnCINames.addAll(headerRow.headers);
 		}
-		for (CIString columnName : allColumnCINames) {
+		for (String columnName : allColumnCINames) {
 			allColumnNames.add(columnName.toString());
 		}
 		Collections.sort(allColumnNames);
@@ -191,7 +191,7 @@ public class ExcelPorter {
 		int colIdx = 1;
 		for (String column : columns) {
 			Cell cell = row.createCell(colIdx++);
-			cell.setCellValue(column);
+			cell.setCellValue(FormatUtil.titleCase(column));
 		}
 		int rowIdx = 1;
 		for (Movie movie : movies) {
@@ -226,18 +226,16 @@ public class ExcelPorter {
 					boolean titleRowLikelyFound = false;
 					int startIdx = c;
 					int titleIdx = 0;
-					List<CIString> headers = new ArrayList<CIString>();
+					List<String> headers = new ArrayList<String>();
 					while (cell != null && !StringUtils.isEmptyOrWhitespace(DATA_FORMATTER.formatCellValue(cell))) {
-						String heading = FormatUtil.formatAlphaNumeric(DATA_FORMATTER.formatCellValue(cell).trim());
+						String heading = FormatUtil.titleCase(FormatUtil.formatAlphaNumeric(DATA_FORMATTER.formatCellValue(cell).trim()));
 						String origHeading = heading;
-						CIString ciHeading = new CIString(heading);
 						int dupIdx = 2;
-						while (headers.contains(ciHeading)) {
+						while (headers.contains(heading)) {
 							heading = origHeading + " " + dupIdx;
-							ciHeading = new CIString(heading);
 							dupIdx++;
 						}
-						headers.add(ciHeading);
+						headers.add(heading);
 						if (!titleRowLikelyFound && heading.toLowerCase().indexOf("title") >= 0) {
 							titleRowLikelyFound = true;
 							titleIdx = c;
@@ -264,10 +262,6 @@ public class ExcelPorter {
 	 * @return movies for sheet
 	 */
 	public List<Movie> getMoviesForSheet(String sheetName, List<String> includedColumns) {
-		Set<CIString> ciIncludedColumns = new HashSet<CIString>();
-		for (String includedColumn : includedColumns) {
-			ciIncludedColumns.add(new CIString(includedColumn));
-		}
 		List<Movie> movies = new ArrayList<Movie>();
 		Sheet sheet = workbook.getSheet(sheetName);
 		HeaderRow headerRow = headerRows.get(sheetName);
@@ -279,8 +273,8 @@ public class ExcelPorter {
 			Row row = sheet.getRow(++r);
 			Movie movie = new Movie();
 			if (row != null) {
-				for (CIString ciIncludedColumn : ciIncludedColumns) {
-					int idx = headerRow.getIndex(ciIncludedColumn);
+				for (String includedColumn : includedColumns) {
+					int idx = headerRow.getIndex(includedColumn);
 					Cell cell = null;
 					if (idx >= 0) {
 						cell = row.getCell(idx);
@@ -288,7 +282,7 @@ public class ExcelPorter {
 					if (cell != null && !StringUtils.isEmptyOrWhitespace(DATA_FORMATTER.formatCellValue(cell))) {
 						String value = DATA_FORMATTER.formatCellValue(cell).trim();
 						if (idx != headerRow.titleIdx) {
-							movie.getAttributes().put(ciIncludedColumn, value);
+							movie.addAttribute(includedColumn, value);
 						}
 					}
 				}

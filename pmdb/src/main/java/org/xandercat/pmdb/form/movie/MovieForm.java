@@ -11,7 +11,6 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
-import org.xandercat.pmdb.util.CIString;
 import org.xandercat.pmdb.util.ReflectionUtil;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
@@ -26,165 +25,165 @@ import org.xandercat.pmdb.util.format.FormatUtil;
 @Validated
 public class MovieForm {
 
-	private int id;
+	private String id;
 	
 	@NotBlank
 	@Length(max=200)
 	private String title;
 	
-	private int collectionId;
+	private String collectionId;
 	
 	private List<String> keyValueIndicies = new ArrayList<String>();
 	
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey0;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue0;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey1;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue1;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey2;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue2;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey3;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue3;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey4;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue4;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey5;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue5;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey6;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue6;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey7;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue7;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey8;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue8;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey9;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue9;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey10;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue10;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey11;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue11;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey12;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue12;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey13;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue13;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey14;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue14;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey15;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue15;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey16;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue16;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey17;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue17;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey18;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue18;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey19;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue19;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey20;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue20;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey21;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue21;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey22;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue22;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey23;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue23;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey24;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue24;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey25;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue25;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey26;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue26;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey27;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue27;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey28;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue28;
 	@Length(max=50)
 	@Pattern(regexp=FormatUtil.ALPHA_NUMERIC_PATTERN)
 	private String attrKey29;
-	@Length(max=200)
+	@Length(max=400)
 	private String attrValue29;
 	
 	public MovieForm() {
@@ -199,8 +198,8 @@ public class MovieForm {
 		this.title = movie.getTitle();
 		this.collectionId = movie.getCollectionId();
 		int index = 0;
-		for (Map.Entry<CIString, String> entry : movie.getAttributes().entrySet()) {
-			setAttrKey(index, entry.getKey().toString());
+		for (Map.Entry<String, String> entry : movie.getAttributes().entrySet()) {
+			setAttrKey(index, entry.getKey());
 			setAttrValue(index++, entry.getValue());
 		}
 	}
@@ -212,17 +211,17 @@ public class MovieForm {
 			String key = getAttrKey(i);
 			String value = getAttrValue(i);
 			if (!StringUtils.isEmptyOrWhitespace(key) && !StringUtils.isEmptyOrWhitespace(value)) {
-				movie.getAttributes().put(new CIString(key), value);
+				movie.addAttribute(key, value); 
 			}
 		}
 		return movie;
 	}
 	
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
@@ -234,11 +233,11 @@ public class MovieForm {
 		this.title = title;
 	}
 
-	public int getCollectionId() {
+	public String getCollectionId() {
 		return collectionId;
 	}
 
-	public void setCollectionId(int collectionId) {
+	public void setCollectionId(String collectionId) {
 		this.collectionId = collectionId;
 	}
 

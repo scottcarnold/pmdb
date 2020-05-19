@@ -2,9 +2,7 @@ package org.xandercat.pmdb.dto;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
-import org.xandercat.pmdb.util.CIString;
 import org.xandercat.pmdb.util.format.DataTransformer;
 
 /**
@@ -15,18 +13,18 @@ import org.xandercat.pmdb.util.format.DataTransformer;
 public class FormattedMovie {
 
 	private Movie movie;
-	private Map<CIString, DataTransformer<?>> transformers = new HashMap<CIString, DataTransformer<?>>();
+	private Map<String, DataTransformer<?>> transformers = new HashMap<String, DataTransformer<?>>();
 	
-	public FormattedMovie(Movie movie, Map<CIString, DataTransformer<?>> transformers) {
+	public FormattedMovie(Movie movie, Map<String, DataTransformer<?>> transformers) {
 		this.movie = movie;
 		this.transformers = transformers;
 	}
 	
-	public int getId() {
+	public String getId() {
 		return movie.getId();
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		movie.setId(id);
 	}
 
@@ -38,19 +36,27 @@ public class FormattedMovie {
 		movie.setTitle(title);
 	}
 
-	public Map<CIString, String> getAttributes() {
+	public void addAttribute(String key, String value) {
+		movie.addAttribute(key, value);
+	}
+
+	public String getAttribute(String key) {
+		return movie.getAttribute(key);
+	}
+
+	public Map<String, String> getAttributes() {
 		return movie.getAttributes();
 	}
 
-	public void setAttributes(TreeMap<CIString, String> attributes) {
+	public void setAttributes(Map<String, String> attributes) {
 		movie.setAttributes(attributes);
 	}
 
-	public int getCollectionId() {
+	public String getCollectionId() {
 		return movie.getCollectionId();
 	}
 
-	public void setCollectionId(int collectionId) {
+	public void setCollectionId(String collectionId) {
 		movie.setCollectionId(collectionId);
 	}
 
@@ -63,7 +69,7 @@ public class FormattedMovie {
 			String value = movie.getAttributeValue(key);
 			return (value == null || value.length() == 0)? " " : value; // space forces Thymeleaf to include the attribute rather than omit it
 		}
-		DataTransformer<?> dataTransformer = transformers.get(new CIString(key));
+		DataTransformer<?> dataTransformer = transformers.get(key);
 		if (dataTransformer == null) {
 			String value = movie.getAttributeValue(key);
 			return (value == null || value.length() == 0)? " " : value; // space forces Thymeleaf to include the attribute rather than omit it
@@ -76,7 +82,7 @@ public class FormattedMovie {
 		if (transformers == null) {
 			return movie.getAttributeValue(key);
 		}
-		DataTransformer<?> dataTransformer = transformers.get(new CIString(key));
+		DataTransformer<?> dataTransformer = transformers.get(key);
 		if (dataTransformer == null) {
 			return movie.getAttributeValue(key);
 		}

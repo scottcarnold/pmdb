@@ -9,6 +9,7 @@
 			<h1>Movie Collections: Edit Collection</h1>
 			<form th:action="@{/collections/editCollectionSubmit}" th:object="${collectionForm}" method="post" class="form-horizontal">
 				<div th:replace="form/input :: hidden('id')"></div>
+				<div th:replace="form/input :: hidden('cloud')"></div>
 				<div th:replace="form/input :: text('Movie Collection Name', 'name')"></div>
 				<div th:replace="form/input :: submit('Save Movie Collection')"></div>
 			</form>

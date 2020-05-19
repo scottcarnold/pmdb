@@ -25,14 +25,15 @@ CREATE TABLE user_details(
 );
 
 CREATE TABLE collection(
-    id            INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    id            VARCHAR(36) NOT NULL PRIMARY KEY,
     name          VARCHAR(100) NOT NULL,
     owner         VARCHAR(50) NOT NULL,
+    cloud         TINYINT(1) NOT NULL,
     CONSTRAINT fk_collection_owner FOREIGN KEY(owner) REFERENCES users(username)
 );
 
 CREATE TABLE collection_permission(
-    collection_id INTEGER NOT NULL,
+    collection_id VARCHAR(36) NOT NULL,
     username      VARCHAR(50) NOT NULL,
     allowEdit     TINYINT(1) NOT NULL,
     accepted      TINYINT(1) NOT NULL DEFAULT 0,
@@ -43,22 +44,22 @@ CREATE TABLE collection_permission(
 
 CREATE TABLE collection_default(
     username      VARCHAR(50) NOT NULL PRIMARY KEY,
-    collection_id INTEGER NOT NULL,
+    collection_id VARCHAR(36) NOT NULL,
     CONSTRAINT fk_collection_default_users FOREIGN KEY(username) REFERENCES users(username),
     CONSTRAINT fk_collection_default_collection FOREIGN KEY(collection_id) REFERENCES collection(id)
 );
 
 CREATE TABLE movie(
-    id            INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    id            VARCHAR(36) NOT NULL PRIMARY KEY,
     title         VARCHAR(200) NOT NULL,
-    collection_id INTEGER NOT NULL,
+    collection_id VARCHAR(36) NOT NULL,
     CONSTRAINT fk_movie_collection FOREIGN KEY(collection_id) REFERENCES collection(id)
 );
 
 CREATE TABLE movie_attributes(
-    movie_id      INTEGER NOT NULL,
+    movie_id      VARCHAR(36) NOT NULL,
     attribute_name VARCHAR(50),
-    attribute_value VARCHAR(200),
+    attribute_value VARCHAR(400),
     CONSTRAINT fk_movie_attributes_movie FOREIGN KEY(movie_id) REFERENCES movie(id)	ON DELETE CASCADE,
     CONSTRAINT ix_movie_attr_name UNIQUE INDEX (movie_id, attribute_name)
 );

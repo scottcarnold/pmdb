@@ -8,11 +8,13 @@ import org.xandercat.pmdb.dto.MovieCollection;
 @Validated
 public class CollectionForm {
 
-	private int id;
+	private String id;
 	
 	@NotBlank
 	@Length(max=100)
 	private String name;
+	
+	private boolean cloud;
 	
 	public CollectionForm() {
 	}
@@ -20,10 +22,10 @@ public class CollectionForm {
 		this.id = movieCollection.getId();
 		this.name = movieCollection.getName();
 	}
-	public int getId() {
+	public String getId() {
 		return id;
 	}
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 	public String getName() {
@@ -31,5 +33,11 @@ public class CollectionForm {
 	}
 	public void setName(String name) {
 		this.name = name;
+	}
+	public boolean isCloud() {
+		return cloud;
+	}
+	public void setCloud(boolean cloud) {
+		this.cloud = cloud;
 	}
 }

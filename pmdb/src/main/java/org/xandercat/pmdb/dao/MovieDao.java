@@ -8,13 +8,13 @@ import org.xandercat.pmdb.dto.Movie;
 
 public interface MovieDao {
 
-	public void deleteMoviesForCollection(int collectionId);
+	public void deleteMoviesForCollection(String collectionId);
 	
-	public Set<Movie> getMoviesForCollection(int collectionId);
+	public Set<Movie> getMoviesForCollection(String collectionId);
 	
-	public Set<Movie> searchMoviesForCollection(int collectionId, String searchString);
+	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString);
 	
-	public Movie getMovie(int id);
+	public Movie getMovie(String id);
 	
 	public void addMovie(Movie movie);
 	
@@ -22,7 +22,7 @@ public interface MovieDao {
 	
 	public void updateMovie(Movie movie);
 	
-	public void deleteMovie(int id);
+	public void deleteMovie(String id);
 	
 	public List<String> getTableColumnPreferences(String username);
 	
@@ -43,7 +43,7 @@ public interface MovieDao {
 	
 	public Integer getMaxTableColumnPreferenceIndex(String username);
 	
-	public List<String> getAttributeKeysForCollection(int collectionId);
+	public List<String> getAttributeKeysForCollection(String collectionId);
 	
-	public Set<String> getAttributeValuesForCollection(int collectionId, String attributeName);
+	public Set<String> getAttributeValuesForCollection(String collectionId, String attributeName);
 }

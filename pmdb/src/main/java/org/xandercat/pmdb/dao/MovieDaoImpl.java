@@ -1,63 +1,60 @@
 package org.xandercat.pmdb.dao;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.jdbc.core.RowCallbackHandler;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.xandercat.pmdb.dto.Movie;
-import org.xandercat.pmdb.util.CIString;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
-@Component
+@Component(value="localMovieDao")
 public class MovieDaoImpl implements MovieDao {
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 	
+	@Autowired
+	private KeyGenerator keyGenerator;
+	
 	@Override
-	public void deleteMoviesForCollection(int collectionId) {
+	public void deleteMoviesForCollection(String collectionId) {
 		// note: relying on cascade delete for movie attributes
 		final String sql = "DELETE FROM movie WHERE collection_id = ?";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setInt(1, collectionId);
+				ps.setString(1, collectionId);
 			}
 		});
 	}
 
 	@Override
-	public Set<Movie> getMoviesForCollection(int collectionId) {
+	public Set<Movie> getMoviesForCollection(String collectionId) {
 		final String sql = "SELECT id, title FROM movie WHERE collection_id = ? ORDER BY title";
 		final Set<Movie> movies = new HashSet<Movie>();
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setInt(1, collectionId);
+				ps.setString(1, collectionId);
 			}
 		}, new RowCallbackHandler() {
 			@Override
 			public void processRow(ResultSet rs) throws SQLException {
 				Movie movie = new Movie();
-				movie.setId(rs.getInt(1));
+				movie.setId(rs.getString(1));
 				movie.setTitle(rs.getString(2));
 				movies.add(movie);
 			}
@@ -69,7 +66,7 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
-	public Set<Movie> searchMoviesForCollection(int collectionId, String searchString) {
+	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString) {
 		final String lcSearchString = searchString.trim().toLowerCase();
 		final String sql = "SELECT id, title FROM movie "
 				+ " LEFT JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
@@ -81,7 +78,7 @@ public class MovieDaoImpl implements MovieDao {
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setInt(1, collectionId);
+				ps.setString(1, collectionId);
 				ps.setString(2, "%" + lcSearchString + "%");
 				ps.setString(3, "%" + lcSearchString + "%");
 			}
@@ -89,7 +86,7 @@ public class MovieDaoImpl implements MovieDao {
 			@Override
 			public void processRow(ResultSet rs) throws SQLException {
 				Movie movie = new Movie();
-				movie.setId(rs.getInt(1));
+				movie.setId(rs.getString(1));
 				movie.setTitle(rs.getString(2));
 				movies.add(movie);
 			}
@@ -101,21 +98,21 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
-	public Movie getMovie(int id) {
+	public Movie getMovie(String id) {
 		final String sql = "SELECT id, title, collection_id FROM movie WHERE id = ?";
 		final List<Movie> movies = new ArrayList<Movie>();
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setInt(1, id);
+				ps.setString(1, id);
 			}
 		}, new RowCallbackHandler() {
 			@Override
 			public void processRow(ResultSet rs) throws SQLException {
 				Movie movie = new Movie();
-				movie.setId(rs.getInt(1));
+				movie.setId(rs.getString(1));
 				movie.setTitle(rs.getString(2));
-				movie.setCollectionId(rs.getInt(3));
+				movie.setCollectionId(rs.getString(3));
 				movies.add(movie);
 			}
 		});
@@ -140,22 +137,20 @@ public class MovieDaoImpl implements MovieDao {
 	}
 	
 	private void addMovieInternal(Movie movie) {
-		final String sql = "INSERT INTO movie(title, collection_id) VALUES (?, ?)";
-		KeyHolder keyHolder = new GeneratedKeyHolder();
-		jdbcTemplate.update(new PreparedStatementCreator() {
+		final String sql = "INSERT INTO movie(id, title, collection_id) VALUES (?, ?, ?)";
+		String key = keyGenerator.getKey();
+		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
-			public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-				PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-				ps.setString(1, movie.getTitle());
-				ps.setInt(2, movie.getCollectionId());
-				return ps;
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setString(1, key);
+				ps.setString(2, movie.getTitle());
+				ps.setString(3, movie.getCollectionId());
 			}
-		}, keyHolder);
-		int id = keyHolder.getKey().intValue();
-		movie.setId(id);
-		for (Map.Entry<CIString, String> entry : movie.getAttributes().entrySet()) {
-			addMovieAttribute(id, entry.getKey().toString(), entry.getValue());
+		});
+		for (Map.Entry<String, String> entry : movie.getAttributes().entrySet()) {
+			addMovieAttribute(key, entry.getKey(), entry.getValue());
 		}
+		movie.setId(key);
 	}
 	
 	@Override
@@ -166,63 +161,63 @@ public class MovieDaoImpl implements MovieDao {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
 				ps.setString(1, movie.getTitle());
-				ps.setInt(2, movie.getId());
+				ps.setString(2, movie.getId());
 			}
 		});
 		// do some set logic to figure out attributes
-		Map<CIString, String> oldAttributes = getMovieAttributes(movie.getId());
-		Set<CIString> oldKeys = oldAttributes.keySet();
-		Set<CIString> newKeys = movie.getAttributes().keySet();
-		Set<CIString> addKeys = new HashSet<CIString>();
-		Set<CIString> deleteKeys = new HashSet<CIString>();
-		Set<CIString> updateKeys = new HashSet<CIString>();
+		Map<String, String> oldAttributes = getMovieAttributes(movie.getId());
+		Set<String> oldKeys = oldAttributes.keySet();
+		Set<String> newKeys = movie.getAttributes().keySet();
+		Set<String> addKeys = new HashSet<String>();
+		Set<String> deleteKeys = new HashSet<String>();
+		Set<String> updateKeys = new HashSet<String>();
 		addKeys.addAll(newKeys);
 		addKeys.removeAll(oldKeys);
 		deleteKeys.addAll(oldKeys);
 		deleteKeys.removeAll(newKeys);
 		updateKeys.addAll(oldKeys);
 		updateKeys.removeAll(deleteKeys);
-		for (CIString key : deleteKeys) {
-			deleteMovieAttribute(movie.getId(), key.toString());
+		for (String key : deleteKeys) {
+			deleteMovieAttribute(movie.getId(), key);
 		}
-		for (CIString key : addKeys) {
-			addMovieAttribute(movie.getId(), key.toString(), movie.getAttributes().get(key));
+		for (String key : addKeys) {
+			addMovieAttribute(movie.getId(), key, movie.getAttribute(key));
 		}
-		for (CIString key : updateKeys) {
-			updateMovieAttribute(movie.getId(), key.toString(), movie.getAttributes().get(key));
+		for (String key : updateKeys) {
+			updateMovieAttribute(movie.getId(), key, movie.getAttribute(key));
 		}
 	}
 
 	@Override
-	public void deleteMovie(int id) {
+	public void deleteMovie(String id) {
 		// note: relying on cascade delete for movie attributes
 		final String sql = "DELETE FROM movie WHERE id = ?";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setInt(1, id);
+				ps.setString(1, id);
 			}
 		});
 	}
 	
-	public TreeMap<CIString, String> getMovieAttributes(int id) {
+	private Map<String, String> getMovieAttributes(String id) {
 		final String sql = "SELECT attribute_name, attribute_value FROM movie_attributes WHERE movie_id = ?";
-		final TreeMap<CIString, String> movieAttributes = new TreeMap<CIString, String>();
+		final Map<String, String> movieAttributes = new HashMap<String, String>();
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setInt(1, id);
+				ps.setString(1, id);
 			}
 		}, new RowCallbackHandler() {
 			@Override
 			public void processRow(ResultSet rs) throws SQLException {
-				movieAttributes.put(new CIString(rs.getString(1)), rs.getString(2));
+				movieAttributes.put(rs.getString(1), rs.getString(2));
 			}
 		});
 		return movieAttributes;
 	}
 	
-	public void addMovieAttribute(int id, String key, String value) {
+	private void addMovieAttribute(String id, String key, String value) {
 		if (!FormatUtil.isAlphaNumeric(key, false)) {
 			// due to need to pass keys around in templates and elsewhere, make life easier by enforcing no special characters in attribute keys
 			throw new IllegalArgumentException("Attribute keys must be alphanumeric, containing only letters, numbers, and spaces.");
@@ -231,31 +226,31 @@ public class MovieDaoImpl implements MovieDao {
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setInt(1, id);
+				ps.setString(1, id);
 				ps.setString(2, key);
 				ps.setString(3, value);
 			}
 		});
 	}
 	
-	public void deleteMovieAttribute(int id, String key) {
+	private void deleteMovieAttribute(String id, String key) {
 		final String sql = "DELETE FROM movie_attributes WHERE movie_id = ? AND LOWER(attribute_name) = ?";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setInt(1, id);
+				ps.setString(1, id);
 				ps.setString(2, key.toLowerCase());
 			}
 		});		
 	}
 	
-	public void updateMovieAttribute(int id, String key, String value) {
+	public void updateMovieAttribute(String id, String key, String value) {
 		final String sql = "UPDATE movie_attributes SET attribute_value = ? WHERE movie_id = ? AND LOWER(attribute_name) = ?";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
 				ps.setString(1, value);
-				ps.setInt(2, id);
+				ps.setString(2, id);
 				ps.setString(3, key.toLowerCase());
 			}			
 		});
@@ -383,7 +378,7 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
-	public List<String> getAttributeKeysForCollection(int collectionId) {
+	public List<String> getAttributeKeysForCollection(String collectionId) {
 		final String sql = "SELECT DISTINCT(attribute_name) FROM movie"
 				+ " INNER JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
 				+ " WHERE movie.collection_id = ?"
@@ -392,7 +387,7 @@ public class MovieDaoImpl implements MovieDao {
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setInt(1, collectionId);
+				ps.setString(1, collectionId);
 			}
 		}, new RowCallbackHandler() {
 			@Override
@@ -404,7 +399,7 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
-	public Set<String> getAttributeValuesForCollection(int collectionId, String attributeName) {
+	public Set<String> getAttributeValuesForCollection(String collectionId, String attributeName) {
 		final String sql = "SELECT DISTINCT(attribute_value) FROM movie"
 				+ " INNER JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
 				+ " WHERE movie.collection_id = ? AND attribute_name = ?";
@@ -412,7 +407,7 @@ public class MovieDaoImpl implements MovieDao {
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setInt(1, collectionId);
+				ps.setString(1, collectionId);
 				ps.setString(2, attributeName);
 			}
 		}, new RowCallbackHandler() {

@@ -2,15 +2,15 @@ package org.xandercat.pmdb.dto;
 
 public class CollectionPermission {
 
-	private int collectionId;
+	private String collectionId;
 	private String username;
 	private boolean allowEdit;
 	private boolean accepted;
 	
-	public int getCollectionId() {
+	public String getCollectionId() {
 		return collectionId;
 	}
-	public void setCollectionId(int collectionId) {
+	public void setCollectionId(String collectionId) {
 		this.collectionId = collectionId;
 	}
 	public String getUsername() {
