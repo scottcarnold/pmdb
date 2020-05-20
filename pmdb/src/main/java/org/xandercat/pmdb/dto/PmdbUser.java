@@ -14,6 +14,8 @@ import org.xandercat.pmdb.config.PmdbGrantedAuthority;
 /**
  * User class that also doubles as UserDetails for Spring security.
  * 
+ * Password should always be the encrypted form.
+ * 
  * @author Scott Arnold
  */
 public class PmdbUser implements UserDetails {
@@ -99,6 +101,9 @@ public class PmdbUser implements UserDetails {
 	}
 	public void setGrantedAuthorities(PmdbGrantedAuthority... grantedAuthorities) {
 		setGrantedAuthorities(Arrays.asList(grantedAuthorities));
+	}
+	public void addGrantedAuthority(PmdbGrantedAuthority grantedAuthority) {
+		grantedAuthorities.add(grantedAuthority);
 	}
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -3,6 +3,7 @@ package org.xandercat.pmdb.form.useradmin;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
+import org.xandercat.pmdb.config.PmdbGrantedAuthority;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.util.Pair;
 import org.xandercat.pmdb.validation.Password;
@@ -41,6 +42,18 @@ public class UserForm {
 		this.email = user.getEmail();
 		this.enabled = user.isEnabled();
 		this.administrator = administrator;
+	}
+	public PmdbUser toUser() {
+		PmdbUser user = new PmdbUser(username);
+		user.setEmail(email);
+		user.setEnabled(enabled);
+		user.setFirstName(firstName);
+		user.setLastName(lastName);
+		user.addGrantedAuthority(PmdbGrantedAuthority.ROLE_USER);
+		if (administrator) {
+			user.addGrantedAuthority(PmdbGrantedAuthority.ROLE_ADMIN);
+		}
+		return user;
 	}
 	public String getUsername() {
 		return username;

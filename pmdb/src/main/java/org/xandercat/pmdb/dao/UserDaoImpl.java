@@ -41,23 +41,19 @@ public class UserDaoImpl implements UserDao {
 	
 	@Override
 	@Transactional
-	public void readdUser(PmdbUser user, byte[] encryptedPassword) throws PmdbException {
-		try {
-			addUser(user, new String(encryptedPassword, "UTF-8"), true);
-		} catch (UnsupportedEncodingException e) {
-			throw new PmdbException(e);
-		} 
+	public void readdUser(PmdbUser user) throws PmdbException {
+		addUser(user, null, true);
 	}
 	
-	private void addUser(PmdbUser user, String password, boolean isPasswordEncrypted) throws PmdbException {
-		LOGGER.info("Request to add user: " + user.getUsername());
+	private void addUser(PmdbUser user, String unencryptedPassword, boolean readd) throws PmdbException {
+		LOGGER.debug("Request to add user: " + user.getUsername());
 		if (StringUtils.isEmptyOrWhitespace(user.getUsername())) {
 			throw new PmdbException("Username cannot be empty.");
 		}
-		if (StringUtils.isEmptyOrWhitespace(password)) {
+		if (!readd && StringUtils.isEmptyOrWhitespace(unencryptedPassword)) {
 			throw new PmdbException("Password cannot be empty.");
 		}
-		String encryptedPassword = isPasswordEncrypted? password : passwordEncoder.encode(password);
+		String encryptedPassword = readd? user.getPassword() : passwordEncoder.encode(unencryptedPassword);
 		final String sql = "INSERT INTO users(username, password, enabled) VALUES (?, ?, ?)";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
@@ -84,6 +80,7 @@ public class UserDaoImpl implements UserDao {
 	}
 
 	@Override
+	@Transactional
 	public void saveUser(PmdbUser user) {
 		LOGGER.info("Request to save user: " + user.getUsername());
 		final String sql = "UPDATE users SET enabled = ? WHERE username = ?";

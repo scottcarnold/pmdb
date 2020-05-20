@@ -86,7 +86,8 @@ public class UserAdminController {
 	public String addNewUserSubmit(Model model,
 			@ModelAttribute("userForm") @Valid UserForm userForm,
 			BindingResult result) {
-		if (StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())) {
+		String newPassword = StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
+		if (newPassword == null) {
 			// special case; new user must be setting a new password, so blank value is not acceptable
 			result.rejectValue("password", "userform.password.required", "A password must be provided for new users.");
 		}
@@ -94,7 +95,7 @@ public class UserAdminController {
 			return "useradmin/adduser";
 		}
 		try {
-			userService.saveUser(userForm, true);
+			userService.saveUser(userForm.toUser(), newPassword, true);
 			ViewUtil.setMessage(model, "User " + userForm.getUsername() + " saved.");
 		} catch (PmdbException e) {
 			LOGGER.error("Unexpected error when saving new user.", e);
@@ -110,8 +111,9 @@ public class UserAdminController {
 		if (result.hasErrors()) {
 			return "useradmin/edituser";
 		}
+		String newPassword = StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
 		try {
-			userService.saveUser(userForm, false);
+			userService.saveUser(userForm.toUser(), newPassword, false);
 			ViewUtil.setMessage(model, "User " + userForm.getUsername() + " saved.");
 		} catch (PmdbException e) {
 			LOGGER.error("Unexpected error when updating user.", e);

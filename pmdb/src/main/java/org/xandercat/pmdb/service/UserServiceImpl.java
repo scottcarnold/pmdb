@@ -1,5 +1,6 @@
 package org.xandercat.pmdb.service;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,7 +20,6 @@ import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.dto.PmdbUserCredentials;
 import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
-import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.util.ApplicationProperties;
 
 @Component
@@ -48,16 +48,6 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void addUser(PmdbUser user, String unencryptedPassword) throws PmdbException {
-		userDao.addUser(user, unencryptedPassword);
-		authDao.grant(user.getUsername(), user.getGrantedAuthorities());
-		if (applicationProperties.isAwsEnabled()) {
-			PmdbUserCredentials credentials = new PmdbUserCredentials(user.getUsername(), user.getPassword().getBytes());
-			dynamoUserCredentialsRepository.save(credentials);
-		}
-	}
-
-	@Override
 	public void updateLastAccess(String username) {
 		userDao.updateLastAccess(username);
 	}
@@ -73,28 +63,30 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void saveMyAccountUser(UserForm userForm, String callingUsername) throws PmdbException {
-		if (!callingUsername.equals(userForm.getUsername())) {
-			throw new PmdbException("Username mismatch. Form has username " + userForm.getUsername() + " while authenticated username is " + callingUsername);
+	public void saveMyAccountUser(PmdbUser user, String newPassword, String callingUsername) throws PmdbException {
+		if (!callingUsername.equals(user.getUsername())) {
+			throw new PmdbException("Username mismatch. Form has username " + user.getUsername() + " while authenticated username is " + callingUsername);
 		}
-		PmdbUser user = userDao.getUser(callingUsername);
-		if (user == null) {
+		PmdbUser storedUser = userDao.getUser(callingUsername);
+		if (storedUser == null) {
 			throw new PmdbException("User " + callingUsername + " not found.");
 		}
-		userForm.setAdministrator(isAdministrator(callingUsername));
-		userForm.setEnabled(user.isEnabled());
-		saveUser(userForm, false);
+		storedUser.setGrantedAuthorities(authDao.getAuthorities(storedUser.getUsername()));
+		storedUser.setEmail(user.getEmail());
+		storedUser.setFirstName(user.getFirstName());
+		storedUser.setLastName(user.getLastName());
+		saveUser(storedUser, newPassword, false);
 	}
 
 	@Override
-	public void saveUser(UserForm userForm, boolean newUser) throws PmdbException {
-		if (StringUtils.isEmptyOrWhitespace(userForm.getUsername())) {
+	public void saveUser(PmdbUser user, String newPassword, boolean newUser) throws PmdbException {
+		if (StringUtils.isEmptyOrWhitespace(user.getUsername())) {
 			throw new PmdbException("No username provided.");
 		}
-		String username = userForm.getUsername().trim();
-		PmdbUser user = getUser(username);
+		String username = user.getUsername().trim();
+		newPassword = StringUtils.isEmptyOrWhitespace(newPassword)? null : newPassword.trim();
 		if (newUser) {
-			if (user != null) {
+			if (getUser(username) != null) {
 				throw new PmdbException("User " + username + " already exists.");
 			}
 			if (applicationProperties.isAwsEnabled()) {
@@ -103,39 +95,31 @@ public class UserServiceImpl implements UserService {
 					throw new PmdbException("Username already exists in the cloud; user must be synced or removed from cloud to add again.");
 				}
 			}
-			user = new PmdbUser(username);
 		} else {
-			if (user == null) {
+			if (getUser(username) == null) {
 				throw new PmdbException("User " + username + " not found.");
 			}
 		}
-		user.setFirstName(userForm.getFirstName().trim());
-		user.setLastName(userForm.getLastName().trim());
-		user.setEmail(userForm.getEmail().trim());
-		user.setEnabled(userForm.isEnabled());
 		if (newUser) {
-			userDao.addUser(user, userForm.getPasswordPair().getFirst().trim());
-			authDao.grant(username, PmdbGrantedAuthority.ROLE_USER);
-			if (userForm.isAdministrator()) {
-				authDao.grant(username, PmdbGrantedAuthority.ROLE_ADMIN);
-			}
+			userDao.addUser(user, newPassword);
+			authDao.grant(user.getUsername(), user.getGrantedAuthorities());
 			if (applicationProperties.isAwsEnabled()) {
 				PmdbUserCredentials credentials = new PmdbUserCredentials(user.getUsername(), user.getPassword().getBytes());
 				dynamoUserCredentialsRepository.save(credentials);
 			}
 		} else {
 			userDao.saveUser(user);
-			if (!StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())) {
-				String encryptedPassword = userDao.changePassword(username, userForm.getPasswordPair().getFirst().trim());
+			if (!StringUtils.isEmptyOrWhitespace(newPassword)) {
+				String encryptedPassword = userDao.changePassword(username, newPassword);
 				if (applicationProperties.isAwsEnabled()) {
 					PmdbUserCredentials credentials = new PmdbUserCredentials(username, encryptedPassword.getBytes());
 					dynamoUserCredentialsRepository.save(credentials);			
 				}
 			}
 			boolean isAdmin = isAdministrator(username);
-			if (userForm.isAdministrator() && !isAdmin) {
+			if (user.getGrantedAuthorities().contains(PmdbGrantedAuthority.ROLE_ADMIN) && !isAdmin) {
 				authDao.grant(username, PmdbGrantedAuthority.ROLE_ADMIN);
-			} else if (!userForm.isAdministrator() && isAdmin) {
+			} else if (!user.getGrantedAuthorities().contains(PmdbGrantedAuthority.ROLE_ADMIN) && isAdmin) {
 				authDao.revoke(username, PmdbGrantedAuthority.ROLE_ADMIN);
 			}
 		}
@@ -195,7 +179,12 @@ public class UserServiceImpl implements UserService {
 			if (optional.isPresent()) {
 				PmdbUserCredentials creds = optional.get();
 				PmdbUser user = new PmdbUser(creds.getUsername());
-				userDao.readdUser(user, creds.getPassword());
+				try {
+					user.setPassword(new String(creds.getPassword(), "UTF-8"));
+				} catch (UnsupportedEncodingException e) {
+					throw new PmdbException(e);
+				}
+				userDao.readdUser(user);
 				authDao.grant(user.getUsername(), PmdbGrantedAuthority.ROLE_USER);
 			} else {
 				throw new CloudServicesException("Unable to find user " + username + " in the cloud.");

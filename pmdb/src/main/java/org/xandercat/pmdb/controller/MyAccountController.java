@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.UserForm;
@@ -48,7 +49,8 @@ public class MyAccountController {
 			return "myaccount/edituser";
 		}
 		try {
-			userService.saveMyAccountUser(userForm, principal.getName());
+			String newPassword = StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
+			userService.saveMyAccountUser(userForm.toUser(), newPassword, principal.getName());
 			ViewUtil.setMessage(model, "Account information saved.");
 		} catch (PmdbException e) {
 			LOGGER.error("Unexpected error when updating user.", e);

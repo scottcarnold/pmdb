@@ -6,7 +6,6 @@ import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
-import org.xandercat.pmdb.form.useradmin.UserForm;
 
 public interface UserService {
 
@@ -19,30 +18,34 @@ public interface UserService {
 	 */
 	public PmdbUser getUser(String username);
 	
-	public PmdbUser getUserByEmail(String email);
-	
 	/**
-	 * Add a new user.  This method should save any stored authorities.  However, the password in the user
-	 * object is meant to be the encrypted form which is why the unencrypted password exists as a separate
-	 * argument.  The password in the user object will be updated to the encrypted form.
+	 * Returns a user by email address.
 	 * 
-	 * @param user
-	 * @param unencryptedPassword
-	 * @throws PmdbException
+	 * @param email  user email address
+	 * @return user with provided email address, or null if user could not be determined
 	 */
-	public void addUser(PmdbUser user, String unencryptedPassword) throws PmdbException;
+	public PmdbUser getUserByEmail(String email);
 	
 	/**
 	 * Save user from the My Account page. When saved through this method, additional validation is performed
 	 * to ensure user is authentic and no administrator properties have been changed.
 	 * 
-	 * @param userForm
+	 * @param user
+	 * @param newPassword new password; leave null/empty if password should not be changed
 	 * @param callingUsername
 	 * @throws PmdbException
 	 */
-	public void saveMyAccountUser(UserForm userForm, String callingUsername) throws PmdbException;
+	public void saveMyAccountUser(PmdbUser user, String newPassword, String callingUsername) throws PmdbException;
 	
-	public void saveUser(UserForm userForm, boolean newUser) throws PmdbException;
+	/**
+	 * Save user.
+	 * 
+	 * @param user user to save
+	 * @param newPassword new password; leave null/empty if password should not be changed
+	 * @param newUser whether or not this is a new user
+	 * @throws PmdbException
+	 */
+	public void saveUser(PmdbUser user, String newPassword, boolean newUser) throws PmdbException;
 	
 	/**
 	 * Update the last access timestamp for a user to the current date.  Call this when a user logs in.
@@ -58,13 +61,47 @@ public interface UserService {
 	 */
 	public int getUserCount();
 	
+	/**
+	 * Returns list of users whose usernames contain the provided search string.  Search is case insensitive.
+	 * 
+	 * @param searchString search string
+	 * @return list of users matching search string
+	 */
 	public List<PmdbUser> searchUsers(String searchString);
 	
+	/**
+	 * Returns whether or not the user with given username is considered an administrator.
+	 * 
+	 * @param username username
+	 * @return whether or not the user with given username is considered an administrator
+	 */
 	public boolean isAdministrator(String username);
 	
+	/**
+	 * Returns information on what users from the provided list are not in the cloud, and what users in 
+	 * the cloud matching the provided search string are not in the provided list.
+	 * 
+	 * @param regularSearchResults list of users to check against
+	 * @param searchString search string used to collect the list of users
+	 * @return information on users who are only in the cloud or only not in the cloud.
+	 */
 	public CloudUserSearchResults syncCloudUsers(List<PmdbUser> regularSearchResults, String searchString);
 	
+	/**
+	 * Copies a user from PMDB to the cloud.  User should not already be in the cloud when calling this method.
+	 * 
+	 * @param username username
+	 * @throws CloudServicesException
+	 */
 	public void syncUserToCloud(String username) throws CloudServicesException;
 	
+	/**
+	 * Copies a user from the cloud to PMDB.  User should not already be in PMDB when calling this method.
+	 * Created user will not be enabled and will not have any user details set.
+	 * 
+	 * @param username username
+	 * @throws PmdbException
+	 * @throws CloudServicesException
+	 */
 	public void syncUserFromCloud(String username) throws PmdbException, CloudServicesException;
 }

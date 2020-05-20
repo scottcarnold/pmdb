@@ -36,7 +36,7 @@ public class BootstrapBean implements InitializingBean {
 				user.setFirstName("Administrator");
 				user.setEnabled(true);
 				user.setGrantedAuthorities(PmdbGrantedAuthority.ROLE_ADMIN, PmdbGrantedAuthority.ROLE_USER);
-				userService.addUser(user, "password");
+				userService.saveUser(user, "password", true);
 				LOGGER.info("Bootstrap created administrator account: " + user.getUsername());
 			}
 		}
