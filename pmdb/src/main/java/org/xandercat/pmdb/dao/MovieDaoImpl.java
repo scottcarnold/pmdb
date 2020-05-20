@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
-@Component(value="localMovieDao")
+@Component
 public class MovieDaoImpl implements MovieDao {
 
 	@Autowired

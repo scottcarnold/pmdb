@@ -39,9 +39,17 @@ public class FormatUtil {
 				newWord = true;
 				sb.append(' ');
 			} else {
-				sb.append(s.charAt(i));
+				sb.append(String.valueOf(s.charAt(i)).toLowerCase());
 			}
 		}
 		return sb.toString();
+	}
+	
+	public static String convertToDynamoKey(String key) {
+		return key.replaceAll(" ", "_");
+	}
+	
+	public static String convertFromDynamoKey(String key) {
+		return key.replaceAll("_", " ");
 	}
 }

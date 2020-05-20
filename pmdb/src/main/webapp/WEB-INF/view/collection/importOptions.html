@@ -11,6 +11,7 @@
 				<div th:replace="form/input :: text('Movie Collection Name', 'collectionName')"></div>
 				<div th:replace="form/input :: selectMultiple('Include Sheets', 'sheetNames', ${sheetOptions}, 5)"></div>
 				<div th:replace="form/input :: selectMultiple('Include Columns', 'columnNames', ${columnOptions}, 15)"></div>
+				<div th:replace="form/input :: checkbox('Store this collection on AWS Cloud (Experimental)', 'cloud')"></div>
 				<div th:replace="form/input :: submit('Import')"></div>
 			</form>
 		</div>

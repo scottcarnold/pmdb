@@ -200,7 +200,7 @@ public class ExcelPorter {
 			colIdx = 1;
 			for (String column : columns) {
 				Cell cell = row.createCell(colIdx++);
-				cell.setCellValue(movie.getAttributeValue(column));
+				cell.setCellValue(movie.getAttribute(column));
 			}
 		}
 	}

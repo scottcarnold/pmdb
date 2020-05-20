@@ -4,6 +4,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.MovieService;
@@ -52,7 +53,7 @@ public class HomeControllerTest {
 		when(collectionService.getDefaultMovieCollection(any())).thenReturn(defaultMovieCollection);
 		try {
 			when(movieService.getMoviesForCollection(any(), any())).thenReturn(new HashSet<Movie>());
-		} catch (CollectionSharingException e) {
+		} catch (CollectionSharingException | CloudServicesException e) {
 		}
 	}
 	

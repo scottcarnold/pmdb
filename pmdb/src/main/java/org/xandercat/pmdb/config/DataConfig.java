@@ -17,7 +17,6 @@ import org.xandercat.pmdb.dao.RandomKeyGenerator;
 import org.xandercat.pmdb.util.PmdbAwsCredentialsProvider;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
@@ -52,32 +51,6 @@ public class DataConfig {
 		return new RandomKeyGenerator();
 	}
 	
-	@Bean
-	public AWSCredentialsProvider awsCredentialsProvider(
-			@Value("${aws.key.id}") String accessKeyId, 
-			@Value("${aws.secret.key}") String secretAccessKey) throws Exception {
-		return new PmdbAwsCredentialsProvider(accessKeyId, secretAccessKey);
-	}
+
 	
-	@Bean
-	public AmazonDynamoDB amazonDynamoDB(AWSCredentialsProvider awsCredentialsProvider) {
-		return AmazonDynamoDBClientBuilder.standard()
-			.withCredentials(awsCredentialsProvider)
-			.withRegion(Regions.US_EAST_2.getName())
-			.build();
-	}
-	
-	@Bean
-	public DynamoDBMapper dynamoDBMapper(AmazonDynamoDB amazonDynamoDB) {
-		return new DynamoDBMapper(amazonDynamoDB);
-	}
-	
-//	AWS SDK V2.x beans; not using 2.x due to lack of finished Spring integration
-//	@Bean
-//	public DynamoDbClient dynamoDbClient(AwsCredentialsProvider awsCredentialsProvider) {
-//		return DynamoDbClient.builder()
-//				.region(Region.US_EAST_2)
-//				.credentialsProvider(awsCredentialsProvider)
-//				.build();
-//	}
 }

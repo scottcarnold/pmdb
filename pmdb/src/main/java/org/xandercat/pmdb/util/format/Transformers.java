@@ -31,7 +31,7 @@ public class Transformers {
 		}
 		for (Movie movie : movies) {
 			for (String attributeName : attributeNames) {
-				selectors.get(attributeName).test(movie.getAttributeValue(attributeName));
+				selectors.get(attributeName).test(movie.getAttribute(attributeName));
 			}
 		}
 		Map<String, DataTransformer<?>> transformerMap = new HashMap<String, DataTransformer<?>>();

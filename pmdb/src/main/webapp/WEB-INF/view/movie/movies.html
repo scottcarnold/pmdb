@@ -9,7 +9,7 @@
 			<div class="panel panel-info">
 				<div class="panel-heading">
 					<h3 th:text="'Movie Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</h3>
-					<p th:if="${movies.size() != totalMoviesInCollection}">Filtered to <span th:text="${movies.size()}">0</span> out of <span th:text="${totalMoviesInCollection}">0</span> movies in the collection.</p>
+					<p th:if="${totalMoviesInCollection} and ${movies.size() != totalMoviesInCollection}">Filtered to <span th:text="${movies.size()}">0</span> out of <span th:text="${totalMoviesInCollection}">0</span> movies in the collection.</p>
 					<form id="cSearchForm" th:action="@{/movies/search}" th:object="${searchForm}" method="post" class="form-inline">
 						<label for="inputId" th:attr="for='search-input'" th:text="'Search this collection'">Label</label>
 						<span class="glyphicon glyphicon-play" aria-hidden="true"></span>

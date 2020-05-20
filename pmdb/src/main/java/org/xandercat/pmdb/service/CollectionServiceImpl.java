@@ -7,13 +7,14 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import org.xandercat.pmdb.dao.CollectionDao;
-import org.xandercat.pmdb.dao.CollectionDaoCrudOps;
+import org.xandercat.pmdb.dao.KeyGenerator;
 import org.xandercat.pmdb.dao.MovieDao;
+import org.xandercat.pmdb.dao.repository.DynamoCollectionRepository;
+import org.xandercat.pmdb.dao.repository.DynamoMovieRepository;
 import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
@@ -27,16 +28,19 @@ public class CollectionServiceImpl implements CollectionService {
 	private static final Logger LOGGER = LogManager.getLogger(CollectionServiceImpl.class);
 	
 	@Autowired
-	@Qualifier("localCollectionDao")
 	private CollectionDao collectionDao;
+
+	@Autowired
+	private DynamoCollectionRepository dynamoCollectionRepository;
 	
 	@Autowired
-	@Qualifier("awsCollectionDao")
-	private CollectionDaoCrudOps awsCollectionDao;
-	
-	@Autowired
-	@Qualifier("localMovieDao")
 	private MovieDao movieDao;
+	
+	@Autowired
+	private DynamoMovieRepository dynamoMovieRepository;
+	
+	@Autowired
+	private KeyGenerator keyGenerator;
 	
 	@Value("${aws.enable:false}")
 	private boolean awsEnabled;
@@ -87,7 +91,11 @@ public class CollectionServiceImpl implements CollectionService {
 		//TODO: Need to consider error control, especially considering the mirroring of movie collections (check other methods too)
 		collectionDao.addMovieCollection(movieCollection);
 		if (movieCollection.isCloud()) {
-			awsCollectionDao.addMovieCollection(movieCollection);
+			try {
+				dynamoCollectionRepository.save(movieCollection);
+			} catch (Exception e) {
+				throw new CloudServicesException(e);
+			}
 		}
 	}
 
@@ -101,7 +109,11 @@ public class CollectionServiceImpl implements CollectionService {
 		viewableMovieCollection.setName(movieCollection.getName());
 		collectionDao.updateMovieCollection(viewableMovieCollection);
 		if (viewableMovieCollection.isCloud()) {
-			awsCollectionDao.updateMovieCollection(viewableMovieCollection);
+			try {
+				dynamoCollectionRepository.save(viewableMovieCollection);
+			} catch (Exception e) {
+				throw new CloudServicesException(e);
+			}
 		}
 	}
 
@@ -113,8 +125,12 @@ public class CollectionServiceImpl implements CollectionService {
 		}
 		assertCloudReady(movieCollection);
 		if (movieCollection.isCloud()) {
-			//TODO: Delete the movies
-			awsCollectionDao.deleteMovieCollection(collectionId);
+			try {
+				dynamoMovieRepository.deleteByCollectionId(collectionId);
+				dynamoCollectionRepository.deleteById(collectionId);
+			} catch (Exception e) {
+				throw new CloudServicesException(e);
+			}
 		} else {
 			movieDao.deleteMoviesForCollection(collectionId);
 		}
@@ -202,7 +218,7 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 
 	@Override
-	public void importCollection(MultipartFile mFile, String collectionName, List<String> sheetNames, List<String> columnNames, String callingUsername) throws IOException {
+	public void importCollection(MultipartFile mFile, String collectionName, boolean cloud, List<String> sheetNames, List<String> columnNames, String callingUsername) throws IOException {
 		long startTime = System.currentTimeMillis();
 		ExcelPorter excelImporter = new ExcelPorter(mFile.getInputStream(), mFile.getOriginalFilename());
 		List<Movie> movies = new ArrayList<Movie>();
@@ -214,11 +230,22 @@ public class CollectionServiceImpl implements CollectionService {
 		movieCollection.setName(collectionName);
 		movieCollection.setOwner(callingUsername, callingUsername);
 		movieCollection.setEditable(true);
+		movieCollection.setCloud(cloud);
 		collectionDao.addMovieCollection(movieCollection);
+		if (cloud) {
+			dynamoCollectionRepository.save(movieCollection); // key will have already been set by mirrored movie collection save
+		}
 		for (Movie movie : movies) {
 			movie.setCollectionId(movieCollection.getId());
 		}
-		movieDao.addMovies(movies);
+		if (cloud) {
+			for (Movie movie : movies) {
+				movie.setId(keyGenerator.getKey());  // TODO: Could redefine the DynamoDB table to have auto-generated keys
+			}
+			dynamoMovieRepository.saveAll(movies);
+		} else {
+			movieDao.addMovies(movies);
+		}
 		long storeTime = System.currentTimeMillis();
 		LOGGER.info("Time to parse: " + String.valueOf(parseTime - startTime) + "ms; Time to store: " + String.valueOf(storeTime - parseTime) + " ms");
 	}

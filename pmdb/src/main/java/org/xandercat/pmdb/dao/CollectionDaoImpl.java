@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.MovieCollection;
 
-@Component(value="localCollectionDao")
+@Component
 public class CollectionDaoImpl implements CollectionDao {
 
 	@Autowired

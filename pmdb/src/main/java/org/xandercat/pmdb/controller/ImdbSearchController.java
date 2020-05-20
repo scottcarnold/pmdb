@@ -23,6 +23,7 @@ import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.dto.imdb.Result;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
+import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.form.imdb.SearchForm;
@@ -78,11 +79,16 @@ public class ImdbSearchController {
 			if (defaultMovieCollection != null) {
 				model.addAttribute("defaultMovieCollection", defaultMovieCollection);
 				if (searchResults != null && searchResults.size() > 0) {
-					Set<String> imdbIdsInCollection = movieService.getImdbIdsInDefaultCollection(principal.getName());
-					for (Result r : searchResults) {
-						if (imdbIdsInCollection.contains(r.getImdbID())) {
-							r.setInCollection(true);
+					try {
+						Set<String> imdbIdsInCollection = movieService.getImdbIdsInDefaultCollection(principal.getName());
+						for (Result r : searchResults) {
+							if (imdbIdsInCollection.contains(r.getImdbID())) {
+								r.setInCollection(true);
+							}
 						}
+					} catch (CloudServicesException e) {
+						LOGGER.error("Unable to read IMDB IDs from collection.", e);
+						ViewUtil.setErrorMessage(model, "What movies you already have in your collection will not be indicated due to an error accessing your movie collection.");
 					}
 				}
 			}
@@ -112,6 +118,11 @@ public class ImdbSearchController {
 			response.setOk(false);
 			response.setErrorMessage("You cannot add movies to the collection.");
 			return response;
+		} catch (CloudServicesException e) {
+			LOGGER.error("Unable to add IMDB movie to collection.", e);
+			response.setOk(false);
+			response.setErrorMessage("Unable to add movie to the collection due to a problem with cloud services.");
+			return response;			
 		}
 		return response;
 	}

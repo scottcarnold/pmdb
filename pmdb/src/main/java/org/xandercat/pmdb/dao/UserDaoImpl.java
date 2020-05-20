@@ -19,7 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.util.StringUtils;
-import org.xandercat.pmdb.dao.aws.AwsUserDao;
+import org.xandercat.pmdb.dao.repository.DynamoUserCredentialsRepository;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.dto.PmdbUserCredentials;
 import org.xandercat.pmdb.exception.PmdbException;
@@ -37,7 +37,7 @@ public class UserDaoImpl implements UserDao {
 	private PasswordEncoder passwordEncoder;
 	
 	@Autowired
-	private AwsUserDao awsUserDao;
+	private DynamoUserCredentialsRepository dynamoUserCredentialsRepository;
 	
 	@Value("${aws.enable:false}")
 	private boolean awsEnabled;
@@ -78,7 +78,7 @@ public class UserDaoImpl implements UserDao {
 		});
 		if (awsEnabled) {
 			PmdbUserCredentials credentials = new PmdbUserCredentials(user.getUsername(), encryptedPassword.getBytes());
-			awsUserDao.addUserCredentials(credentials);
+			dynamoUserCredentialsRepository.save(credentials);
 		}
 	}
 
@@ -121,7 +121,7 @@ public class UserDaoImpl implements UserDao {
 		});
 		if (awsEnabled) {
 			PmdbUserCredentials credentials = new PmdbUserCredentials(username, encryptedPassword.getBytes());
-			awsUserDao.changeUserPassword(credentials);			
+			dynamoUserCredentialsRepository.save(credentials);			
 		}
 	}
 

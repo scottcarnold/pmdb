@@ -16,6 +16,8 @@ public class ImportOptionsForm {
 	@NotEmpty
 	private List<String> columnNames;
 	
+	private boolean cloud;
+	
 	public ImportOptionsForm() {
 	}
 	public ImportOptionsForm(List<String> sheetNames, List<String> columnNames) {
@@ -39,5 +41,11 @@ public class ImportOptionsForm {
 	}
 	public void setColumnNames(List<String> columnNames) {
 		this.columnNames = columnNames;
+	}
+	public boolean isCloud() {
+		return cloud;
+	}
+	public void setCloud(boolean cloud) {
+		this.cloud = cloud;
 	}
 }

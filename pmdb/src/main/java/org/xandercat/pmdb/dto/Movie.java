@@ -4,14 +4,18 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.springframework.data.annotation.Id;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.service.ImdbSearchService;
 import org.xandercat.pmdb.util.format.FormatUtil;
+import org.xandercat.pmdb.util.format.MovieAttributesConverter;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted;
 
 /**
  * Class to represent a movie and it's associated attributes. To support mapping of this object
@@ -30,16 +34,18 @@ public class Movie {
 	private static final int MAX_ATTRIBUTE_VALUE_LENGTH = 400;
 	private static final String IMDB_URL_BASE = "https://www.imdb.com/title/";
 	
+	@Id
 	@DynamoDBHashKey
 	private String id;
 	
 	@DynamoDBAttribute
 	private String title;
 	
+	@DynamoDBTypeConverted(converter=MovieAttributesConverter.class)
 	@DynamoDBAttribute
 	private Map<String, String> attributes = new TreeMap<String, String>();
 	
-	@DynamoDBAttribute
+	@DynamoDBIndexHashKey(globalSecondaryIndexName = "idx_global_movie_collection_id")
 	private String collectionId;
 	
 	public Movie() {
@@ -109,9 +115,6 @@ public class Movie {
 	}
 	public void setCollectionId(String collectionId) {
 		this.collectionId = collectionId;
-	}
-	public String getAttributeValue(String key) {
-		return this.attributes.get(key);
 	}
 	@Override
 	public int hashCode() {

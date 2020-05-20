@@ -51,5 +51,5 @@ public interface CollectionService {
 	
 	public CollectionPermission getCollectionPermission(String collectionId, String username, String callingUsername) throws CollectionSharingException;
 	
-	public void importCollection(MultipartFile mFile, String collectionName, List<String> sheetNames, List<String> columnNames, String callingUsername) throws IOException;
+	public void importCollection(MultipartFile mFile, String collectionName, boolean cloud, List<String> sheetNames, List<String> columnNames, String callingUsername) throws IOException;
 }

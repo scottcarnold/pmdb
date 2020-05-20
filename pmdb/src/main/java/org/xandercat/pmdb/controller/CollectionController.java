@@ -391,7 +391,7 @@ public class CollectionController {
 		}
 		MultipartFile mFile = ViewUtil.getImportedCollectionFile(session);
 		try {
-			collectionService.importCollection(mFile, importOptionsForm.getCollectionName(), 
+			collectionService.importCollection(mFile, importOptionsForm.getCollectionName(), importOptionsForm.isCloud(),
 					importOptionsForm.getSheetNames(), importOptionsForm.getColumnNames(), principal.getName());
 			ViewUtil.setMessage(model, "Collection imported.");
 		} catch (Exception e) {

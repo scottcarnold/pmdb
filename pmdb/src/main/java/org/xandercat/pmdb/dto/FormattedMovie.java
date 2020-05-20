@@ -60,33 +60,29 @@ public class FormattedMovie {
 		movie.setCollectionId(collectionId);
 	}
 
-	public String getAttributeValue(String key) {
-		return movie.getAttributeValue(key);
-	}
-
 	public String getAttributeSortValue(String key) {
 		if (transformers == null) {
-			String value = movie.getAttributeValue(key);
+			String value = movie.getAttribute(key);
 			return (value == null || value.length() == 0)? " " : value; // space forces Thymeleaf to include the attribute rather than omit it
 		}
 		DataTransformer<?> dataTransformer = transformers.get(key);
 		if (dataTransformer == null) {
-			String value = movie.getAttributeValue(key);
+			String value = movie.getAttribute(key);
 			return (value == null || value.length() == 0)? " " : value; // space forces Thymeleaf to include the attribute rather than omit it
 		}
-		String value = dataTransformer.getSortValue(movie.getAttributeValue(key));
+		String value = dataTransformer.getSortValue(movie.getAttribute(key));
 		return (value == null || value.length() == 0)? " " : value; // space forces Thymeleaf to include the attribute rather than omit it
 	}
 	
 	public String getAttributeDisplayValue(String key) {
 		if (transformers == null) {
-			return movie.getAttributeValue(key);
+			return movie.getAttribute(key);
 		}
 		DataTransformer<?> dataTransformer = transformers.get(key);
 		if (dataTransformer == null) {
-			return movie.getAttributeValue(key);
+			return movie.getAttribute(key);
 		}
-		return dataTransformer.getDisplayValue(movie.getAttributeValue(key));		
+		return dataTransformer.getDisplayValue(movie.getAttribute(key));		
 	}
 
 	@Override
