@@ -10,7 +10,7 @@
 			<form th:action="@{/collections/addCollectionSubmit}" th:object="${collectionForm}" method="post" class="form-horizontal">
 				<div th:replace="form/input :: hidden('id')"></div>
 				<div th:replace="form/input :: text('Movie Collection Name', 'name')"></div>
-				<div th:replace="form/input :: checkbox('Store this collection on AWS Cloud (Experimental)', 'cloud')"></div>
+				<div th:replace="form/input :: checkbox('Store this collection on AWS Cloud', 'cloud')"></div>
 				<div th:replace="form/input :: submit('Create Movie Collection')"></div>
 			</form>
 		</div>

@@ -49,10 +49,10 @@ public class MyAccountController {
 		}
 		try {
 			userService.saveMyAccountUser(userForm, principal.getName());
-			model.addAttribute("message", "Account information saved.");
+			ViewUtil.setMessage(model, "Account information saved.");
 		} catch (PmdbException e) {
 			LOGGER.error("Unexpected error when updating user.", e);
-			model.addAttribute("message", "An unexpected error occurred while attempting to save account information.");
+			ViewUtil.setErrorMessage(model, "An unexpected error occurred while attempting to save account information.");
 		}
 		return editUser(model, principal);		
 	}

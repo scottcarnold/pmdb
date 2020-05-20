@@ -24,8 +24,8 @@
 					<tbody>
 					<tr th:each="collectionPermission : ${collectionPermissions}">
 						<td th:text="${collectionPermission.username}">Username</td>
-						<td th:text="${collectionPermission.allowEdit}">false</td>
-						<td th:text="${collectionPermission.accepted}">true</td>
+						<td th:text="${collectionPermission.allowEdit}? 'Yes' : 'No'">false</td>
+						<td th:text="${collectionPermission.accepted}? 'Yes' : 'No'">true</td>
 						<td>
 							<a href="#" th:href="@{/collections/toggleEditPermission(collectionId=${movieCollection.id},username=${collectionPermission.username})}" class="btn btn-default" role="button">Toggle Edit Permission</a>
 							<form th:action="@{/collections/revokePermission}" method="post" style="display: inline">
