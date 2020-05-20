@@ -2,7 +2,9 @@ package org.xandercat.pmdb.service;
 
 import java.util.List;
 
+import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.UserForm;
 
@@ -59,4 +61,10 @@ public interface UserService {
 	public List<PmdbUser> searchUsers(String searchString);
 	
 	public boolean isAdministrator(String username);
+	
+	public CloudUserSearchResults syncCloudUsers(List<PmdbUser> regularSearchResults, String searchString);
+	
+	public void syncUserToCloud(String username) throws CloudServicesException;
+	
+	public void syncUserFromCloud(String username) throws PmdbException, CloudServicesException;
 }

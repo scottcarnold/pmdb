@@ -9,6 +9,8 @@ import org.xandercat.pmdb.util.Pair;
  * Validator for passwords.  Validated class can either be a String or a Pair<String>.
  * If validated class is a Pair<String>, only the Pair first value is validated.
  * 
+ * To allow for editing users without changing passwords, an empty password is currently accepted.
+ * 
  * @author Scott Arnold
  */
 public class PasswordValidator implements ConstraintValidator<Password, Object> {
@@ -20,7 +22,7 @@ public class PasswordValidator implements ConstraintValidator<Password, Object> 
 	@Override
 	public boolean isValid(Object value, ConstraintValidatorContext context) {
 		if (value == null) {
-			return false;
+			return true;
 		}
 		String password = null;
 		if (Pair.class.isAssignableFrom(value.getClass())) {
@@ -33,6 +35,9 @@ public class PasswordValidator implements ConstraintValidator<Password, Object> 
 		}
 		// implement custom password rules here
 		password = password.trim();
+		if (password.length() == 0) {
+			return true;
+		}
 		if (password.length() < 8 || password.length() > 72) { // 72 should be max supported by Spring BCrypt implementation; 8 was chosen arbitrarily
 			return false;
 		}

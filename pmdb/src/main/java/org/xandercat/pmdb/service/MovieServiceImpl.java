@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.xandercat.pmdb.dao.KeyGenerator;
 import org.xandercat.pmdb.dao.MovieDao;
@@ -17,6 +16,7 @@ import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.exception.PmdbException;
+import org.xandercat.pmdb.util.ApplicationProperties;
 
 @Component
 public class MovieServiceImpl implements MovieService {
@@ -33,11 +33,11 @@ public class MovieServiceImpl implements MovieService {
 	@Autowired
 	private KeyGenerator keyGenerator;
 	
-	@Value("${aws.enable:false}")
-	private boolean awsEnabled;
+	@Autowired
+	private ApplicationProperties applicationProperties;
 	
 	private void assertCloudReady(MovieCollection movieCollection) throws CloudServicesException {
-		if (!awsEnabled && movieCollection.isCloud()) {
+		if (!applicationProperties.isAwsEnabled() && movieCollection.isCloud()) {
 			throw new CloudServicesException("Cloud services are disabled.");
 		}
 		return;
@@ -79,7 +79,7 @@ public class MovieServiceImpl implements MovieService {
 	public Movie getMovie(String id, String callingUsername) throws CollectionSharingException, CloudServicesException {
 		// doing a blind retrieve here; if not in local db, then try AWS
 		Movie movie = movieDao.getMovie(id);
-		if ((movie == null) && awsEnabled) {
+		if ((movie == null) && applicationProperties.isAwsEnabled()) {
 			try {
 				Optional<Movie> optional = dynamoMovieRepository.findById(id);
 				if (optional.isPresent()) {
@@ -130,7 +130,7 @@ public class MovieServiceImpl implements MovieService {
 	public void deleteMovie(String id, String callingUsername) throws CollectionSharingException, CloudServicesException {
 		// doing a blind retrieve here; if not in local db, then try AWS
 		Movie movie = movieDao.getMovie(id);
-		if ((movie == null) && awsEnabled) {
+		if ((movie == null) && applicationProperties.isAwsEnabled()) {
 			try {
 				Optional<Movie> optional = dynamoMovieRepository.findById(id);
 				if (optional.isPresent()) {

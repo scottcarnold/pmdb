@@ -10,6 +10,7 @@
 			<h1>User Administration</h1>
 			<form th:action="@{/useradmin/search}" th:object="${searchForm}" method="post" class="form-horizontal">
 				<div th:replace="form/input :: text('Search For', 'searchString')"></div>
+				<div th:if="${awsEnabled}" th:replace="form/input :: checkbox('Sync With Cloud', 'syncCloud')"></div>
 				<div th:replace="form/input :: submit('Search')"></div>
 				<a href="#" th:href="@{/useradmin/addNewUser}">Add New User</a>
 			</form>
@@ -32,7 +33,26 @@
 						<td th:text="${result.firstName}">First Name</td>
 						<td th:text="${result.lastName}">Last Name</td>
 						<td th:text="${result.enabled}">Enabled/Disabled</td>
-						<td><a href="#" th:href="@{/useradmin/editUser(username=${result.username})}">Edit</a></td>
+						<td>
+							<a href="#" th:href="@{/useradmin/editUser(username=${result.username})}">Edit</a>
+							<a href="#" th:if="${awsEnabled} and ${usernamesNotInCloud} and ${#lists.contains(usernamesNotInCloud, result.username)}" th:href="@{/useradmin/syncUserToCloud(username=${result.username})}" style="padding-left: 10px"><span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span></a>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+			<div th:if="${usernamesOnlyInCloud} and ${usernamesOnlyInCloud.size() > 0}">
+				<table class="table table-striped">
+					<thead>
+					<tr>
+						<th>Username</th>
+						<th>Action</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="cloudResult : ${usernamesOnlyInCloud}">
+						<td th:text="${cloudResult}">Username</td>
+						<td><a href="#" th:href="@{/useradmin/syncUserFromCloud(username=${cloudResult})}"><span class="glyphicon glyphicon-cloud-download" aria-hidden="true"></span></a></td>
 					</tr>
 					</tbody>
 				</table>

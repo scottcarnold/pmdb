@@ -6,6 +6,7 @@ import org.springframework.validation.annotation.Validated;
 public class SearchForm {
 
 	private String searchString;
+	private boolean syncCloud;
 
 	public String getSearchString() {
 		return searchString;
@@ -13,6 +14,14 @@ public class SearchForm {
 
 	public void setSearchString(String searchString) {
 		this.searchString = searchString;
+	}
+
+	public boolean isSyncCloud() {
+		return syncCloud;
+	}
+
+	public void setSyncCloud(boolean syncCloud) {
+		this.syncCloud = syncCloud;
 	}
 
 }

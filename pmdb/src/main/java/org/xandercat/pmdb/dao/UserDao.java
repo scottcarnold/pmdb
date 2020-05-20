@@ -9,9 +9,11 @@ public interface UserDao {
 
 	public void addUser(PmdbUser user, String unencryptedPassword) throws PmdbException;
 	
+	public void readdUser(PmdbUser user, byte[] encryptedPassword) throws PmdbException;
+	
 	public void saveUser(PmdbUser user);
 	
-	public void changePassword(String username, String newPassword);
+	public String changePassword(String username, String newPassword);
 	
 	public PmdbUser getUser(String username);
 	

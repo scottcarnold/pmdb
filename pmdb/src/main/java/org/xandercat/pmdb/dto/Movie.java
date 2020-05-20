@@ -19,8 +19,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted;
 
 /**
  * Class to represent a movie and it's associated attributes. To support mapping of this object
- * to DynamoDB, the id is defined as a String; getIntId() and setIntId() methods have been
- * added to continue to provide the convenience of using an int where preferable.
+ * to DynamoDB, the id is defined as a String
  * 
  * As a rule, attribute names must be stored in "Title Case", where the first letter of each word
  * is capitalized and all other letters are lower case. As the movie class serves as the 

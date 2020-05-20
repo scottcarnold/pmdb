@@ -7,7 +7,6 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import org.xandercat.pmdb.dao.CollectionDao;
@@ -20,6 +19,7 @@ import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.util.ApplicationProperties;
 import org.xandercat.pmdb.util.ExcelPorter;
 
 @Component
@@ -42,11 +42,11 @@ public class CollectionServiceImpl implements CollectionService {
 	@Autowired
 	private KeyGenerator keyGenerator;
 	
-	@Value("${aws.enable:false}")
-	private boolean awsEnabled;
+	@Autowired
+	private ApplicationProperties applicationProperties;
 	
 	private void assertCloudReady(MovieCollection movieCollection) throws CloudServicesException {
-		if (!awsEnabled && movieCollection.isCloud()) {
+		if (!applicationProperties.isAwsEnabled() && movieCollection.isCloud()) {
 			throw new CloudServicesException("Cloud services are disabled.");
 		}
 		return;

@@ -15,11 +15,14 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.thymeleaf.util.StringUtils;
+import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.SearchForm;
 import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.ApplicationProperties;
 import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller
@@ -29,6 +32,9 @@ public class UserAdminController {
 	
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private ApplicationProperties applicationProperties;
 	
 	@ModelAttribute("viewTab")
 	public String getViewTab() {
@@ -51,6 +57,12 @@ public class UserAdminController {
 		} else {
 			List<PmdbUser> results = userService.searchUsers(searchForm.getSearchString());
 			model.addAttribute("results", results);
+			model.addAttribute("awsEnabled", applicationProperties.isAwsEnabled());
+			if (applicationProperties.isAwsEnabled() && searchForm.isSyncCloud()) {
+				CloudUserSearchResults cloudSearchResults = userService.syncCloudUsers(results, searchForm.getSearchString());
+				model.addAttribute("usernamesNotInCloud", cloudSearchResults.getUsernamesNotInCloud());
+				model.addAttribute("usernamesOnlyInCloud", cloudSearchResults.getUsernamesOnlyInCloud());
+			}
 		}
 		return "useradmin/useradmin";
 	}
@@ -104,6 +116,30 @@ public class UserAdminController {
 		} catch (PmdbException e) {
 			LOGGER.error("Unexpected error when updating user.", e);
 			ViewUtil.setErrorMessage(model, "An unexpected error occurred while attempting to save user. User could not be saved.");
+		}
+		return userAdmin(model);
+	}
+
+	@RequestMapping("/useradmin/syncUserToCloud")
+	public String syncUserToCloud(Model model, @RequestParam String username) {
+		try {
+			userService.syncUserToCloud(username);
+			ViewUtil.setMessage(model, "User " + username + " synced to cloud.");
+		} catch (CloudServicesException e) {
+			LOGGER.error("Unable to sync user to cloud.", e);
+			ViewUtil.setErrorMessage(model, "User " + username + " could not be synced to cloud.");
+		}
+		return userAdmin(model);
+	}
+	
+	@RequestMapping("/useradmin/syncUserFromCloud")
+	public String syncUserFromCloud(Model model, @RequestParam String username) {
+		try {
+			userService.syncUserFromCloud(username);
+			ViewUtil.setMessage(model, "User " + username + " synced from cloud. User will need to be edited to enable user and add user details.");
+		} catch (PmdbException | CloudServicesException e) {
+			LOGGER.error("Unable to sync user from cloud.", e);
+			ViewUtil.setErrorMessage(model, "User " + username + " could not be synced from cloud.");
 		}
 		return userAdmin(model);
 	}

@@ -76,7 +76,7 @@ public class DynamoMovieRepositoryExtensionImpl implements DynamoMovieRepository
 		DynamoDBQueryExpression<Movie> queryExpression = new DynamoDBQueryExpression<Movie>()
 				.withIndexName("idx_global_movie_collection_id")
 				.withConsistentRead(false)
-				.withKeyConditionExpression("collectionId = :collectionId") // collectionId is a sort key
+				.withKeyConditionExpression("collectionId = :collectionId") // collectionId is global secondary index
 				.withFilterExpression("attribute_exists(" + FormatUtil.convertToDynamoKey(attributeName) + ")")
 				.withExpressionAttributeValues(parms);
 		PaginatedQueryList<Movie> queryList = dynamoDBTemplate.query(Movie.class, queryExpression);
