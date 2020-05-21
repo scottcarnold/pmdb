@@ -17,8 +17,8 @@
 								<button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
 							</span>
 						</div>
-						<div class="btn-group" role="group">
-							<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/imdbsearch}" class="btn btn-default" role="button">Add Movie</a>
+						<div th:if="${defaultMovieCollection.editable}" class="btn-group" role="group">
+							<a href="#" th:href="@{/imdbsearch}" class="btn btn-default" role="button">Add Movie</a>
 							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span></button>
 							<ul class="dropdown-menu">
 								<li><a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/addMovie}">Add Movie (Manual Entry)</a></li>
