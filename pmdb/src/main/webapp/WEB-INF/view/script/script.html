@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+	<head>
+		<title>Macros for scripts</title>
+	</head>
+	<body>
+		<!--/* action button for the JQuery buttonSelector must be within a form */-->
+		<script type="text/javascript" th:inline="javascript" th:fragment="confirmDialog (dialogSelector, buttonSelector)">
+		    var currentForm;
+			$(document).ready(function() {  
+				$([[${dialogSelector}]]).dialog({
+					autoOpen: false, modal: true,
+				      buttons : {
+					        "Confirm" : function() {
+					          $(this).dialog("close");
+					          currentForm.submit();
+					        },
+					        "Cancel" : function() {
+					          $(this).dialog("close");
+					        }
+					      }
+				});
+		        $([[${buttonSelector}]]).click(function() {
+		            currentForm = $(this).closest('form');
+		            $([[${dialogSelector}]]).dialog('open');
+		            return false;
+		        });	
+			});
+		</script>	
+	</body>
+</html>

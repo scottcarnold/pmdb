@@ -92,46 +92,8 @@
 				You will not have access to it again unless the original owner of the collection shares it with you again.
 				Are you sure you wish to remove your access to this collection?</p>
 			</div>
-			<script type="text/javascript">
-			var currentForm;
-			$(document).ready(function() {  
-					$( "#confirmDeleteDialog" ).dialog({
-						autoOpen: false, modal: true,
-					      buttons : {
-						        "Confirm" : function() {
-						          $(this).dialog("close");
-						          currentForm.submit();
-						        },
-						        "Cancel" : function() {
-						          $(this).dialog("close");
-						        }
-						      }
-					});
-			        $(".confirmDelete").click(function() {
-			            currentForm = $(this).closest('form');
-			            $("#confirmDeleteDialog").dialog('open');
-			            return false;
-			        });
-					$( "#confirmRemoveDialog" ).dialog({
-						autoOpen: false, modal: true,
-					      buttons : {
-						        "Confirm" : function() {
-						          $(this).dialog("close");
-						          currentForm.submit();
-						        },
-						        "Cancel" : function() {
-						          $(this).dialog("close");
-						        }
-						      }
-					});
-			        $(".confirmRemove").click(function() {
-			            currentForm = $(this).closest('form');
-			            $("#confirmRemoveDialog").dialog('open');
-			            return false;
-			        });
-			} );	
-			
-			</script>
+			<script th:replace="script/script :: confirmDialog('#confirmDeleteDialog', '.confirmDelete')"></script>
+			<script th:replace="script/script :: confirmDialog('#confirmRemoveDialog', '.confirmRemove')"></script>
 		</div>
 	</body>
 </html>

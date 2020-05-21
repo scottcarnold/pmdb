@@ -61,6 +61,10 @@
 					</tbody>
 				</table>
 			</div>
+			<div id="confirmDeleteDialog" title="Confirm Delete">
+				<p>Are you sure you wish to delete this user?</p>
+			</div>
+			<script th:replace="script/script :: confirmDialog('#confirmDeleteDialog', '.confirmDelete')"></script>
 		</div>
 	</body>
 </html>

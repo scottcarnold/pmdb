@@ -55,26 +55,10 @@
 			<div th:if="${defaultMovieCollection.editable and editMode}" id="confirmDeleteDialog" title="Confirm Delete">
 				<p>Are you sure you wish to delete this movie?</p>
 			</div>
+			<!--/* We can't put a th:if on the script because th:replace executes first, but it doesn't hurt to have script without dialog and buttons present, so just always include it */-->
+			<script th:replace="script/script :: confirmDialog('#confirmDeleteDialog', '.confirmDelete')"></script>
 			<script th:if="${defaultMovieCollection.editable and editMode}" type="text/javascript">
-			var currentForm;
 			$(document).ready(function() {  
-					$( "#confirmDeleteDialog" ).dialog({
-						autoOpen: false, modal: true,
-					      buttons : {
-						        "Confirm" : function() {
-						          $(this).dialog("close");
-						          currentForm.submit();
-						        },
-						        "Cancel" : function() {
-						          $(this).dialog("close");
-						        }
-						      }
-					});
-			        $(".confirmDelete").click(function() {
-			            currentForm = $(this).closest('form');
-			            $("#confirmDeleteDialog").dialog('open');
-			            return false;
-			          });
 			        $("#movieTable").DataTable({
 			        	searching: false,
 			        	columnDefs: [
@@ -85,7 +69,6 @@
 			
 			</script>
 			<script th:if="not ${defaultMovieCollection.editable and editMode}" type="text/javascript">
-			var currentForm;
 			$(document).ready(function() {  
 			        $("#movieTable").DataTable({
 			        	searching: false
@@ -93,7 +76,6 @@
 			} );	
 			</script>
 			<script th:if="${defaultMovieCollection.editable}" type="text/javascript">
-			var currentForm;
 			$(document).ready(function() {  
 			        $("#editModeCheckbox").click(function () {
 			        	$("#cSearchForm").submit();
