@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.config.PmdbGrantedAuthority;
@@ -18,13 +19,18 @@ import org.xandercat.pmdb.dao.repository.DynamoUserCredentialsRepository;
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.dto.PmdbUserCredentials;
+import org.xandercat.pmdb.exception.BandwidthException;
 import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.util.ApplicationProperties;
+import org.xandercat.pmdb.util.format.FormatUtil;
 
 @Component
 public class UserServiceImpl implements UserService {
-
+	
+	@Value("${registrations.interval.max}")
+	private int regMax;
+	
 	@Autowired
 	private UserDao userDao;
 	
@@ -36,6 +42,9 @@ public class UserServiceImpl implements UserService {
 	
 	@Autowired
 	private ApplicationProperties applicationProperties;
+	
+	@Autowired
+	private ApplicationService applicationService;
 	
 	@Override
 	public PmdbUser getUser(String username) {
@@ -126,6 +135,26 @@ public class UserServiceImpl implements UserService {
 	}
 	
 	@Override
+	public void registerUser(PmdbUser user, String newPassword) throws PmdbException, BandwidthException {
+		int count = applicationService.incrementRegistrationsTriggerCount();
+		if (count >= regMax) {
+			throw new BandwidthException("Too many registrations in a short period of time.", count, regMax);
+		}
+		if (!FormatUtil.isValidUsername(user.getUsername())) {
+			// defensive double check on username, though validation should have already caught this
+			throw new PmdbException("Invalid username: \"" + user.getUsername() + "\"");
+		}
+		if (StringUtils.isEmptyOrWhitespace(newPassword)) {
+			// defensive double check on password, though validation should have already caught this
+			throw new PmdbException("Password cannot be empty.");
+		}
+		user.setEnabled(false); // ensure user account is initially disabled
+		user.setGrantedAuthorities(PmdbGrantedAuthority.ROLE_USER); // ensure proper roles
+		saveUser(user, newPassword, true);
+		//TODO: If we had email working, we could send an account activation email to the user here
+	}
+
+	@Override
 	public boolean isAdministrator(String username) {
 		Collection<PmdbGrantedAuthority> authorities = authDao.getAuthorities(username);
 		return authorities.contains(PmdbGrantedAuthority.ROLE_ADMIN);
@@ -192,5 +221,22 @@ public class UserServiceImpl implements UserService {
 		} else {
 			throw new CloudServicesException("Cloud services are disabled.");
 		}		
-	}	
+	}
+
+	@Override
+	public void deleteUser(String username) throws PmdbException {
+		PmdbUser user = getUser(username);
+		if (user == null) {
+			throw new PmdbException("User not found.");
+		}
+		if (user.getLastAccessDate() != null) {
+			throw new PmdbException("Only users who have no last access date (indicating they have never logged in) can be deleted.");
+		}
+		authDao.revoke(username, PmdbGrantedAuthority.values());
+		userDao.delete(username);
+		if (applicationProperties.isAwsEnabled()) {
+			PmdbUserCredentials userCredentials = new PmdbUserCredentials(user.getUsername(), user.getPassword().getBytes());
+			dynamoUserCredentialsRepository.delete(userCredentials);
+		}
+	}
 }

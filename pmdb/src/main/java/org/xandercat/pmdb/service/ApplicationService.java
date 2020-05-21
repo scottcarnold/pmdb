@@ -9,4 +9,6 @@ public interface ApplicationService {
 	public int getImdbServiceCallCount(LocalDate date);
 	
 	public void incrementImdbServiceCallCount();
+	
+	public int incrementRegistrationsTriggerCount();
 }

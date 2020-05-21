@@ -34,7 +34,11 @@
 						<td th:text="${result.lastName}">Last Name</td>
 						<td th:text="${result.enabled}">Enabled/Disabled</td>
 						<td>
-							<a href="#" th:href="@{/useradmin/editUser(username=${result.username})}">Edit</a>
+							<a href="#" th:href="@{/useradmin/editUser(username=${result.username})}" class="btn btn-default" role="button">Edit</a>
+							<form th:if="not ${result.lastAccessDate}" th:action="@{/useradmin/deleteUser}" method="post" style="display: inline">
+								<input type="hidden" name="username" th:value="${result.username}"/>
+								<button type="submit" class="confirmDelete btn btn-default">Delete</button>
+							</form>
 							<a href="#" th:if="${awsEnabled} and ${usernamesNotInCloud} and ${#lists.contains(usernamesNotInCloud, result.username)}" th:href="@{/useradmin/syncUserToCloud(username=${result.username})}" style="padding-left: 10px"><span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span></a>
 						</td>
 					</tr>

@@ -28,4 +28,16 @@ public class FormatUtilTest {
 		assertEquals("Imdb_Id", FormatUtil.convertToDynamoKey("Imdb Id"));
 		assertEquals("Imdb Id", FormatUtil.convertFromDynamoKey("Imdb_Id"));
 	}
+	
+	@Test
+	public void testValidUsername() {
+		assertTrue(FormatUtil.isValidUsername("AaBbCc9"));
+		assertTrue(FormatUtil.isValidUsername("joefish@pacificocean.com"));
+		assertTrue(FormatUtil.isValidUsername("joe_fish-roberts@pacificocean.com"));
+		assertFalse(FormatUtil.isValidUsername(null));
+		assertFalse(FormatUtil.isValidUsername(""));
+		assertFalse(FormatUtil.isValidUsername(" "));
+		assertFalse(FormatUtil.isValidUsername("Jeff "));
+		assertFalse(FormatUtil.isValidUsername("Jeff Henry"));
+	}
 }

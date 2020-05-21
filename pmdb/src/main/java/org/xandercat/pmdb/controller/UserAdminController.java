@@ -13,6 +13,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
@@ -89,7 +90,7 @@ public class UserAdminController {
 		String newPassword = StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
 		if (newPassword == null) {
 			// special case; new user must be setting a new password, so blank value is not acceptable
-			result.rejectValue("password", "userform.password.required", "A password must be provided for new users.");
+			result.rejectValue("password", "{userform.password.required}", "A password must be provided for new users.");
 		}
 		if (result.hasErrors()) {
 			return "useradmin/adduser";
@@ -142,6 +143,18 @@ public class UserAdminController {
 		} catch (PmdbException | CloudServicesException e) {
 			LOGGER.error("Unable to sync user from cloud.", e);
 			ViewUtil.setErrorMessage(model, "User " + username + " could not be synced from cloud.");
+		}
+		return userAdmin(model);
+	}
+	
+	@RequestMapping(value="/useradmin/deleteUser", method=RequestMethod.POST)
+	public String deleteUser(Model model, @RequestParam String username) {
+		try {
+			userService.deleteUser(username);
+			ViewUtil.setMessage(model, "User deleted.");
+		} catch (PmdbException e) {
+			LOGGER.error("User could not be deleted.", e);
+			ViewUtil.setErrorMessage(model, "User could not be deleted.");
 		}
 		return userAdmin(model);
 	}

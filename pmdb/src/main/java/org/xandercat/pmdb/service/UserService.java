@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.exception.BandwidthException;
 import org.xandercat.pmdb.exception.CloudServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
 
@@ -47,6 +48,16 @@ public interface UserService {
 	 */
 	public void saveUser(PmdbUser user, String newPassword, boolean newUser) throws PmdbException;
 	
+	/**
+	 * Register user.
+	 * 
+	 * @param user user to register
+	 * @param newPassword new password
+	 * @throws PmdbException
+	 */
+	public void registerUser(PmdbUser user, String newPassword) throws PmdbException, BandwidthException;
+	
+		
 	/**
 	 * Update the last access timestamp for a user to the current date.  Call this when a user logs in.
 	 * 
@@ -104,4 +115,13 @@ public interface UserService {
 	 * @throws CloudServicesException
 	 */
 	public void syncUserFromCloud(String username) throws PmdbException, CloudServicesException;
+	
+	/**
+	 * Delete a user from the system.  By design, this should only be called for users who have never logged in.
+	 * If user has logged in before, an exception will be thrown.
+	 * 
+	 * @param username username
+	 * @throws PmdbException
+	 */
+	public void deleteUser(String username) throws PmdbException;
 }

@@ -16,23 +16,20 @@
 	</head>
 	<body>
 		<div class="container">
-			
-				<h2 style="text-align: center">PMDB - Personal Movie Database</h2>
-			
-			<form class="form-signin" th:action="@{/loginProcess.html}" method="post">
-				<label for="usernameInput" class="sr-only">Username:</label>
-				<input id="usernameInput" class="form-control" placeholder="Username" type="text" name="username" required/>
-				<label for="passwordInput" class="sr-only">Password:</label>
-				<input type="password" id="passwordInput" class="form-control" placeholder="Password" name="password"/>
-				<p th:if="${loginError}" class="fieldErrorMessage">Wrong username or password</p>
-				<p th:text="'System Environment: ' + ${environment}"></p>
-				<button class="btn btn-lg btn-primary btn-block" type="submit">Log in</button>
-			</form>
-			<div style="text-align: center">
-				<a th:href="@{/loginRegister}">Create A New Account</a>
+			<h2 style="text-align: center">PMDB - Personal Movie Database</h2>
+			<div th:if="${registrationSuccess}" class="alert alert-success" role="alert">
+				<p><strong>Registration Success*</strong></p>
+				<p>Your new account has been created.  However, email activation is currently unavailable.  An administrator will activate your account after it has been reviewed.</p>
+			</div>
+			<div th:if="not ${registrationSuccess}" class="alert alert-danger" role="alert">
+				<p><strong>Registration Failure</strong></p>
+				<p th:text="${alertErrorMessage}"></p>
 			</div>
 		</div>
 		<script th:src="@{/js/jquery-1.12.4.min.js}" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
 		<script th:src="@{/js/bootstrap.min.js}" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>			
+		<div style="text-align: center">
+			<a th:href="@{/login.html}">Return To Login</a>
+		</div>
 	</body>
 </html>

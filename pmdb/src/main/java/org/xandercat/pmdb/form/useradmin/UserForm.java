@@ -7,11 +7,13 @@ import org.xandercat.pmdb.config.PmdbGrantedAuthority;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.util.Pair;
 import org.xandercat.pmdb.validation.Password;
+import org.xandercat.pmdb.validation.Username;
 import org.xandercat.pmdb.validation.ValuesMatch;
 
 @Validated
 public class UserForm {
 
+	@Username
 	@Length(min=4, max=50)
 	private String username;
 	

@@ -244,4 +244,23 @@ public class UserDaoImpl implements UserDao {
 		});		
 		return users;
 	}
+
+	@Override
+	@Transactional
+	public void delete(String username) {
+		final String detailsSql = "DELETE FROM user_details WHERE username = ?";
+		final String sql = "DELETE FROM users WHERE username = ?";
+		jdbcTemplate.update(detailsSql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setString(1, username);
+			}
+		});
+		jdbcTemplate.update(sql, new PreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps) throws SQLException {
+				ps.setString(1, username);
+			}			
+		});
+	}
 }

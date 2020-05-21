@@ -82,4 +82,12 @@ public interface UserDao {
 	 * @return users with usernames containing the search string
 	 */
 	public List<PmdbUser> searchUsers(String searchString);
+	
+	/**
+	 * Deletes user of given username.  Operation will fail if there are any other tables
+	 * other than the user details table with foreign keys referencing the user.
+	 * 
+	 * @param username
+	 */
+	public void delete(String username);
 }

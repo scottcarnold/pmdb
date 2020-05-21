@@ -8,6 +8,13 @@ public class ApplicationAttribute {
 	private String value;
 	private LocalDate date;
 	
+	public ApplicationAttribute() {
+	}
+	public ApplicationAttribute(String name, String value, LocalDate date) {
+		this.name = name;
+		this.value = value;
+		this.date = date;
+	}
 	public String getName() {
 		return name;
 	}
