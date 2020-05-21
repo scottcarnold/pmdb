@@ -82,7 +82,7 @@ public class UserDaoImpl implements UserDao {
 	@Override
 	@Transactional
 	public void saveUser(PmdbUser user) {
-		LOGGER.info("Request to save user: " + user.getUsername());
+		LOGGER.debug("Request to save user: " + user.getUsername());
 		final String sql = "UPDATE users SET enabled = ? WHERE username = ?";
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
@@ -122,7 +122,7 @@ public class UserDaoImpl implements UserDao {
 
 	@Override
 	public PmdbUser getUser(String username) {
-		LOGGER.info("Request to get user: " + username);
+		LOGGER.debug("Request to get user: " + username);
 		PmdbUser pmdbUser = new PmdbUser();
 		final String sql = "SELECT users.username, password, enabled, firstName, lastName, email, createdTs, updatedTs, lastAccessTs FROM users"
 				+ " INNER JOIN user_details ON users.username = user_details.username"
@@ -155,7 +155,7 @@ public class UserDaoImpl implements UserDao {
 
 	@Override
 	public PmdbUser getUserByEmail(String email) {
-		LOGGER.info("Request to get user by email: " + email);
+		LOGGER.debug("Request to get user by email: " + email);
 		PmdbUser pmdbUser = new PmdbUser();
 		final String sql = "SELECT users.username, password, enabled, firstName, lastName, email, createdTs, updatedTs, lastAccessTs FROM users"
 				+ " INNER JOIN user_details ON users.username = user_details.username"

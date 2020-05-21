@@ -21,15 +21,15 @@
 	</head>
 	<body>
 		<div class="container">
-			<div class="jumbotron">
-				<h1>PMDB - Personal Movie Database</h1>
-			</div>
+			
+				<h2 style="text-align: center">PMDB - Personal Movie Database</h2>
+			
 			<form class="form-signin" th:action="@{/loginProcess.html}" method="post">
 				<label for="usernameInput" class="sr-only">Username:</label>
 				<input id="usernameInput" class="form-control" placeholder="Username" type="text" name="username" required/>
 				<label for="passwordInput" class="sr-only">Password:</label>
 				<input type="password" id="passwordInput" class="form-control" placeholder="Password" name="password"/>
-				<p th:if="${loginError}" class="error">Wrong username or password</p>
+				<p th:if="${loginError}" class="fieldErrorMessage">Wrong username or password</p>
 				<p th:text="'System Environment: ' + ${environment}"></p>
 				<button class="btn btn-lg btn-primary btn-block" type="submit">Log in</button>
 			</form>

@@ -8,7 +8,7 @@
 		<div layout:fragment="content">
 			<div th:if="${defaultMovieCollection}" class="panel panel-info">
 				<div class="panel-heading">
-					<h3 th:text="'Movie Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</h3>
+					<h3 th:text="'Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</h3>
 				</div>
 				<p class="pmdbPanelParagraph">The <span th:text="${defaultMovieCollection.name}" style="font-weight: bold"></span> movie collection will be used by default when managing or searching movies.  You can 
 				change your active movie collection in the list of movie collections listed on this page.</p>
