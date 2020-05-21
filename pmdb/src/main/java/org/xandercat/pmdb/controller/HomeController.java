@@ -30,6 +30,7 @@ import org.xandercat.pmdb.form.movie.MovieForm;
 import org.xandercat.pmdb.form.movie.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.MovieService;
+import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
 import org.xandercat.pmdb.util.format.Transformers;
 
@@ -98,7 +99,7 @@ public class HomeController {
 			
 		} catch (CollectionSharingException | CloudServicesException e) {
 			LOGGER.error("Unable to retrieve movies for default movie collection.", e);
-			ViewUtil.setErrorMessage(model, "Unable to get movies for the collection.");
+			Alerts.setErrorMessage(model, "Unable to get movies for the collection.");
 		}
 		return "movie/movies";		
 	}
@@ -119,7 +120,7 @@ public class HomeController {
 			model.addAttribute("movieForm", new MovieForm(movie));
 		} catch (Exception e) {
 			LOGGER.error("Unable to edit movie for ID: " + movieId, e);
-			ViewUtil.setErrorMessage(model, "This movie cannot be edited.");
+			Alerts.setErrorMessage(model, "This movie cannot be edited.");
 			return home(model, principal, session);
 		}
 		return "movie/editMovie";
@@ -139,10 +140,10 @@ public class HomeController {
 			movieService.addMovie(movie, principal.getName());
 		} catch (CollectionSharingException | CloudServicesException e) {
 			LOGGER.error("Unable to add movie.", e);
-			ViewUtil.setErrorMessage(model, "This movie cannot be added.");
+			Alerts.setErrorMessage(model, "This movie cannot be added.");
 			return home(model, principal, session);
 		}
-		ViewUtil.setMessage(model, "Movie added to the collection.");
+		Alerts.setMessage(model, "Movie added to the collection.");
 		return home(model, principal, session);
 	}
 	
@@ -161,10 +162,10 @@ public class HomeController {
 			movieService.updateMovie(movie, principal.getName());
 		} catch (CollectionSharingException | CloudServicesException e) {
 			LOGGER.error("Unable to update movie.", e);
-			ViewUtil.setErrorMessage(model, "This movie cannot be updated.");
+			Alerts.setErrorMessage(model, "This movie cannot be updated.");
 			return home(model, principal, session);
 		}
-		ViewUtil.setMessage(model, "Movie updated.");
+		Alerts.setMessage(model, "Movie updated.");
 		return home(model, principal, session);
 	}
 	
@@ -174,16 +175,16 @@ public class HomeController {
 		try {
 			Movie movie = movieService.getMovie(movieId, principal.getName());
 			if (!movie.getCollectionId().equals(movieCollection.getId())) {
-				ViewUtil.setErrorMessage(model, "Movies can only be deleted from your currently active collection.");
+				Alerts.setErrorMessage(model, "Movies can only be deleted from your currently active collection.");
 				return home(model, principal, session);
 			}
 			movieService.deleteMovie(movieId, principal.getName());
 		} catch (CollectionSharingException | CloudServicesException e) {
 			LOGGER.error("Unable to delete movie.", e);
-			ViewUtil.setErrorMessage(model, "Movie cannot be deleted.");
+			Alerts.setErrorMessage(model, "Movie cannot be deleted.");
 			return home(model, principal, session);
 		}
-		ViewUtil.setMessage(model, "Movie deleted.");
+		Alerts.setMessage(model, "Movie deleted.");
 		return home(model, principal, session);
 	}
 	
@@ -195,7 +196,7 @@ public class HomeController {
 			tableColumnOptions = movieService.getAttributeKeysForCollection(movieCollection.getId(), principal.getName());
 		} catch (CollectionSharingException | CloudServicesException e) {
 			LOGGER.error("User " + principal.getName() + " cannot configure columns for collection " + movieCollection.getId(), e);
-			ViewUtil.setErrorMessage(model, "Columns cannot be configured.");
+			Alerts.setErrorMessage(model, "Columns cannot be configured.");
 			return home(model, principal, session);
 		}
 		List<String> tableColumnPreferences = movieService.getTableColumnPreferences(principal.getName());
@@ -213,7 +214,7 @@ public class HomeController {
 			// not going to set success messages here as it would reduce usability of the interface and be of little value
 		} catch (PmdbException e) {
 			LOGGER.error("Unable to reorder columns.", e);
-			ViewUtil.setErrorMessage(model, "Table columns could not be reordered.");
+			Alerts.setErrorMessage(model, "Table columns could not be reordered.");
 		}
 		return configureColumns(model, principal, session);
 	}
@@ -230,5 +231,10 @@ public class HomeController {
 		movieService.deleteTableColumnPreference(deleteIndex, principal.getName());
 		// not going to set success messages here as it would reduce usability of the interface and be of little value
 		return configureColumns(model, principal, session);		
+	}
+	
+	@RequestMapping("/dismissSessionAlert")
+	public void dismissSessionAlert(HttpSession session, @RequestParam String key) {
+		Alerts.dismissSessionAlert(session, key);
 	}
 }

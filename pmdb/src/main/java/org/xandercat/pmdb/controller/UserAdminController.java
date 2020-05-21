@@ -23,6 +23,7 @@ import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.SearchForm;
 import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ApplicationProperties;
 import org.xandercat.pmdb.util.ViewUtil;
 
@@ -97,10 +98,10 @@ public class UserAdminController {
 		}
 		try {
 			userService.saveUser(userForm.toUser(), newPassword, true);
-			ViewUtil.setMessage(model, "User " + userForm.getUsername() + " saved.");
+			Alerts.setMessage(model, "User " + userForm.getUsername() + " saved.");
 		} catch (PmdbException e) {
 			LOGGER.error("Unexpected error when saving new user.", e);
-			ViewUtil.setErrorMessage(model, "An unexpected error occurred while attempting to save user. User could not be saved.");
+			Alerts.setErrorMessage(model, "An unexpected error occurred while attempting to save user. User could not be saved.");
 		}
 		return userAdmin(model);
 	}
@@ -115,10 +116,10 @@ public class UserAdminController {
 		String newPassword = StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
 		try {
 			userService.saveUser(userForm.toUser(), newPassword, false);
-			ViewUtil.setMessage(model, "User " + userForm.getUsername() + " saved.");
+			Alerts.setMessage(model, "User " + userForm.getUsername() + " saved.");
 		} catch (PmdbException e) {
 			LOGGER.error("Unexpected error when updating user.", e);
-			ViewUtil.setErrorMessage(model, "An unexpected error occurred while attempting to save user. User could not be saved.");
+			Alerts.setErrorMessage(model, "An unexpected error occurred while attempting to save user. User could not be saved.");
 		}
 		return userAdmin(model);
 	}
@@ -127,10 +128,10 @@ public class UserAdminController {
 	public String syncUserToCloud(Model model, @RequestParam String username) {
 		try {
 			userService.syncUserToCloud(username);
-			ViewUtil.setMessage(model, "User " + username + " synced to cloud.");
+			Alerts.setMessage(model, "User " + username + " synced to cloud.");
 		} catch (CloudServicesException e) {
 			LOGGER.error("Unable to sync user to cloud.", e);
-			ViewUtil.setErrorMessage(model, "User " + username + " could not be synced to cloud.");
+			Alerts.setErrorMessage(model, "User " + username + " could not be synced to cloud.");
 		}
 		return userAdmin(model);
 	}
@@ -139,10 +140,10 @@ public class UserAdminController {
 	public String syncUserFromCloud(Model model, @RequestParam String username) {
 		try {
 			userService.syncUserFromCloud(username);
-			ViewUtil.setMessage(model, "User " + username + " synced from cloud. User will need to be edited to enable user and add user details.");
+			Alerts.setMessage(model, "User " + username + " synced from cloud. User will need to be edited to enable user and add user details.");
 		} catch (PmdbException | CloudServicesException e) {
 			LOGGER.error("Unable to sync user from cloud.", e);
-			ViewUtil.setErrorMessage(model, "User " + username + " could not be synced from cloud.");
+			Alerts.setErrorMessage(model, "User " + username + " could not be synced from cloud.");
 		}
 		return userAdmin(model);
 	}
@@ -151,10 +152,10 @@ public class UserAdminController {
 	public String deleteUser(Model model, @RequestParam String username) {
 		try {
 			userService.deleteUser(username);
-			ViewUtil.setMessage(model, "User deleted.");
+			Alerts.setMessage(model, "User deleted.");
 		} catch (PmdbException e) {
 			LOGGER.error("User could not be deleted.", e);
-			ViewUtil.setErrorMessage(model, "User could not be deleted.");
+			Alerts.setErrorMessage(model, "User could not be deleted.");
 		}
 		return userAdmin(model);
 	}

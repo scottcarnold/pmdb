@@ -2,13 +2,16 @@ package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,6 +33,7 @@ import org.xandercat.pmdb.form.imdb.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.ImdbSearchService;
 import org.xandercat.pmdb.service.MovieService;
+import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
 import org.xandercat.pmdb.util.ajax.JsonResponse;
 
@@ -47,21 +51,28 @@ public class ImdbSearchController {
 	@Autowired
 	private CollectionService collectionService;
 	
+	@Autowired
+	private MessageSource messageSource;
+	
 	@ModelAttribute("viewTab")
 	public String getViewTab() {
 		return ViewUtil.TAB_IMDB_SEARCH;
 	}
 	
 	@RequestMapping("/imdbsearch")
-	public String imdbSearch(Model model) {
+	public String imdbSearch(Model model, HttpSession session, Locale locale) {
 		model.addAttribute("searchForm", new SearchForm());
+		String message = messageSource.getMessage("alert.imdbsearch.limits", null, locale);
+		Alerts.setSessionAlert(model, session, "IMDBSearchLimit", Alerts.AlertType.WARNING, message);
 		return "imdbsearch/imdbSearch";
 	}
 
 	@RequestMapping("/imdbsearch/searchSubmit")
 	public String imdbSearchSubmit(Model model, Principal principal,
 			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
-			BindingResult result) {
+			BindingResult result, HttpSession session, Locale locale) {
+		String message = messageSource.getMessage("alert.imdbsearch.limits", null, locale);
+		Alerts.setSessionAlert(model, session, "IMDBSearchLimit", Alerts.AlertType.WARNING, message);
 		if (!result.hasErrors()) {
 			String title = searchForm.getTitle();
 			String year = (StringUtils.isEmptyOrWhitespace(searchForm.getYear()))? null : searchForm.getYear().trim();
@@ -69,7 +80,7 @@ public class ImdbSearchController {
 			try {
 				searchResult = imdbSearchService.searchImdb(title, Integer.valueOf(1), year);
 			} catch (ServiceLimitExceededException e) {
-				ViewUtil.setErrorMessage(model, "The maximum number of allowed IMDB service calls for today has been reached.  Please retry at a later date.");
+				Alerts.setErrorMessage(model, "The maximum number of allowed IMDB service calls for today has been reached.  Please retry at a later date.");
 				return "imdbsearch/imdbSearch";
 			}
 			List<Result> searchResults = searchResult.getResults();
@@ -88,7 +99,7 @@ public class ImdbSearchController {
 						}
 					} catch (CloudServicesException e) {
 						LOGGER.error("Unable to read IMDB IDs from collection.", e);
-						ViewUtil.setErrorMessage(model, "What movies you already have in your collection will not be indicated due to an error accessing your movie collection.");
+						Alerts.setErrorMessage(model, "What movies you already have in your collection will not be indicated due to an error accessing your movie collection.");
 					}
 				}
 			}

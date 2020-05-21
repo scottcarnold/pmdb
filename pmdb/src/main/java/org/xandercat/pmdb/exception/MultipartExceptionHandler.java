@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.Alerts;
 
 @ControllerAdvice
 public class MultipartExceptionHandler {
@@ -16,7 +16,7 @@ public class MultipartExceptionHandler {
 	@ExceptionHandler(MultipartException.class)
 	public String handleError(MultipartException e, RedirectAttributes redirectAttributes) {
 		LOGGER.error("Error during file upload.", e);
-		ViewUtil.setErrorMessage(redirectAttributes, "An error occurred while uploading your file.");
+		Alerts.setErrorMessage(redirectAttributes, "An error occurred while uploading your file.");
 		return "redirect:/collections/import"; // only one place this can happen, during collections upload; if there were more places, would have to rethink this
 	}
 

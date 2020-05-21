@@ -6,9 +6,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpSession;
 
-import org.springframework.ui.Model;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.xandercat.pmdb.form.Option;
 import org.xandercat.pmdb.service.CollectionService;
 
@@ -25,18 +23,6 @@ public class ViewUtil {
 	public static String SESSION_COLLECTION_UPLOAD_FILE = "importedCollectionFile";
 	public static String SESSION_COLLECTION_UPLOAD_SHEETS = "importedCollectionSheetNames";
 	public static String SESSION_COLLECTION_UPLOAD_COLUMNS = "importedCollectionColumnNames";
-	
-	public static void setErrorMessage(Model model, String errorMessage) {
-		model.addAttribute("alertErrorMessage", errorMessage);
-	}
-	
-	public static void setErrorMessage(RedirectAttributes redirectAttributes, String errorMessage) {
-		redirectAttributes.addFlashAttribute("alertErrorMessage", errorMessage);
-	}
-	
-	public static void setMessage(Model model, String message) {
-		model.addAttribute("alertMessage", message);
-	}
 	
 	public static void updateNumShareOffers(CollectionService collectionService, HttpSession session, String username) {
 		int numShareOffers = collectionService.getShareOfferMovieCollections(username).size();

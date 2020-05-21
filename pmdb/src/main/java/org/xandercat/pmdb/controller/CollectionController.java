@@ -35,6 +35,7 @@ import org.xandercat.pmdb.form.collection.ShareCollectionForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ExcelPorter;
 import org.xandercat.pmdb.util.ViewUtil;
 
@@ -94,7 +95,7 @@ public class CollectionController {
 			collectionService.addMovieCollection(movieCollection, principal.getName());
 		} catch (CloudServicesException e1) {
 			LOGGER.error("Unable to save movie collection to cloud.", e1);
-			ViewUtil.setErrorMessage(model, "Movie collection could not be added to the cloud.");
+			Alerts.setErrorMessage(model, "Movie collection could not be added to the cloud.");
 			return "collection/addCollection";
 		}
 		if (movieCollections.size() == 0) {
@@ -107,7 +108,7 @@ public class CollectionController {
 				// despite that this represents an unsettling error, there is no real value in notifying the user, so not setting message here
 			}
 		}
-		ViewUtil.setMessage(model, "Movie collection added.");
+		Alerts.setMessage(model, "Movie collection added.");
 		return collections(model, principal);
 	}
 	
@@ -118,7 +119,7 @@ public class CollectionController {
 			return "redirect:/";  // after setting a new default collection, immediately go to movie list for that collection			
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to set default movie collection", e);
-			ViewUtil.setErrorMessage(model, "Default movie collection could not be set.");
+			Alerts.setErrorMessage(model, "Default movie collection could not be set.");
 			return collections(model, principal);
 		}
 	}
@@ -130,7 +131,7 @@ public class CollectionController {
 			movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to edit movie collection.", e);
-			ViewUtil.setErrorMessage(model, "Unable to edit requested movie collection.");
+			Alerts.setErrorMessage(model, "Unable to edit requested movie collection.");
 			return collections(model, principal);
 		}
 		CollectionForm collectionForm = new CollectionForm(movieCollection);
@@ -153,10 +154,10 @@ public class CollectionController {
 			collectionService.updateMovieCollection(movieCollection, principal.getName());
 		} catch (CollectionSharingException | CloudServicesException e) {
 			LOGGER.error("Unable to save collection.", e);
-			ViewUtil.setErrorMessage(model, "Unable to save movie collection.");
+			Alerts.setErrorMessage(model, "Unable to save movie collection.");
 			return collections(model, principal);
 		}
-		ViewUtil.setMessage(model, "Movie collection saved.");
+		Alerts.setMessage(model, "Movie collection saved.");
 		return collections(model, principal);
 	}
 	
@@ -166,10 +167,10 @@ public class CollectionController {
 			collectionService.deleteMovieCollection(collectionId, principal.getName());
 		} catch (CollectionSharingException | CloudServicesException e) {
 			LOGGER.error("Unable to delete collection.", e);
-			ViewUtil.setErrorMessage(model, "Unable to delete movie collection.");
+			Alerts.setErrorMessage(model, "Unable to delete movie collection.");
 			return collections(model, principal);
 		}
-		ViewUtil.setMessage(model, "Movie collection deleted.");
+		Alerts.setMessage(model, "Movie collection deleted.");
 		return collections(model, principal);
 	}
 	
@@ -182,7 +183,7 @@ public class CollectionController {
 			model.addAttribute("collectionPermissions", collectionPermissions);
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to retrieve collection permissions for collection " + collectionId + " user " + principal.getName(), e);
-			ViewUtil.setErrorMessage(model, "Sharing is not available on the collection.");
+			Alerts.setErrorMessage(model, "Sharing is not available on the collection.");
 			return collections(model, principal);
 		}
 		return "collection/editSharing";
@@ -193,9 +194,9 @@ public class CollectionController {
 		try {
 			collectionService.acceptShareOffer(collectionId, principal.getName());
 			ViewUtil.updateNumShareOffers(collectionService, session, principal.getName());
-			ViewUtil.setMessage(model, "Share offer accepted.");
+			Alerts.setMessage(model, "Share offer accepted.");
 		} catch (CollectionSharingException e) {
-			ViewUtil.setErrorMessage(model, "Unable to accept share offer.");
+			Alerts.setErrorMessage(model, "Unable to accept share offer.");
 		}
 		return collections(model, principal);
 	}
@@ -205,9 +206,9 @@ public class CollectionController {
 		try {
 			collectionService.declineShareOffer(collectionId, principal.getName());
 			ViewUtil.updateNumShareOffers(collectionService, session, principal.getName());
-			ViewUtil.setMessage(model, "Share offer declined.");
+			Alerts.setMessage(model, "Share offer declined.");
 		} catch (CollectionSharingException e) {
-			ViewUtil.setErrorMessage(model, "Unable to decline share offer.");
+			Alerts.setErrorMessage(model, "Unable to decline share offer.");
 		}
 		return collections(model, principal);
 	}
@@ -220,10 +221,10 @@ public class CollectionController {
 				throw new CollectionSharingException("Unable to obtain permission for collection " + collectionId + " user " + username);
 			}
 			collectionService.updateEditable(collectionId, username, !permission.isAllowEdit(), principal.getName());
-			ViewUtil.setMessage(model, "Edit permission updated.");
+			Alerts.setMessage(model, "Edit permission updated.");
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to update edit permission for user.", e);
-			ViewUtil.setErrorMessage(model, "Could not update edit permission for user.");
+			Alerts.setErrorMessage(model, "Could not update edit permission for user.");
 		}
 		return editSharing(model, principal, collectionId);		
 	}
@@ -232,10 +233,10 @@ public class CollectionController {
 	public String revokePermission(Model model, Principal principal, @RequestParam String collectionId, @RequestParam String username) {
 		try {
 			collectionService.unshareMovieCollection(collectionId, username, principal.getName());
-			ViewUtil.setMessage(model, "Share revoked.");
+			Alerts.setMessage(model, "Share revoked.");
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to revoke share.", e);
-			ViewUtil.setErrorMessage(model, "Share could not be revoked.");
+			Alerts.setErrorMessage(model, "Share could not be revoked.");
 		}
 		return editSharing(model, principal, collectionId);
 	}
@@ -244,10 +245,10 @@ public class CollectionController {
 	public String revokeMyPermission(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
 			collectionService.unshareMovieCollection(collectionId, principal.getName(), principal.getName());
-			ViewUtil.setMessage(model, "Removed access to collection.");
+			Alerts.setMessage(model, "Removed access to collection.");
 		} catch (CollectionSharingException e) {
 			LOGGER.error("User unable to remove their own permission to a collection.", e);
-			ViewUtil.setErrorMessage(model, "Access cannot be removed.");
+			Alerts.setErrorMessage(model, "Access cannot be removed.");
 		}
 		return collections(model, principal);
 	}
@@ -259,7 +260,7 @@ public class CollectionController {
 			model.addAttribute("movieCollection", movieCollection);
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to share movie collection.", e);
-			ViewUtil.setErrorMessage(model, "Unable to share movie collection.");
+			Alerts.setErrorMessage(model, "Unable to share movie collection.");
 			return editSharing(model, principal, collectionId);
 		}
 		model.addAttribute("shareCollectionForm", new ShareCollectionForm(collectionId));
@@ -290,10 +291,10 @@ public class CollectionController {
 		try {
 			collectionService.shareMovieCollection(shareCollectionForm.getCollectionId(), 
 					shareWithUser.getUsername(), shareCollectionForm.isEditable(), principal.getName());
-			ViewUtil.setMessage(model, "Offer sent to share collection.");
+			Alerts.setMessage(model, "Offer sent to share collection.");
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to share collection.", e);
-			ViewUtil.setErrorMessage(model, "Unable to share collection.");
+			Alerts.setErrorMessage(model, "Unable to share collection.");
 		}
 		return editSharing(model, principal, shareCollectionForm.getCollectionId());
 	}
@@ -302,7 +303,7 @@ public class CollectionController {
 	public String export(Model model, Principal principal) {
 		List<MovieCollection> movieCollections = collectionService.getViewableMovieCollections(principal.getName());
 		if (movieCollections.size() == 0) {
-			ViewUtil.setErrorMessage(model, "There are no collections that can be exported.");
+			Alerts.setErrorMessage(model, "There are no collections that can be exported.");
 			return collections(model, principal);
 		}
 		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
@@ -320,7 +321,7 @@ public class CollectionController {
 	public String exportSubmit(Model model, Principal principal,
 			@ModelAttribute("exportForm") ExportForm exportForm, HttpServletResponse response) {
 		if (exportForm.getCollections() == null || exportForm.getCollections().size() == 0) {
-			ViewUtil.setErrorMessage(model, "You must select at least 1 collection to export.");
+			Alerts.setErrorMessage(model, "You must select at least 1 collection to export.");
 			return export(model, principal);
 		}
 		try {
@@ -362,7 +363,7 @@ public class CollectionController {
 		try {
 			ExcelPorter excelPorter = new ExcelPorter(mFile.getInputStream(), mFile.getOriginalFilename());
 			if (excelPorter.getSheetNames().size() == 0) {
-				ViewUtil.setErrorMessage(model, "Unable to find movies table on any of the workbook sheets.  Make sure your movies table has a header row and that the header for the movie title has the word \"title\" in it.");
+				Alerts.setErrorMessage(model, "Unable to find movies table on any of the workbook sheets.  Make sure your movies table has a header row and that the header for the movie title has the word \"title\" in it.");
 				return importCollections(model, principal);
 			}
 			sheetNames = excelPorter.getSheetNames();
@@ -371,7 +372,7 @@ public class CollectionController {
 			model.addAttribute("columnOptions", ViewUtil.getOptions(columnNames));
 			model.addAttribute("importOptionsForm", new ImportOptionsForm(excelPorter.getSheetNames(), excelPorter.getAllColumnNames()));
 		} catch (IOException ioe) {
-			ViewUtil.setErrorMessage(model, "File could not be successfully uploaded.");
+			Alerts.setErrorMessage(model, "File could not be successfully uploaded.");
 			return importCollections(model, principal);
 		}
 		ViewUtil.setImportedCollectionFile(session, mFile, sheetNames, columnNames);
@@ -393,10 +394,10 @@ public class CollectionController {
 		try {
 			collectionService.importCollection(mFile, importOptionsForm.getCollectionName(), importOptionsForm.isCloud(),
 					importOptionsForm.getSheetNames(), importOptionsForm.getColumnNames(), principal.getName());
-			ViewUtil.setMessage(model, "Collection imported.");
+			Alerts.setMessage(model, "Collection imported.");
 		} catch (Exception e) {
 			LOGGER.error("Unable to import collection from Excel.", e);
-			ViewUtil.setErrorMessage(model, "Your collection could not be imported.");
+			Alerts.setErrorMessage(model, "Your collection could not be imported.");
 		}
 		ViewUtil.clearImportedCollectionFile(session);
 		return collections(model, principal);

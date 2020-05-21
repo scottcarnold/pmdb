@@ -17,6 +17,7 @@ import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
 
 @Controller
@@ -51,10 +52,10 @@ public class MyAccountController {
 		try {
 			String newPassword = StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
 			userService.saveMyAccountUser(userForm.toUser(), newPassword, principal.getName());
-			ViewUtil.setMessage(model, "Account information saved.");
+			Alerts.setMessage(model, "Account information saved.");
 		} catch (PmdbException e) {
 			LOGGER.error("Unexpected error when updating user.", e);
-			ViewUtil.setErrorMessage(model, "An unexpected error occurred while attempting to save account information.");
+			Alerts.setErrorMessage(model, "An unexpected error occurred while attempting to save account information.");
 		}
 		return editUser(model, principal);		
 	}

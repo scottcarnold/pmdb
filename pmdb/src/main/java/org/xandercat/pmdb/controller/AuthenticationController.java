@@ -22,6 +22,7 @@ import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
@@ -92,12 +93,12 @@ public class AuthenticationController {
 			model.addAttribute("registrationSuccess", Boolean.TRUE);
 		} catch (PmdbException e) {
 			LOGGER.error("Unable to register user.", e);
-			ViewUtil.setErrorMessage(model, "The system was unable to register your account.");
+			Alerts.setErrorMessage(model, "The system was unable to register your account.");
 		} catch (BandwidthException be) {
 			if (be.isInitialTrigger()) {
 				LOGGER.error("Excessive registrations.", be);
 			}
-			ViewUtil.setErrorMessage(model, "Too many user accounts have been created in a short amount of time.  Please try again later.");
+			Alerts.setErrorMessage(model, "Too many user accounts have been created in a short amount of time.  Please try again later.");
 		}
 		return "authentication/registerResult";
 	}

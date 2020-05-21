@@ -14,12 +14,6 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.xandercat.pmdb.dao.KeyGenerator;
 import org.xandercat.pmdb.dao.RandomKeyGenerator;
-import org.xandercat.pmdb.util.PmdbAwsCredentialsProvider;
-
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 
 @Configuration
 @EnableTransactionManagement
@@ -50,7 +44,4 @@ public class DataConfig {
 	public KeyGenerator keyGenerator() {
 		return new RandomKeyGenerator();
 	}
-	
-
-	
 }
