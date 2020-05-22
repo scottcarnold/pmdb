@@ -14,12 +14,14 @@
 					<form th:action="@{/imdbsearch/searchSubmit}" th:object="${searchForm}" method="post" class="form-horizontal">
 						<div th:replace="form/input :: text('Movie Title', 'title')"></div>
 						<div th:replace="form/input :: text('Year', 'year')"></div>
+						<input th:id="searchFormPage" type="hidden" th:field="*{page}"/>
 						<div th:replace="form/input :: submit('Search IMDB')"></div>
 					</form>
 				</div>
 			</div>
+			<p th:if="${searched}" th:text="'There are ' + ${totalResults} + ' total results.'">There are X total results.</p>
 			<div th:if="${searchResults}">
-				<p th:text="'Showing ' + ${searchResults.size()} + ' out of ' + ${totalResults} + ' total results.'">Showing 0 of 0 total results.</p>
+				<div th:replace="imdbsearch/paginator :: paginator(${searchForm.page}, ${totalResults}, 'searchFormPage')"></div>
 				<div th:each="searchResult : ${searchResults}">
 					<div class="panel panel-default">
 						<div class="panel-heading">

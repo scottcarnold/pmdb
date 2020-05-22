@@ -71,13 +71,18 @@ public class ImdbSearchController {
 			String year = (StringUtils.isEmptyOrWhitespace(searchForm.getYear()))? null : searchForm.getYear().trim();
 			SearchResult searchResult = null;
 			try {
-				searchResult = imdbSearchService.searchImdb(title, Integer.valueOf(1), year);
+				searchResult = imdbSearchService.searchImdb(title, Integer.valueOf(searchForm.getPage()), year);
+				model.addAttribute("searched", Boolean.TRUE);
 			} catch (ServiceLimitExceededException e) {
 				Alerts.setErrorMessage(model, "The maximum number of allowed IMDB service calls for today has been reached.  Please retry at a later date.");
 				return "imdbsearch/imdbSearch";
 			}
 			List<Result> searchResults = searchResult.getResults();
-			model.addAttribute("totalResults", searchResult.getTotalResults());
+			if (StringUtils.isEmptyOrWhitespace(searchResult.getTotalResults())) {
+				model.addAttribute("totalResults", Integer.valueOf(0));
+			} else {
+				model.addAttribute("totalResults", Integer.valueOf(searchResult.getTotalResults()));
+			}
 			model.addAttribute("searchResults", searchResults);
 			MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 			if (defaultMovieCollection != null) {

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<title>Macros for scripts</title>
+	</head>
+	<body>
+		<!--/* paginator for imdb search created to resemble the datatables.net paginator. Page size is always 10 for imdb service call results. */-->
+		<div th:fragment="paginator (pageNum, totalResults, formInputId)">
+			<div th:with="totalPages=(${totalResults}+10-(${totalResults}%10))/10,pPage=${pageNum}-1,nPage=${pageNum}+1" class="btn-group" role="group">
+				<button th:if="${pageNum == 1}" type="button" class="btn btn-default" disabled="disabled">Previous</button>
+				<button th:attr="data-pagenum=${pPage}" th:if="${pageNum > 1}" type="button" class="btn btn-default paginatorButton">Previous</button>
+				
+				<button th:attr="data-pagenum='1'" th:if="${totalPages > 0}" type="button" class="btn" th:classappend="${pageNum == 1}? 'btn-primary' : 'btn-default  paginatorButton'">1</button>	
+				
+				<button th:if="${totalPages > 7 and pageNum > 4}" type="button" class="btn btn-default" disabled="disabled">...</button>	
+
+				<button th:attr="data-pagenum=${pageNum - 5}" th:if="${totalPages == $pageNum and $pageNum == 7}" type="button" class="btn btn-default paginatorButton" th:text="${pageNum - 5}">X</button>
+				<button th:attr="data-pagenum=${pageNum - 4}" th:if="${(pageNum == 6 and totalPages < 8) or (pageNum > 6 and pageNum == totalPages)}" type="button" class="btn btn-default paginatorButton" th:text="${pageNum - 4}">X</button>
+				<button th:attr="data-pagenum=${pageNum - 3}" th:if="${(pageNum == 5 and totalPages < 8) or (pageNum > 5 and pageNum > (totalPages - 2))}" type="button" class="btn btn-default paginatorButton" th:text="${pageNum - 3}">X</button>				
+				<button th:attr="data-pagenum=${pageNum - 2}" th:if="${pageNum == 4 or (pageNum > 4 and pageNum > (totalPages - 3))}" type="button" class="btn btn-default paginatorButton" th:text="${pageNum - 2}">X</button>
+				<button th:attr="data-pagenum=${pageNum - 1}" th:if="${pageNum > 2}" type="button" class="btn btn-default paginatorButton" th:text="${pageNum - 1}">X</button>
+				<button th:if="${totalPages > 2 and pageNum > 1 and pageNum < totalPages}" type="button" class="btn btn-primary" th:text="${pageNum}">X</button>
+				<button th:attr="data-pagenum=${pageNum + 1}" th:if="${totalPages > 2 and pageNum < (totalPages - 1)}" type="button" class="btn btn-default paginatorButton" th:text="${pageNum + 1}">X</button>
+				<button th:attr="data-pagenum=${pageNum + 2}" th:if="${(pageNum < 4 and totalPages > (pageNum + 2)) or (pageNum == (totalPages - 3))}" type="button" class="btn btn-default paginatorButton" th:text="${pageNum + 2}">X</button>
+				<button th:attr="data-pagenum=${pageNum + 3}" th:if="${pageNum < 3 and totalPages > (pageNum + 3)}" type="button" class="btn btn-default paginatorButton" th:text="${pageNum + 3}">X</button>
+				<button th:attr="data-pagenum=${pageNum + 4}" th:if="${pageNum == 1 and totalPages > 5}" type="button" class="btn btn-default paginatorButton" th:text="${pageNum + 4}">X</button>
+				<button th:attr="data-pagenum=${pageNum + 5}" th:if="${pageNum == 1 and totalPages > 6}" type="button" class="btn btn-default paginatorButton" th:text="${pageNum + 5}">X</button>
+								
+				<button th:if="${totalPages > 7 and pageNum < (totalPages - 3)}" type="button" class="btn btn-default" disabled="disabled">...</button>	
+				
+				<button th:attr="data-pagenum=${totalPages}" th:if="${totalPages > 1}" th:text="${totalPages}" type="button" class="btn" th:classappend="${pageNum == totalPages}? 'btn-primary' : 'btn-default paginatorButton'"></button>	
+				
+				<button th:if="${pageNum == totalPages}" type="button" class="btn btn-default" disabled="disabled">Next</button>
+				<button th:attr="data-pagenum=${nPage}" th:if="${pageNum < totalPages}" type="button" class="btn btn-default paginatorButton">Next</button>
+			</div>
+			<script th:inline="javascript" type="text/javascript">
+			$(document).ready(function() {  
+			        $(".paginatorButton").click(function (e) {
+			        	$("#"+[[${formInputId}]]).val($(this).data("pagenum"));
+			        	$("#"+[[${formInputId}]]).closest("form").submit();
+			        });
+			} );	
+			</script>			
+		</div>
+	</body>
+</html>
