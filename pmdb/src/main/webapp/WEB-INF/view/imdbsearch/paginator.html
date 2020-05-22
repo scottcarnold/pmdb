@@ -6,7 +6,7 @@
 	<body>
 		<!--/* paginator for imdb search created to resemble the datatables.net paginator. Page size is always 10 for imdb service call results. */-->
 		<div th:fragment="paginator (pageNum, totalResults, formInputId)">
-			<div th:with="totalPages=(${totalResults}+10-(${totalResults}%10))/10,pPage=${pageNum}-1,nPage=${pageNum}+1" class="btn-group" role="group">
+			<div th:with="totalPages=(${totalResults}+(10-(${totalResults}%10))%10)/10,pPage=${pageNum}-1,nPage=${pageNum}+1" class="btn-group" role="group">
 				<button th:if="${pageNum == 1}" type="button" class="btn btn-default" disabled="disabled">Previous</button>
 				<button th:attr="data-pagenum=${pPage}" th:if="${pageNum > 1}" type="button" class="btn btn-default paginatorButton">Previous</button>
 				
@@ -30,7 +30,7 @@
 				
 				<button th:attr="data-pagenum=${totalPages}" th:if="${totalPages > 1}" th:text="${totalPages}" type="button" class="btn" th:classappend="${pageNum == totalPages}? 'btn-primary' : 'btn-default paginatorButton'"></button>	
 				
-				<button th:if="${pageNum == totalPages}" type="button" class="btn btn-default" disabled="disabled">Next</button>
+				<button th:if="${pageNum >= totalPages}" type="button" class="btn btn-default" disabled="disabled">Next</button>
 				<button th:attr="data-pagenum=${nPage}" th:if="${pageNum < totalPages}" type="button" class="btn btn-default paginatorButton">Next</button>
 			</div>
 			<script th:inline="javascript" type="text/javascript">

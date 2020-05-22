@@ -39,6 +39,7 @@ import org.xandercat.pmdb.util.ajax.JsonResponse;
 public class ImdbSearchController {
 
 	private static final Logger LOGGER = LogManager.getLogger(ImdbSearchController.class);
+	private static final String SESSION_KEY_LAST_SEARCH = "imdbLastSearchString";
 	
 	@Autowired
 	private ImdbSearchService imdbSearchService;
@@ -71,7 +72,14 @@ public class ImdbSearchController {
 			String year = (StringUtils.isEmptyOrWhitespace(searchForm.getYear()))? null : searchForm.getYear().trim();
 			SearchResult searchResult = null;
 			try {
+				Integer previousHash = (Integer) session.getAttribute(SESSION_KEY_LAST_SEARCH);
+				Integer currentHash = Integer.valueOf(searchForm.hashCode());
+				if (!currentHash.equals(previousHash)) {
+					// search criteria has changed; reset to page 1
+					searchForm.setPage(1);
+				}
 				searchResult = imdbSearchService.searchImdb(title, Integer.valueOf(searchForm.getPage()), year);
+				session.setAttribute(SESSION_KEY_LAST_SEARCH, currentHash);
 				model.addAttribute("searched", Boolean.TRUE);
 			} catch (ServiceLimitExceededException e) {
 				Alerts.setErrorMessage(model, "The maximum number of allowed IMDB service calls for today has been reached.  Please retry at a later date.");
