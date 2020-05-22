@@ -3,10 +3,10 @@ package org.xandercat.pmdb.service;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -164,22 +164,17 @@ public class UserServiceImpl implements UserService {
 	public CloudUserSearchResults syncCloudUsers(List<PmdbUser> regularSearchResults, String searchString) {
 		CloudUserSearchResults results = new CloudUserSearchResults();
 		Iterable<PmdbUserCredentials> credentials = dynamoUserCredentialsRepository.findAll();
-		Set<String> localUsernames = new HashSet<String>();
 		Set<String> cloudUsernames = new HashSet<String>();
 		credentials.forEach(credential -> cloudUsernames.add(credential.getUsername()));
-		regularSearchResults.forEach(pmdbUser -> localUsernames.add(pmdbUser.getUsername()));
-		Set<String> usersNotInCloud = new HashSet<String>();
-		usersNotInCloud.addAll(localUsernames);
-		usersNotInCloud.removeAll(cloudUsernames);
-		for (Iterator<String> cloudUsernamesIter = cloudUsernames.iterator(); cloudUsernamesIter.hasNext();) {
-			String cloudUsername = cloudUsernamesIter.next();
-			if (!cloudUsername.contains(searchString)) {
-				cloudUsernamesIter.remove();
-			}
-		}
-		cloudUsernames.removeAll(localUsernames);
+		Set<String> usersNotInCloud = regularSearchResults.stream()
+				.map(user -> user.getUsername())
+				.filter(localUsername -> !cloudUsernames.contains(localUsername))
+				.collect(Collectors.toSet());					
+		Set<String> onlyInCloudUsernames = cloudUsernames.stream()
+				.filter(cloudUsername -> cloudUsername.contains(searchString))
+				.collect(Collectors.toSet());
 		results.setUsernamesNotInCloud(usersNotInCloud);
-		results.setUsernamesOnlyInCloud(cloudUsernames);
+		results.setUsernamesOnlyInCloud(onlyInCloudUsernames);
 		return results;
 	}
 

@@ -5,12 +5,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -124,14 +122,9 @@ public class ExcelPorter {
 		this.sheetNames.retainAll(headerRows.keySet());
 		
 		// combine headers for all sheets to create master list of column names
-		Set<String> allColumnCINames = new HashSet<String>();
-		for (HeaderRow headerRow : headerRows.values()) {
-			allColumnCINames.addAll(headerRow.headers);
-		}
-		for (String columnName : allColumnCINames) {
-			allColumnNames.add(columnName.toString());
-		}
-		Collections.sort(allColumnNames);
+		this.allColumnNames = headerRows.values().stream()
+				.flatMap(headerRow -> headerRow.headers.stream())
+				.distinct().sorted().collect(Collectors.toList());
 	}
 	
 	/**
@@ -206,18 +199,15 @@ public class ExcelPorter {
 	}
 
 	private Map<String, HeaderRow> scanForHeaderRows() {
-		Map<String, HeaderRow> headerRows = new HashMap<String, HeaderRow>();
-		for (String sheetName : sheetNames) {
-			Sheet sheet = workbook.getSheet(sheetName);
-			HeaderRow headerRow = scanSheetForHeaderRow(sheet);
-			if (headerRow != null) {
-				headerRows.put(sheetName, headerRow);
-			}
-		}
-		return headerRows;
+		return sheetNames.stream()
+				.map(workbook::getSheet)
+				.collect(Collectors.toMap(Sheet::getSheetName, this::scanSheetForHeaderRow))
+				.entrySet().stream()
+				.filter(entry -> entry.getValue().isPresent())
+				.collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().get()));
 	}
 	
-	private HeaderRow scanSheetForHeaderRow(Sheet sheet) {
+	private Optional<HeaderRow> scanSheetForHeaderRow(Sheet sheet) {
 		for (int r=0; r<=MAX_SCAN_ROW_IDX; r++) {
 			Row row = sheet.getRow(r);
 			if (row != null) {
@@ -243,12 +233,12 @@ public class ExcelPorter {
 						cell = row.getCell(++c);
 					}
 					if (titleRowLikelyFound) {
-						return new HeaderRow(r, startIdx, titleIdx, headers);
+						return Optional.of(new HeaderRow(r, startIdx, titleIdx, headers));
 					}
 				}
 			}
 		}
-		return null;
+		return Optional.empty();
 	}
 	
 	/**

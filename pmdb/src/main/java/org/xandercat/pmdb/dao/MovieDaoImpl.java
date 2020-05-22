@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -59,9 +60,7 @@ public class MovieDaoImpl implements MovieDao {
 				movies.add(movie);
 			}
 		});
-		for (Movie movie : movies) {
-			movie.setAttributes(getMovieAttributes(movie.getId()));
-		}
+		movies.forEach(movie -> movie.setAttributes(getMovieAttributes(movie)));
 		return movies;
 	}
 
@@ -165,27 +164,24 @@ public class MovieDaoImpl implements MovieDao {
 			}
 		});
 		// do some set logic to figure out attributes
-		Map<String, String> oldAttributes = getMovieAttributes(movie.getId());
-		Set<String> oldKeys = oldAttributes.keySet();
+		Set<String> oldKeys = getMovieAttributes(movie.getId()).keySet();
 		Set<String> newKeys = movie.getAttributes().keySet();
-		Set<String> addKeys = new HashSet<String>();
-		Set<String> deleteKeys = new HashSet<String>();
-		Set<String> updateKeys = new HashSet<String>();
-		addKeys.addAll(newKeys);
-		addKeys.removeAll(oldKeys);
-		deleteKeys.addAll(oldKeys);
-		deleteKeys.removeAll(newKeys);
-		updateKeys.addAll(oldKeys);
-		updateKeys.removeAll(deleteKeys);
-		for (String key : deleteKeys) {
-			deleteMovieAttribute(movie.getId(), key);
-		}
-		for (String key : addKeys) {
-			addMovieAttribute(movie.getId(), key, movie.getAttribute(key));
-		}
-		for (String key : updateKeys) {
-			updateMovieAttribute(movie.getId(), key, movie.getAttribute(key));
-		}
+		
+		Set<String> deleteKeys = oldKeys.stream()
+				.filter(oldKey -> !newKeys.contains(oldKey))
+				.collect(Collectors.toSet());
+		
+		Set<String> addKeys = newKeys.stream()
+				.filter(newKey -> !oldKeys.contains(newKey))
+				.collect(Collectors.toSet());
+		
+		Set<String> updateKeys = oldKeys.stream()
+				.filter(oldKey -> !deleteKeys.contains(oldKey))
+				.collect(Collectors.toSet());
+		
+		deleteKeys.forEach(key -> deleteMovieAttribute(movie.getId(), key));
+		addKeys.forEach(key -> addMovieAttribute(movie.getId(), key, movie.getAttribute(key)));	
+		updateKeys.forEach(key -> updateMovieAttribute(movie.getId(), key, movie.getAttribute(key)));
 	}
 
 	@Override
@@ -198,6 +194,10 @@ public class MovieDaoImpl implements MovieDao {
 				ps.setString(1, id);
 			}
 		});
+	}
+	
+	private Map<String, String> getMovieAttributes(Movie movie) {
+		return getMovieAttributes(movie.getId());
 	}
 	
 	private Map<String, String> getMovieAttributes(String id) {

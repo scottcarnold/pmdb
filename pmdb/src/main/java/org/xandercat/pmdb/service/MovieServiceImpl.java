@@ -1,10 +1,10 @@
 package org.xandercat.pmdb.service;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -49,9 +49,7 @@ public class MovieServiceImpl implements MovieService {
 		assertCloudReady(movieCollection);
 		if (movieCollection.isCloud()) {
 			try {
-				Set<Movie> movies = new HashSet<Movie>();
-				movies.addAll(dynamoMovieRepository.findByCollectionId(collectionId));
-				return movies;
+				return dynamoMovieRepository.findByCollectionId(collectionId).stream().collect(Collectors.toSet());
 			} catch (Exception e) {
 				throw new CloudServicesException(e);
 			}
@@ -203,16 +201,19 @@ public class MovieServiceImpl implements MovieService {
 
 	@Override
 	public Set<String> getImdbIdsInDefaultCollection(String callingUsername) throws CloudServicesException {
-		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(callingUsername);
-		assertCloudReady(defaultMovieCollection);
-		if (defaultMovieCollection.isCloud()) {
+		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(callingUsername);
+		if (!defaultMovieCollection.isPresent()) {
+			return Collections.emptySet();
+		}
+		assertCloudReady(defaultMovieCollection.get());
+		if (defaultMovieCollection.get().isCloud()) {
 			try {
-				return dynamoMovieRepository.getAttributeValuesForCollection(defaultMovieCollection.getId(), ImdbSearchService.IMDB_ID_KEY);
+				return dynamoMovieRepository.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
 			} catch (Exception e) {
 				throw new CloudServicesException(e);
 			}
 		} else {
-			return movieDao.getAttributeValuesForCollection(defaultMovieCollection.getId(), ImdbSearchService.IMDB_ID_KEY);
+			return movieDao.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
 		}		
 	}
 }

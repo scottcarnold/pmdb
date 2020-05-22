@@ -3,6 +3,7 @@ package org.xandercat.pmdb.controller;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.servlet.http.HttpSession;
@@ -52,10 +53,10 @@ public class HomeController {
 	
 	@ModelAttribute("attributeNames")
 	public List<String> getAttributeNames(Principal principal) {
-		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
-		if (defaultMovieCollection != null) {
+		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		if (defaultMovieCollection.isPresent()) {
 			try {
-				return movieService.getAttributeKeysForCollection(defaultMovieCollection.getId(), principal.getName());
+				return movieService.getAttributeKeysForCollection(defaultMovieCollection.get().getId(), principal.getName());
 			} catch (Exception e) {
 				LOGGER.error("Unable to add collection attribute names to model.", e);
 			}			
@@ -78,19 +79,19 @@ public class HomeController {
 	}
 	
 	private String prepareHome(Model model, Principal principal, String searchString, boolean editMode, HttpSession session) {
-		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
-		if (defaultMovieCollection == null) {
+		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		if (!defaultMovieCollection.isPresent()) {
 			// send them to collections so they can set a default movie collection
 			return "redirect:/collections";
 		}
 		ViewUtil.setMoviesEditMode(session, editMode);
 		model.addAttribute("editMode", Boolean.valueOf(editMode));
-		model.addAttribute("defaultMovieCollection", defaultMovieCollection);
+		model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
 		try {
-			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.getId(), principal.getName());
+			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.get().getId(), principal.getName());
 			model.addAttribute("totalMoviesInCollection", movies.size());
 			if (!StringUtils.isEmptyOrWhitespace(searchString)) {
-				movies = movieService.searchMoviesForCollection(defaultMovieCollection.getId(), searchString, principal.getName());
+				movies = movieService.searchMoviesForCollection(defaultMovieCollection.get().getId(), searchString, principal.getName());
 			}
 			List<String> attrColumns = movieService.getTableColumnPreferences(principal.getName());
 			Set<FormattedMovie> formattedMovies = Transformers.getFormattedMovies(movies, attrColumns);
@@ -133,9 +134,9 @@ public class HomeController {
 		if (result.hasErrors()) {
 			return "movie/addMovie";
 		}
-		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		Movie movie = movieForm.toMovie();
-		movie.setCollectionId(movieCollection.getId());
+		movie.setCollectionId(movieCollection.get().getId());
 		try {
 			movieService.addMovie(movie, principal.getName());
 		} catch (CollectionSharingException | CloudServicesException e) {
@@ -171,10 +172,10 @@ public class HomeController {
 	
 	@RequestMapping(value="/movies/deleteMovie", method=RequestMethod.POST)
 	public String deleteMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
-		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		try {
 			Movie movie = movieService.getMovie(movieId, principal.getName());
-			if (!movie.getCollectionId().equals(movieCollection.getId())) {
+			if (!movie.getCollectionId().equals(movieCollection.get().getId())) {
 				Alerts.setErrorMessage(model, "Movies can only be deleted from your currently active collection.");
 				return home(model, principal, session);
 			}
@@ -190,12 +191,12 @@ public class HomeController {
 	
 	@RequestMapping("/movies/configureColumns")
 	public String configureColumns(Model model, Principal principal, HttpSession session) {
-		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		List<String> tableColumnOptions = null;
 		try {
-			tableColumnOptions = movieService.getAttributeKeysForCollection(movieCollection.getId(), principal.getName());
+			tableColumnOptions = movieService.getAttributeKeysForCollection(movieCollection.get().getId(), principal.getName());
 		} catch (CollectionSharingException | CloudServicesException e) {
-			LOGGER.error("User " + principal.getName() + " cannot configure columns for collection " + movieCollection.getId(), e);
+			LOGGER.error("User " + principal.getName() + " cannot configure columns for collection " + movieCollection.get().getId(), e);
 			Alerts.setErrorMessage(model, "Columns cannot be configured.");
 			return home(model, principal, session);
 		}

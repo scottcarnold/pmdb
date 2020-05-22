@@ -1,8 +1,9 @@
 package org.xandercat.pmdb.util;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpSession;
 
@@ -70,6 +71,24 @@ public class ViewUtil {
 		session.removeAttribute(SESSION_COLLECTION_UPLOAD_COLUMNS);
 	}
 	
+	private static Option reflectOptionWithIntValue(Object item, String valueFieldName, String textFieldName) {
+		try {
+			String value = String.valueOf(ReflectionUtil.invokeGetter(item, valueFieldName, Integer.TYPE));
+			String text = ReflectionUtil.invokeGetter(item, textFieldName, String.class);
+			return new Option(value, text);	
+		} catch (Exception e) {
+			throw new IllegalArgumentException("Unable to obtain option text and value with reflection.");
+		}
+	}
+	
+	private static <E extends Enum<E>> Option getOption(E e) {
+		return new Option(e.name(), e.toString());
+	}
+	
+	private static Option getOption(String s) {
+		return new Option(s, s);
+	}
+	
 	/**
 	 * Shortcut method to return list of options for view given collection of objects.  Value field is currently
 	 * limited to primitive int type.  Text field is currently limited to String type.
@@ -81,17 +100,9 @@ public class ViewUtil {
 	 * @return list of options for the items
 	 */
 	public static List<Option> getOptions(Collection<?> items, String valueFieldName, String textFieldName) {
-		List<Option> options = new ArrayList<Option>();
-		try {
-			for (Object item : items) {
-				String value = String.valueOf(ReflectionUtil.invokeGetter(item, valueFieldName, Integer.TYPE));
-				String text = ReflectionUtil.invokeGetter(item, textFieldName, String.class);
-				options.add(new Option(value, text));
-			}
-		} catch (Exception e) {
-			throw new IllegalArgumentException("Unable to generate list of options from provided items.", e);
-		}
-		return options;
+		return items.stream().map(item -> { 
+			return reflectOptionWithIntValue(item, valueFieldName, textFieldName); 
+		}).collect(Collectors.toList());
 	}
 	
 	/**
@@ -102,11 +113,7 @@ public class ViewUtil {
 	 * @return          list of options for enum class
 	 */
 	public static <E extends Enum<E>> List<Option> getOptions(Class<E> enumType) {
-		List<Option> options = new ArrayList<Option>();
-		for (Enum<?> e : enumType.getEnumConstants()) {
-			options.add(new Option(e.name(), e.toString()));
-		}
-		return options;
+		return Arrays.stream(enumType.getEnumConstants()).map(ViewUtil::getOption).collect(Collectors.toList());
 	}
 	
 	/**
@@ -117,10 +124,6 @@ public class ViewUtil {
 	 * @return options for the strings
 	 */
 	public static List<Option> getOptions(Collection<String> strings) {
-		List<Option> options = new ArrayList<Option>();
-		for (String s : strings) {
-			options.add(new Option(s, s));
-		}
-		return options;
+		return strings.stream().map(ViewUtil::getOption).collect(Collectors.toList());
 	}
 }

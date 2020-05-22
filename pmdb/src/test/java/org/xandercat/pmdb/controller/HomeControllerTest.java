@@ -21,6 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 
@@ -47,10 +48,11 @@ public class HomeControllerTest {
 		defaultMovieCollection.setId("1");
 		defaultMovieCollection.setName("Test Collection");
 		defaultMovieCollection.setOwner("User", "User");
+		Optional<MovieCollection> optional = Optional.of(defaultMovieCollection);
 		MockitoAnnotations.initMocks(this);
 		mockMvc = MockMvcBuilders.standaloneSetup(homeController).build();
 		when(principal.getName()).thenReturn("User");
-		when(collectionService.getDefaultMovieCollection(any())).thenReturn(defaultMovieCollection);
+		when(collectionService.getDefaultMovieCollection(any())).thenReturn(optional);
 		try {
 			when(movieService.getMoviesForCollection(any(), any())).thenReturn(new HashSet<Movie>());
 		} catch (CollectionSharingException | CloudServicesException e) {

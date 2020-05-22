@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,10 +81,8 @@ public class DynamoMovieRepositoryExtensionImpl implements DynamoMovieRepository
 				.withFilterExpression("attribute_exists(" + FormatUtil.convertToDynamoKey(attributeName) + ")")
 				.withExpressionAttributeValues(parms);
 		PaginatedQueryList<Movie> queryList = dynamoDBTemplate.query(Movie.class, queryExpression);
-		Set<String> attributeValues = new HashSet<String>();
-		for (Movie movie : queryList) {
-			attributeValues.add(movie.getAttribute(attributeName));
-		}
-		return attributeValues;
+		return queryList.stream()
+				.map(movie -> movie.getAttribute(attributeName))
+				.collect(Collectors.toSet());
 	}
 }

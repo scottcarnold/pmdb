@@ -3,6 +3,7 @@ package org.xandercat.pmdb.controller;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
@@ -61,9 +62,9 @@ public class CollectionController {
 	@RequestMapping("/collections")
 	public String collections(Model model, Principal principal) {
 		String username = principal.getName();
-		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(username);
-		if (defaultMovieCollection != null) {
-			model.addAttribute("defaultMovieCollection", defaultMovieCollection);
+		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(username);
+		if (defaultMovieCollection.isPresent()) {
+			model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
 		}
 		List<MovieCollection> movieCollections = collectionService.getViewableMovieCollections(username);
 		List<MovieCollection> shareOffers = collectionService.getShareOfferMovieCollections(username);
@@ -216,11 +217,11 @@ public class CollectionController {
 	@RequestMapping("/collections/toggleEditPermission")
 	public String toggleEditPermission(Model model, Principal principal, @RequestParam String collectionId, @RequestParam String username) {
 		try {
-			CollectionPermission permission = collectionService.getCollectionPermission(collectionId, username, principal.getName());
-			if (permission == null) {
+			Optional<CollectionPermission> permission = collectionService.getCollectionPermission(collectionId, username, principal.getName());
+			if (!permission.isPresent()) {
 				throw new CollectionSharingException("Unable to obtain permission for collection " + collectionId + " user " + username);
 			}
-			collectionService.updateEditable(collectionId, username, !permission.isAllowEdit(), principal.getName());
+			collectionService.updateEditable(collectionId, username, !permission.get().isAllowEdit(), principal.getName());
 			Alerts.setMessage(model, "Edit permission updated.");
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to update edit permission for user.", e);
@@ -306,10 +307,10 @@ public class CollectionController {
 			Alerts.setErrorMessage(model, "There are no collections that can be exported.");
 			return collections(model, principal);
 		}
-		MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		String exportCollectionId = movieCollections.get(0).getId();
-		if (defaultMovieCollection != null) {
-			exportCollectionId = defaultMovieCollection.getId();
+		if (defaultMovieCollection.isPresent()) {
+			exportCollectionId = defaultMovieCollection.get().getId();
 		}
 		model.addAttribute("exportForm", new ExportForm(exportCollectionId, ExportType.XLSX));
 		model.addAttribute("collectionOptions", ViewUtil.getOptions(movieCollections, "id", "name"));

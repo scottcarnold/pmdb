@@ -1,6 +1,7 @@
 package org.xandercat.pmdb.dao;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.MovieCollection;
@@ -64,7 +65,7 @@ public interface CollectionDao {
 	 * 
 	 * @return viewable movie collection of given id (or null if collection is not viewable)
 	 */
-	public MovieCollection getViewableMovieCollection(String collectionId, String username);
+	public Optional<MovieCollection> getViewableMovieCollection(String collectionId, String username);
 
 	/**
 	 * Offer to share a collection of given id to the given username.
@@ -91,7 +92,7 @@ public interface CollectionDao {
 	 * @param username      username
 	 * @return              id of default movie collection
 	 */
-	public String getDefaultCollectionId(String username);
+	public Optional<String> getDefaultCollectionId(String username);
 	
 	/**
 	 * Sets the default collection of the user of given username to the movie collection of given id.
@@ -126,7 +127,7 @@ public interface CollectionDao {
 	 * @param username      username
 	 * @return collection permission for user
 	 */
-	public CollectionPermission getCollectionPermission(String collectionId, String username);
+	public Optional<CollectionPermission> getCollectionPermission(String collectionId, String username);
 	
 	/**
 	 * Sets whether or not the given user can edit the given collection.

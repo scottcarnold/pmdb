@@ -4,11 +4,10 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.FormattedMovie;
@@ -22,27 +21,23 @@ import org.xandercat.pmdb.dto.FormattedMovie;
 public class Transformers {
 
 	public static Set<FormattedMovie> getFormattedMovies(Set<Movie> movies, List<String> attributeNames) {
-		Set<FormattedMovie> tmovies = new HashSet<FormattedMovie>();
 		List<DataTransformer<?>> dataTransformers = buildTransformers();
-		Map<String, DataTransformerSelector> selectors = new HashMap<String, DataTransformerSelector>();
-		for (String attributeName : attributeNames) {
-			DataTransformerSelector selector = new DataTransformerSelector(attributeName, dataTransformers);
-			selectors.put(attributeName, selector);
-		}
-		for (Movie movie : movies) {
-			for (String attributeName : attributeNames) {
-				selectors.get(attributeName).test(movie.getAttribute(attributeName));
-			}
-		}
-		Map<String, DataTransformer<?>> transformerMap = new HashMap<String, DataTransformer<?>>();
-		for (Map.Entry<String, DataTransformerSelector> entry : selectors.entrySet()) {
-			transformerMap.put(entry.getKey(), entry.getValue().getDataTransformer());
-		}
-		for (Movie movie : movies) {
-			FormattedMovie tmovie = new FormattedMovie(movie, transformerMap);
-			tmovies.add(tmovie);
-		}
-		return tmovies;
+		
+		// test the data
+		Map<String, DataTransformerSelector> selectors = attributeNames.stream()
+				.collect(Collectors.toMap(String::toString, attributeName -> new DataTransformerSelector(attributeName, dataTransformers)));
+		movies.stream()
+				.forEach(movie -> attributeNames.stream()
+				.forEach(attributeName -> selectors.get(attributeName).test(movie.getAttribute(attributeName))));
+		
+		// build the transformer map
+		Map<String, DataTransformer<?>> transformerMap = selectors.entrySet().stream()
+				.filter(entry -> entry.getValue().getDataTransformer().isPresent())
+				.collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getDataTransformer().get()));
+		
+		// return the wrapped movies
+		return movies.stream()
+				.map(movie -> new FormattedMovie(movie, transformerMap)).collect(Collectors.toSet());
 	}
 
 	private static List<DataTransformer<?>> buildTransformers() {

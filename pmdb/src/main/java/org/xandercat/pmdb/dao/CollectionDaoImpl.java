@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -61,14 +62,10 @@ public class CollectionDaoImpl implements CollectionDao {
 	}
 
 	@Override
-	public MovieCollection getViewableMovieCollection(String collectionId, String username) {
-		List<MovieCollection> viewableMovieCollections = getViewableMovieCollections(username);
-		for (MovieCollection movieCollection : viewableMovieCollections) {
-			if (movieCollection.getId().equals(collectionId)) {
-				return movieCollection;
-			}
-		}
-		return null;
+	public Optional<MovieCollection> getViewableMovieCollection(String collectionId, String username) {
+		return getViewableMovieCollections(username).stream()
+				.filter(movieCollection -> movieCollection.getId().equals(collectionId))
+				.findAny();
 	}
 
 	@Override
@@ -178,7 +175,7 @@ public class CollectionDaoImpl implements CollectionDao {
 	}
 
 	@Override
-	public String getDefaultCollectionId(String username) {
+	public Optional<String> getDefaultCollectionId(String username) {
 		final String sql = "SELECT collection_id FROM collection_default WHERE username = ?";
 		List<String> ids = new ArrayList<String>();
 		jdbcTemplate.query(sql, new PreparedStatementSetter() {
@@ -192,15 +189,15 @@ public class CollectionDaoImpl implements CollectionDao {
 				ids.add(rs.getString(1));
 			}
 		});
-		return ids.size() > 0? ids.get(0) : null;
+		return ids.stream().findAny();
 	}
 
 	@Override
 	public void setDefaultCollection(String username, String collectionId) {
-		String currentDefault = getDefaultCollectionId(username);
+		Optional<String> currentDefault = getDefaultCollectionId(username);
 		final String insertSql = "INSERT INTO collection_default(collection_id, username) VALUES (?, ?)";
 		final String updateSql = "UPDATE collection_default SET collection_id = ? WHERE username = ?";
-		String sql = (currentDefault == null)? insertSql : updateSql;
+		String sql = (currentDefault.isPresent())? updateSql : insertSql;
 		jdbcTemplate.update(sql, new PreparedStatementSetter() {
 			@Override
 			public void setValues(PreparedStatement ps) throws SQLException {
@@ -251,13 +248,9 @@ public class CollectionDaoImpl implements CollectionDao {
 	}
 
 	@Override
-	public CollectionPermission getCollectionPermission(String collectionId, String username) {
-		List<CollectionPermission> permissions = getCollectionPermissions(collectionId);
-		for (CollectionPermission permission : permissions) {
-			if (permission.getUsername().equals(username)) {
-				return permission;
-			}
-		}
-		return null;
+	public Optional<CollectionPermission> getCollectionPermission(String collectionId, String username) {
+		return getCollectionPermissions(collectionId).stream()
+				.filter(permission -> permission.getUsername().equals(username))
+				.findAny();
 	}
 }

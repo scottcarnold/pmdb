@@ -20,6 +20,7 @@ import org.xandercat.pmdb.dto.imdb.SearchResult;
 import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.util.Pair;
 
+//TODO: Switch the parameter setting to an object that can be marshalled
 @Component
 public class ImdbRestService implements ImdbSearchService {
 	

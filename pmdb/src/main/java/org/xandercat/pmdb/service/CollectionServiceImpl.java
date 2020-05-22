@@ -3,6 +3,7 @@ package org.xandercat.pmdb.service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,9 +54,9 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 	
 	@Override
-	public MovieCollection getDefaultMovieCollection(String username) {
-		String collectionId = collectionDao.getDefaultCollectionId(username);
-		return (collectionId == null)? null : collectionDao.getViewableMovieCollection(collectionId, username);
+	public Optional<MovieCollection> getDefaultMovieCollection(String username) {
+		Optional<String> collectionId = collectionDao.getDefaultCollectionId(username);
+		return collectionId.isPresent()? collectionDao.getViewableMovieCollection(collectionId.get(), username) : Optional.ofNullable(null);
 	}
 
 	@Override
@@ -77,11 +78,11 @@ public class CollectionServiceImpl implements CollectionService {
 
 	@Override
 	public MovieCollection getViewableMovieCollection(String collectionId, String callingUsername)	throws CollectionSharingException {
-		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
-		if (movieCollection == null) {
+		Optional<MovieCollection> movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
+		if (!movieCollection.isPresent()) {
 			throw new CollectionSharingException("User does not have permission to view collection.");
 		}
-		return movieCollection;
+		return movieCollection.get();
 	}
 
 	@Override
@@ -101,16 +102,17 @@ public class CollectionServiceImpl implements CollectionService {
 
 	@Override
 	public void updateMovieCollection(MovieCollection movieCollection, String callingUsername) throws CollectionSharingException, CloudServicesException {
-		MovieCollection viewableMovieCollection = collectionDao.getViewableMovieCollection(movieCollection.getId(), callingUsername);
-		if (viewableMovieCollection == null || !viewableMovieCollection.isEditable()) { // collection must be editable
+		Optional<MovieCollection> viewableMovieCollectionOptional = collectionDao.getViewableMovieCollection(movieCollection.getId(), callingUsername);
+		if (!viewableMovieCollectionOptional.isPresent() || !viewableMovieCollectionOptional.get().isEditable()) { // collection must be editable
 			throw new CollectionSharingException("User does not have required permission to update collection.");
 		}
-		assertCloudReady(viewableMovieCollection);
-		viewableMovieCollection.setName(movieCollection.getName());
-		collectionDao.updateMovieCollection(viewableMovieCollection);
-		if (viewableMovieCollection.isCloud()) {
+		MovieCollection editableMovieCollection = viewableMovieCollectionOptional.get();
+		assertCloudReady(editableMovieCollection);
+		editableMovieCollection.setName(movieCollection.getName());
+		collectionDao.updateMovieCollection(editableMovieCollection);
+		if (editableMovieCollection.isCloud()) {
 			try {
-				dynamoCollectionRepository.save(viewableMovieCollection);
+				dynamoCollectionRepository.save(editableMovieCollection);
 			} catch (Exception e) {
 				throw new CloudServicesException(e);
 			}
@@ -119,10 +121,11 @@ public class CollectionServiceImpl implements CollectionService {
 
 	@Override
 	public void deleteMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException, CloudServicesException {
-		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
-		if (movieCollection == null || !movieCollection.getOwner().equals(callingUsername)) { // only owner can delete collection
+		Optional<MovieCollection> movieCollectionOptional = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
+		if (!movieCollectionOptional.isPresent() || !movieCollectionOptional.get().getOwner().equals(callingUsername)) { // only owner can delete collection
 			throw new CollectionSharingException("User does not have required permission to delete collection.");
 		}
+		MovieCollection movieCollection = movieCollectionOptional.get();
 		assertCloudReady(movieCollection);
 		if (movieCollection.isCloud()) {
 			try {
@@ -183,35 +186,35 @@ public class CollectionServiceImpl implements CollectionService {
 	
 	@Override
 	public MovieCollection assertCollectionViewable(String collectionId, String callingUsername) throws CollectionSharingException {
-		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
-		if (movieCollection == null) { // collection must be viewable
+		Optional<MovieCollection> movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
+		if (!movieCollection.isPresent()) { // collection must be viewable
 			throw new CollectionSharingException("User does not have required permission to update share permission.");
 		}
-		return movieCollection;
+		return movieCollection.get();
 	}
 
 	@Override
 	public MovieCollection assertCollectionEditable(String collectionId, String callingUsername) throws CollectionSharingException {
-		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
-		if (movieCollection == null || !movieCollection.isEditable()) { // collection must be editable
+		Optional<MovieCollection> movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
+		if (!movieCollection.isPresent() || !movieCollection.get().isEditable()) { // collection must be editable
 			throw new CollectionSharingException("User does not have required permission to update share permission.");
 		}
-		return movieCollection;
+		return movieCollection.get();
 	}
 
 	@Override
 	public List<CollectionPermission> getCollectionPermissions(String collectionId, String callingUsername) throws CollectionSharingException {
-		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
-		if (movieCollection == null || !callingUsername.equals(movieCollection.getOwner())) {
+		Optional<MovieCollection> movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
+		if (!movieCollection.isPresent() || !callingUsername.equals(movieCollection.get().getOwner())) {
 			throw new CollectionSharingException("User can only view sharing permissions of collections they are the owner of.");
 		}
 		return collectionDao.getCollectionPermissions(collectionId);
 	}
 
 	@Override
-	public CollectionPermission getCollectionPermission(String collectionId, String username, String callingUsername) throws CollectionSharingException {
-		MovieCollection movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
-		if (movieCollection == null || !callingUsername.equals(movieCollection.getOwner())) {
+	public Optional<CollectionPermission> getCollectionPermission(String collectionId, String username, String callingUsername) throws CollectionSharingException {
+		Optional<MovieCollection> movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
+		if (!movieCollection.isPresent() || !callingUsername.equals(movieCollection.get().getOwner())) {
 			throw new CollectionSharingException("User can only view sharing permissions of collections they are the owner of.");
 		}
 		return collectionDao.getCollectionPermission(collectionId, username);
@@ -235,13 +238,9 @@ public class CollectionServiceImpl implements CollectionService {
 		if (cloud) {
 			dynamoCollectionRepository.save(movieCollection); // key will have already been set by mirrored movie collection save
 		}
-		for (Movie movie : movies) {
-			movie.setCollectionId(movieCollection.getId());
-		}
+		movies.forEach(movie -> movie.setCollectionId(movieCollection.getId()));
 		if (cloud) {
-			for (Movie movie : movies) {
-				movie.setId(keyGenerator.getKey());  // TODO: Could redefine the DynamoDB table to have auto-generated keys
-			}
+			movies.forEach(movie -> movie.setId(keyGenerator.getKey())); // TODO: Could redefine the DynamoDB table to have auto-generated keys
 			dynamoMovieRepository.saveAll(movies);
 		} else {
 			movieDao.addMovies(movies);

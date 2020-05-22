@@ -2,6 +2,7 @@ package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.servlet.http.HttpSession;
@@ -92,9 +93,9 @@ public class ImdbSearchController {
 				model.addAttribute("totalResults", Integer.valueOf(searchResult.getTotalResults()));
 			}
 			model.addAttribute("searchResults", searchResults);
-			MovieCollection defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
-			if (defaultMovieCollection != null) {
-				model.addAttribute("defaultMovieCollection", defaultMovieCollection);
+			Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+			if (defaultMovieCollection.isPresent()) {
+				model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
 				if (searchResults != null && searchResults.size() > 0) {
 					try {
 						Set<String> imdbIdsInCollection = movieService.getImdbIdsInDefaultCollection(principal.getName());
@@ -126,8 +127,8 @@ public class ImdbSearchController {
 			response.setErrorMessage("Service limit exceeded. You will not be able to add any more movies to your collection today through the IMDB Search function.");
 			return response;
 		}
-		MovieCollection movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
-		Movie movie = new Movie(movieDetails, movieCollection.getId());
+		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		Movie movie = new Movie(movieDetails, movieCollection.get().getId());
 		try {
 			movieService.addMovie(movie, principal.getName());
 		} catch (CollectionSharingException e) {
