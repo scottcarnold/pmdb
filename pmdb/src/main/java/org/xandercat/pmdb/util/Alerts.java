@@ -24,22 +24,27 @@ public class Alerts {
 	public static final String KEY_DISMISSED_KEYS = "alertOtherMessagesDismissed";
 
 	public static class Alert {
-		private String message;
-		private String key;
+		private String message;     // a basic string message
+		private boolean messageKey; // if true, indicates message is a resource message key
+		private String sessionKey;  // key for session tracking
 		private AlertType type;
-		public Alert(String key, AlertType type, String message) {
-			this.key = key;
+		public Alert(String sessionKey, AlertType type, String message, boolean messageKey) {
+			this.sessionKey = sessionKey;
 			this.type = type;
 			this.message = message;
+			this.messageKey = messageKey;
 		}
 		public String getMessage() {
 			return message;
 		}
-		public String getKey() {
-			return key;
+		public String getSessionKey() {
+			return sessionKey;
 		}
 		public AlertType getType() {
 			return type;
+		}
+		public boolean isMessageKey() {
+			return messageKey;
 		}
 	}
 	
@@ -55,19 +60,43 @@ public class Alerts {
 	}
 	
 	public static void setMessage(Model model, String message) {
-		model.addAttribute(KEY_MESSAGE, message);
+		setMessage(model, message, false);
+	}
+	
+	public static void setMessageWithKey(Model model, String messageKey) {
+		setMessage(model, messageKey, true);
+	}
+	
+	public static void setMessage(Model model, String message, boolean messageKey) {
+		model.addAttribute(KEY_MESSAGE, new Alert(KEY_MESSAGE, AlertType.SUCCESS, message, messageKey));
 	}
 	
 	public static void setErrorMessage(Model model, String errorMessage) {
-		model.addAttribute(KEY_ERROR_MESSAGE, errorMessage);
+		setErrorMessage(model, errorMessage, false);
 	}
 	
-	public static void setErrorMessage(RedirectAttributes redirectAttributes, String errorMessage) {
-		redirectAttributes.addFlashAttribute(KEY_ERROR_MESSAGE, errorMessage);
+	public static void setErrorMessageWithKey(Model model, String errorMessageKey) {
+		setErrorMessage(model, errorMessageKey, true);
+	}
+	
+	public static void setErrorMessage(Model model, String errorMessage, boolean messageKey) {
+		model.addAttribute(KEY_ERROR_MESSAGE, new Alert(KEY_ERROR_MESSAGE, AlertType.DANGER, errorMessage, messageKey));
+	}
+	
+	public static void setErrorMessage(RedirectAttributes redirectAttributes, String errorMessage, boolean messageKey) {
+		redirectAttributes.addFlashAttribute(KEY_ERROR_MESSAGE, new Alert(KEY_ERROR_MESSAGE, AlertType.DANGER, errorMessage, messageKey));
 	}
 
+	public static void setSessionAlertWithKey(Model model, HttpSession session, String sessionKey, AlertType type, String messageKey) {
+		setSessionAlert(model, session, sessionKey, type, messageKey, true);
+	}
+	
+	public static void setSessionAlert(Model model, HttpSession session, String sessionKey, AlertType type, String message) {
+		setSessionAlert(model, session, sessionKey, type, message, false);
+	}
+	
 	@SuppressWarnings("unchecked")
-	public static void setSessionAlert(Model model, HttpSession session, String key, AlertType type, String message) {
+	public static void setSessionAlert(Model model, HttpSession session, String key, AlertType type, String message, boolean messageKey) {
 		Set<String> dismissedKeys = (Set<String>) session.getAttribute(KEY_DISMISSED_KEYS);
 		if (dismissedKeys != null && dismissedKeys.contains(key)) {
 			return;
@@ -77,7 +106,7 @@ public class Alerts {
 			alerts = new ArrayList<Alert>();
 			model.addAttribute(KEY_OTHER_MESSAGES, alerts);
 		}
-		alerts.add(new Alert(key, type, message));
+		alerts.add(new Alert(key, type, message, messageKey));
 	}
 	
 	@SuppressWarnings("unchecked")

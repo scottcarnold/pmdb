@@ -7,16 +7,19 @@
 		<div th:fragment="alert">
 			<div th:if="${alertMessage}" class="alert alert-success alert-dismissible" role="alert">
 				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<p th:text="${alertMessage}"></p>
+				<p th:if="${alertMessage.messageKey}" th:text="#{__${alertMessage.message}__}"></p>
+				<p th:if="not ${alertMessage.messageKey}" th:text="${alertMessage.message}"></p>
 			</div>
 			<div th:if="${alertErrorMessage}" class="alert alert-danger alert-dismissible" role="alert">
 				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<p th:text="${alertErrorMessage}"></p>
+				<p th:if="${alertErrroMessage.messageKey}" th:text="#{__${alertErrorMessage}__}"></p>
+				<p th:if="not ${alertErrroMessage.messageKey}" th:text="${alertErrorMessage}"></p>
 			</div>
 			<div th:if="${alertOtherMessages}">
 				<div th:each="alertOtherMessage : ${alertOtherMessages}" class="alert alert-dismissible" th:classappend="${alertOtherMessage.type.classname}" role="alert">
-					<button th:attr="data-href='/pmdb/dismissSessionAlert',data-key=${alertOtherMessage.key}" type="button" class="close alertCloseButton" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-					<p th:text="${alertOtherMessage.message}"></p>
+					<button th:attr="data-href='/pmdb/dismissSessionAlert',data-key=${alertOtherMessage.sessionKey}" type="button" class="close alertCloseButton" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<p th:if="${alertOtherMessage.messageKey}" th:text="#{__${alertOtherMessage.message}__}"></p>
+					<p th:if="not ${alertOtherMessage.messageKey}" th:text="${alertOtherMessage.message}"></p>
 				</div>
 			</div>
 			<script type="text/javascript">

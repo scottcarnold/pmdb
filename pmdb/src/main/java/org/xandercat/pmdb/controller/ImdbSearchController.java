@@ -2,7 +2,6 @@ package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import javax.servlet.http.HttpSession;
@@ -11,7 +10,6 @@ import javax.validation.Valid;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -51,28 +49,23 @@ public class ImdbSearchController {
 	@Autowired
 	private CollectionService collectionService;
 	
-	@Autowired
-	private MessageSource messageSource;
-	
 	@ModelAttribute("viewTab")
 	public String getViewTab() {
 		return ViewUtil.TAB_IMDB_SEARCH;
 	}
 	
 	@RequestMapping("/imdbsearch")
-	public String imdbSearch(Model model, HttpSession session, Locale locale) {
+	public String imdbSearch(Model model, HttpSession session) {
 		model.addAttribute("searchForm", new SearchForm());
-		String message = messageSource.getMessage("alert.imdbsearch.limits", null, locale);
-		Alerts.setSessionAlert(model, session, "IMDBSearchLimit", Alerts.AlertType.WARNING, message);
+		Alerts.setSessionAlertWithKey(model, session, "IMDBSearchLimit", Alerts.AlertType.WARNING, "alert.imdbsearch.limits");
 		return "imdbsearch/imdbSearch";
 	}
 
 	@RequestMapping("/imdbsearch/searchSubmit")
 	public String imdbSearchSubmit(Model model, Principal principal,
 			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
-			BindingResult result, HttpSession session, Locale locale) {
-		String message = messageSource.getMessage("alert.imdbsearch.limits", null, locale);
-		Alerts.setSessionAlert(model, session, "IMDBSearchLimit", Alerts.AlertType.WARNING, message);
+			BindingResult result, HttpSession session) {
+		Alerts.setSessionAlertWithKey(model, session, "IMDBSearchLimit", Alerts.AlertType.WARNING, "alert.imdbsearch.limits");
 		if (!result.hasErrors()) {
 			String title = searchForm.getTitle();
 			String year = (StringUtils.isEmptyOrWhitespace(searchForm.getYear()))? null : searchForm.getYear().trim();
