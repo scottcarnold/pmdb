@@ -24,7 +24,7 @@ import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.FormattedMovie;
-import org.xandercat.pmdb.exception.CloudServicesException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.movie.MovieForm;
@@ -98,7 +98,7 @@ public class HomeController {
 			model.addAttribute("movies", formattedMovies); 
 			model.addAttribute("attrColumns", attrColumns);
 			
-		} catch (CollectionSharingException | CloudServicesException e) {
+		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("Unable to retrieve movies for default movie collection.", e);
 			Alerts.setErrorMessage(model, "Unable to get movies for the collection.");
 		}
@@ -139,7 +139,7 @@ public class HomeController {
 		movie.setCollectionId(movieCollection.get().getId());
 		try {
 			movieService.addMovie(movie, principal.getName());
-		} catch (CollectionSharingException | CloudServicesException e) {
+		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("Unable to add movie.", e);
 			Alerts.setErrorMessage(model, "This movie cannot be added.");
 			return home(model, principal, session);
@@ -161,7 +161,7 @@ public class HomeController {
 			movie.setId(movieBefore.getId());
 			movie.setCollectionId(movieBefore.getCollectionId());
 			movieService.updateMovie(movie, principal.getName());
-		} catch (CollectionSharingException | CloudServicesException e) {
+		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("Unable to update movie.", e);
 			Alerts.setErrorMessage(model, "This movie cannot be updated.");
 			return home(model, principal, session);
@@ -180,7 +180,7 @@ public class HomeController {
 				return home(model, principal, session);
 			}
 			movieService.deleteMovie(movieId, principal.getName());
-		} catch (CollectionSharingException | CloudServicesException e) {
+		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("Unable to delete movie.", e);
 			Alerts.setErrorMessage(model, "Movie cannot be deleted.");
 			return home(model, principal, session);
@@ -195,7 +195,7 @@ public class HomeController {
 		List<String> tableColumnOptions = null;
 		try {
 			tableColumnOptions = movieService.getAttributeKeysForCollection(movieCollection.get().getId(), principal.getName());
-		} catch (CollectionSharingException | CloudServicesException e) {
+		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("User " + principal.getName() + " cannot configure columns for collection " + movieCollection.get().getId(), e);
 			Alerts.setErrorMessage(model, "Columns cannot be configured.");
 			return home(model, principal, session);

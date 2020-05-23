@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.xandercat.pmdb.dto.Movie;
-import org.xandercat.pmdb.exception.CloudServicesException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.exception.PmdbException;
 
@@ -15,17 +15,17 @@ import org.xandercat.pmdb.exception.PmdbException;
  */
 public interface MovieService {
 
-	public Set<Movie> getMoviesForCollection(String collectionId, String callingUsername) throws CollectionSharingException, CloudServicesException;
+	public Set<Movie> getMoviesForCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
-	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString, String callingUsername) throws CollectionSharingException, CloudServicesException;
+	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
-	public Movie getMovie(String id, String callingUsername) throws CollectionSharingException, CloudServicesException;
+	public Movie getMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
-	public void addMovie(Movie movie, String callingUsername) throws CollectionSharingException, CloudServicesException;
+	public void addMovie(Movie movie, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
-	public void updateMovie(Movie movie, String callingUsername) throws CollectionSharingException, CloudServicesException;
+	public void updateMovie(Movie movie, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
-	public void deleteMovie(String id, String callingUsername) throws CollectionSharingException, CloudServicesException;
+	public void deleteMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
 	public List<String> getTableColumnPreferences(String username);
 	
@@ -46,7 +46,7 @@ public interface MovieService {
 	
 	public void deleteTableColumnPreference(int sourceIdx, String username);
 	
-	public List<String> getAttributeKeysForCollection(String collectionId, String callingUsername) throws CollectionSharingException, CloudServicesException; 
+	public List<String> getAttributeKeysForCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException; 
 	
-	public Set<String> getImdbIdsInDefaultCollection(String callingUsername) throws CloudServicesException;
+	public Set<String> getImdbIdsInDefaultCollection(String callingUsername) throws WebServicesException;
 }

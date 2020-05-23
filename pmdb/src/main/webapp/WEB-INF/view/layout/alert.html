@@ -12,8 +12,8 @@
 			</div>
 			<div th:if="${alertErrorMessage}" class="alert alert-danger alert-dismissible" role="alert">
 				<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-				<p th:if="${alertErrroMessage.messageKey}" th:text="#{__${alertErrorMessage}__}"></p>
-				<p th:if="not ${alertErrroMessage.messageKey}" th:text="${alertErrorMessage}"></p>
+				<p th:if="${alertErrorMessage.messageKey}" th:text="#{__${alertErrorMessage.message}__}"></p>
+				<p th:if="not ${alertErrorMessage.messageKey}" th:text="${alertErrorMessage.message}"></p>
 			</div>
 			<div th:if="${alertOtherMessages}">
 				<div th:each="alertOtherMessage : ${alertOtherMessages}" class="alert alert-dismissible" th:classappend="${alertOtherMessage.type.classname}" role="alert">

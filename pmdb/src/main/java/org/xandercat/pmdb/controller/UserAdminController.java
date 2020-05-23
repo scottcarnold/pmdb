@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
-import org.xandercat.pmdb.exception.CloudServicesException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.SearchForm;
 import org.xandercat.pmdb.form.useradmin.UserForm;
@@ -129,7 +129,7 @@ public class UserAdminController {
 		try {
 			userService.syncUserToCloud(username);
 			Alerts.setMessage(model, "User " + username + " synced to cloud.");
-		} catch (CloudServicesException e) {
+		} catch (WebServicesException e) {
 			LOGGER.error("Unable to sync user to cloud.", e);
 			Alerts.setErrorMessage(model, "User " + username + " could not be synced to cloud.");
 		}
@@ -141,7 +141,7 @@ public class UserAdminController {
 		try {
 			userService.syncUserFromCloud(username);
 			Alerts.setMessage(model, "User " + username + " synced from cloud. User will need to be edited to enable user and add user details.");
-		} catch (PmdbException | CloudServicesException e) {
+		} catch (PmdbException | WebServicesException e) {
 			LOGGER.error("Unable to sync user from cloud.", e);
 			Alerts.setErrorMessage(model, "User " + username + " could not be synced from cloud.");
 		}

@@ -20,10 +20,12 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="col-xs-6">
+				<div class="col-xs-12" style="text-align: right">
 					<p th:if="${searched}" th:text="'There are ' + ${totalResults} + ' total results.'">There are X total results.</p>
 				</div>
-				<div class="col-xs-6" style="text-align: right; padding-bottom: 15px">
+			</div>
+			<div class="row">
+				<div class="col-xs-12" style="text-align: right; padding-bottom: 15px">
 					<div th:if="${searched}">
 						<div th:replace="imdbsearch/paginator :: paginator(${searchForm.page}, ${totalResults}, 'searchFormPage')"></div>
 					</div>
@@ -59,10 +61,7 @@
 				</div>
 			</div>
 			<div class="row" th:if="${totalResults > 0}">
-				<div class="col-xs-6">
-					<p th:if="${searched}" th:text="'There are ' + ${totalResults} + ' total results.'">There are X total results.</p>
-				</div>
-				<div class="col-xs-6" style="text-align: right; padding-bottom: 15px">
+				<div class="col-xs-12" style="text-align: right; padding-bottom: 15px">
 					<div th:if="${searched}">
 						<div th:replace="imdbsearch/paginator :: paginator(${searchForm.page}, ${totalResults}, 'searchFormPage')"></div>
 					</div>

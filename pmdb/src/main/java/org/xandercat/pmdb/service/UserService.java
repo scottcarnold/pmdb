@@ -5,7 +5,7 @@ import java.util.List;
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.BandwidthException;
-import org.xandercat.pmdb.exception.CloudServicesException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
 
 public interface UserService {
@@ -102,9 +102,9 @@ public interface UserService {
 	 * Copies a user from PMDB to the cloud.  User should not already be in the cloud when calling this method.
 	 * 
 	 * @param username username
-	 * @throws CloudServicesException
+	 * @throws WebServicesException
 	 */
-	public void syncUserToCloud(String username) throws CloudServicesException;
+	public void syncUserToCloud(String username) throws WebServicesException;
 	
 	/**
 	 * Copies a user from the cloud to PMDB.  User should not already be in PMDB when calling this method.
@@ -112,9 +112,9 @@ public interface UserService {
 	 * 
 	 * @param username username
 	 * @throws PmdbException
-	 * @throws CloudServicesException
+	 * @throws WebServicesException
 	 */
-	public void syncUserFromCloud(String username) throws PmdbException, CloudServicesException;
+	public void syncUserFromCloud(String username) throws PmdbException, WebServicesException;
 	
 	/**
 	 * Delete a user from the system.  By design, this should only be called for users who have never logged in.

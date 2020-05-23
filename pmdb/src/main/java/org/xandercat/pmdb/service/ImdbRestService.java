@@ -18,6 +18,7 @@ import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.dto.imdb.MovieDetailsWrapper;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
 import org.xandercat.pmdb.exception.ServiceLimitExceededException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.util.Pair;
 
 //TODO: Switch the parameter setting to an object that can be marshalled
@@ -61,7 +62,7 @@ public class ImdbRestService implements ImdbSearchService {
 	}
 	
 	@Override
-	public SearchResult searchImdb(String title, Integer page, String year) throws ServiceLimitExceededException {
+	public SearchResult searchImdb(String title, Integer page, String year) throws WebServicesException, ServiceLimitExceededException {
 		int serviceCalls = applicationService.getImdbServiceCallCount();
 		if (serviceCalls >= maxServiceCallsPerDay) {
 			throw new ServiceLimitExceededException(serviceCalls);
@@ -80,12 +81,15 @@ public class ImdbRestService implements ImdbSearchService {
 			queryParams.add(new Pair<String>("y", year.trim()));
 		}
 		queryParams.add(new Pair<String>("r", "xml"));
-		SearchResult searchResult = builder(queryParams).get(new GenericType<SearchResult>() {});
-		return searchResult;
+		try {
+			return builder(queryParams).get(new GenericType<SearchResult>() {});
+		} catch (Exception e) {
+			throw new WebServicesException(e);
+		}
 	}
 	
 	@Override
-	public MovieDetails getMovieDetails(String imdbId) throws ServiceLimitExceededException {
+	public MovieDetails getMovieDetails(String imdbId) throws WebServicesException, ServiceLimitExceededException {
 		int serviceCalls = applicationService.getImdbServiceCallCount();
 		if (serviceCalls >= maxServiceCallsPerDay) {
 			throw new ServiceLimitExceededException(serviceCalls);
@@ -95,7 +99,12 @@ public class ImdbRestService implements ImdbSearchService {
 		List<Pair<String>> queryParams = new ArrayList<Pair<String>>();
 		queryParams.add(new Pair<String>("i", imdbId));
 		queryParams.add(new Pair<String>("r", "xml"));
-		MovieDetailsWrapper movieDetailsWrapper = builder(queryParams).get(new GenericType<MovieDetailsWrapper>() {});
+		MovieDetailsWrapper movieDetailsWrapper = null;
+		try {
+			movieDetailsWrapper = builder(queryParams).get(new GenericType<MovieDetailsWrapper>() {});
+		} catch (Exception e) {
+			throw new WebServicesException(e);
+		}
 		return movieDetailsWrapper.getMovieDetails();
 	}
 }

@@ -25,7 +25,7 @@ import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.PmdbUser;
-import org.xandercat.pmdb.exception.CloudServicesException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.form.collection.CollectionForm;
 import org.xandercat.pmdb.form.collection.ExportForm;
@@ -94,7 +94,7 @@ public class CollectionController {
 		movieCollection.setCloud(collectionForm.isCloud());
 		try {
 			collectionService.addMovieCollection(movieCollection, principal.getName());
-		} catch (CloudServicesException e1) {
+		} catch (WebServicesException e1) {
 			LOGGER.error("Unable to save movie collection to cloud.", e1);
 			Alerts.setErrorMessage(model, "Movie collection could not be added to the cloud.");
 			return "collection/addCollection";
@@ -153,7 +153,7 @@ public class CollectionController {
 		movieCollection.setCloud(collectionForm.isCloud()); // this isn't really used, as it will only update the name
 		try {
 			collectionService.updateMovieCollection(movieCollection, principal.getName());
-		} catch (CollectionSharingException | CloudServicesException e) {
+		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("Unable to save collection.", e);
 			Alerts.setErrorMessage(model, "Unable to save movie collection.");
 			return collections(model, principal);
@@ -166,7 +166,7 @@ public class CollectionController {
 	public String deleteCollection(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
 			collectionService.deleteMovieCollection(collectionId, principal.getName());
-		} catch (CollectionSharingException | CloudServicesException e) {
+		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("Unable to delete collection.", e);
 			Alerts.setErrorMessage(model, "Unable to delete movie collection.");
 			return collections(model, principal);

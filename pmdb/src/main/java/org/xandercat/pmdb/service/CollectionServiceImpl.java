@@ -18,7 +18,7 @@ import org.xandercat.pmdb.dao.repository.DynamoMovieRepository;
 import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
-import org.xandercat.pmdb.exception.CloudServicesException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.util.ApplicationProperties;
 import org.xandercat.pmdb.util.ExcelPorter;
@@ -46,9 +46,9 @@ public class CollectionServiceImpl implements CollectionService {
 	@Autowired
 	private ApplicationProperties applicationProperties;
 	
-	private void assertCloudReady(MovieCollection movieCollection) throws CloudServicesException {
+	private void assertCloudReady(MovieCollection movieCollection) throws WebServicesException {
 		if (!applicationProperties.isAwsEnabled() && movieCollection.isCloud()) {
-			throw new CloudServicesException("Cloud services are disabled.");
+			throw new WebServicesException("Cloud services are disabled.");
 		}
 		return;
 	}
@@ -86,7 +86,7 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 
 	@Override
-	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) throws CloudServicesException {
+	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) throws WebServicesException {
 		movieCollection.setOwner(callingUsername, callingUsername); // enforce that movie collection owner is the calling username
 		assertCloudReady(movieCollection);
 		//TODO: Need to consider error control, especially considering the mirroring of movie collections (check other methods too)
@@ -95,13 +95,13 @@ public class CollectionServiceImpl implements CollectionService {
 			try {
 				dynamoCollectionRepository.save(movieCollection);
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		}
 	}
 
 	@Override
-	public void updateMovieCollection(MovieCollection movieCollection, String callingUsername) throws CollectionSharingException, CloudServicesException {
+	public void updateMovieCollection(MovieCollection movieCollection, String callingUsername) throws CollectionSharingException, WebServicesException {
 		Optional<MovieCollection> viewableMovieCollectionOptional = collectionDao.getViewableMovieCollection(movieCollection.getId(), callingUsername);
 		if (!viewableMovieCollectionOptional.isPresent() || !viewableMovieCollectionOptional.get().isEditable()) { // collection must be editable
 			throw new CollectionSharingException("User does not have required permission to update collection.");
@@ -114,13 +114,13 @@ public class CollectionServiceImpl implements CollectionService {
 			try {
 				dynamoCollectionRepository.save(editableMovieCollection);
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		}
 	}
 
 	@Override
-	public void deleteMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException, CloudServicesException {
+	public void deleteMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException {
 		Optional<MovieCollection> movieCollectionOptional = collectionDao.getViewableMovieCollection(collectionId, callingUsername);
 		if (!movieCollectionOptional.isPresent() || !movieCollectionOptional.get().getOwner().equals(callingUsername)) { // only owner can delete collection
 			throw new CollectionSharingException("User does not have required permission to delete collection.");
@@ -132,7 +132,7 @@ public class CollectionServiceImpl implements CollectionService {
 				dynamoMovieRepository.deleteByCollectionId(collectionId);
 				dynamoCollectionRepository.deleteById(collectionId);
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		} else {
 			movieDao.deleteMoviesForCollection(collectionId);

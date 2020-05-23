@@ -20,7 +20,7 @@ import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.dto.PmdbUserCredentials;
 import org.xandercat.pmdb.exception.BandwidthException;
-import org.xandercat.pmdb.exception.CloudServicesException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.util.ApplicationProperties;
 import org.xandercat.pmdb.util.format.FormatUtil;
@@ -179,22 +179,22 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void syncUserToCloud(String username) throws CloudServicesException {
+	public void syncUserToCloud(String username) throws WebServicesException {
 		if (applicationProperties.isAwsEnabled()) {
 			PmdbUser user = userDao.getUser(username);
 			PmdbUserCredentials credentials = new PmdbUserCredentials(user.getUsername(), user.getPassword().getBytes());
 			try {
 				dynamoUserCredentialsRepository.save(credentials);
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		} else {
-			throw new CloudServicesException("Cloud services are disabled.");
+			throw new WebServicesException("Cloud services are disabled.");
 		}
 	}
 
 	@Override
-	public void syncUserFromCloud(String username) throws CloudServicesException, PmdbException {
+	public void syncUserFromCloud(String username) throws WebServicesException, PmdbException {
 		if (userDao.getUser(username) != null) {
 			throw new IllegalArgumentException("User named " + username + " already exists in the system.");
 		}
@@ -211,10 +211,10 @@ public class UserServiceImpl implements UserService {
 				userDao.readdUser(user);
 				authDao.grant(user.getUsername(), PmdbGrantedAuthority.ROLE_USER);
 			} else {
-				throw new CloudServicesException("Unable to find user " + username + " in the cloud.");
+				throw new WebServicesException("Unable to find user " + username + " in the cloud.");
 			}
 		} else {
-			throw new CloudServicesException("Cloud services are disabled.");
+			throw new WebServicesException("Cloud services are disabled.");
 		}		
 	}
 

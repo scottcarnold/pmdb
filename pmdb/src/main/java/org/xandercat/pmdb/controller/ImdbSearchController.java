@@ -25,7 +25,7 @@ import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.dto.imdb.Result;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
-import org.xandercat.pmdb.exception.CloudServicesException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.form.imdb.SearchForm;
@@ -85,6 +85,10 @@ public class ImdbSearchController {
 			} catch (ServiceLimitExceededException e) {
 				Alerts.setErrorMessage(model, "The maximum number of allowed IMDB service calls for today has been reached.  Please retry at a later date.");
 				return "imdbsearch/imdbSearch";
+			} catch (WebServicesException wse) {
+				// with a little more work we could still provide paginator, as sometimes only a specific page fails. (example: "dragon" page 3 results in error 5/23/2020)
+				Alerts.setErrorMessage(model, "Search results could not be obtained for this page.");
+				return "imdbsearch/imdbSearch";
 			}
 			List<Result> searchResults = searchResult.getResults();
 			if (StringUtils.isEmptyOrWhitespace(searchResult.getTotalResults())) {
@@ -104,7 +108,7 @@ public class ImdbSearchController {
 								r.setInCollection(true);
 							}
 						}
-					} catch (CloudServicesException e) {
+					} catch (WebServicesException e) {
 						LOGGER.error("Unable to read IMDB IDs from collection.", e);
 						Alerts.setErrorMessage(model, "What movies you already have in your collection will not be indicated due to an error accessing your movie collection.");
 					}
@@ -126,6 +130,10 @@ public class ImdbSearchController {
 			response.setOk(false);
 			response.setErrorMessage("Service limit exceeded. You will not be able to add any more movies to your collection today through the IMDB Search function.");
 			return response;
+		} catch (WebServicesException wse) {
+			response.setOk(false);
+			response.setErrorMessage("Unable to retrieve details for this movie from the IMDB.  Movie could not be added to your collection.");
+			return response;
 		}
 		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		Movie movie = new Movie(movieDetails, movieCollection.get().getId());
@@ -136,7 +144,7 @@ public class ImdbSearchController {
 			response.setOk(false);
 			response.setErrorMessage("You cannot add movies to the collection.");
 			return response;
-		} catch (CloudServicesException e) {
+		} catch (WebServicesException e) {
 			LOGGER.error("Unable to add IMDB movie to collection.", e);
 			response.setOk(false);
 			response.setErrorMessage("Unable to add movie to the collection due to a problem with cloud services.");

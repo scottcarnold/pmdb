@@ -7,7 +7,7 @@ import java.util.Optional;
 import org.springframework.web.multipart.MultipartFile;
 import org.xandercat.pmdb.dto.CollectionPermission;
 import org.xandercat.pmdb.dto.MovieCollection;
-import org.xandercat.pmdb.exception.CloudServicesException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 
 /**
@@ -28,11 +28,11 @@ public interface CollectionService {
 	
 	public List<MovieCollection> getShareOfferMovieCollections(String username);
 	
-	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) throws CloudServicesException;
+	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) throws WebServicesException;
 	
-	public void updateMovieCollection(MovieCollection movieCollection, String callingUsername) throws CollectionSharingException, CloudServicesException;
+	public void updateMovieCollection(MovieCollection movieCollection, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
-	public void deleteMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException, CloudServicesException;
+	public void deleteMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
 	public void shareMovieCollection(String collectionId, String shareWithUsername, boolean editable, String callingUsername) throws CollectionSharingException;
 	

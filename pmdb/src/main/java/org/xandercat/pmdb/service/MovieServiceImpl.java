@@ -13,7 +13,7 @@ import org.xandercat.pmdb.dao.MovieDao;
 import org.xandercat.pmdb.dao.repository.DynamoMovieRepository;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
-import org.xandercat.pmdb.exception.CloudServicesException;
+import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.util.ApplicationProperties;
@@ -36,22 +36,22 @@ public class MovieServiceImpl implements MovieService {
 	@Autowired
 	private ApplicationProperties applicationProperties;
 	
-	private void assertCloudReady(MovieCollection movieCollection) throws CloudServicesException {
+	private void assertCloudReady(MovieCollection movieCollection) throws WebServicesException {
 		if (!applicationProperties.isAwsEnabled() && movieCollection.isCloud()) {
-			throw new CloudServicesException("Cloud services are disabled.");
+			throw new WebServicesException("Cloud services are disabled.");
 		}
 		return;
 	}
 	
 	@Override
-	public Set<Movie> getMoviesForCollection(String collectionId, String callingUsername) throws CollectionSharingException, CloudServicesException {
+	public Set<Movie> getMoviesForCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException {
 		MovieCollection movieCollection = collectionService.assertCollectionViewable(collectionId, callingUsername);
 		assertCloudReady(movieCollection);
 		if (movieCollection.isCloud()) {
 			try {
 				return dynamoMovieRepository.findByCollectionId(collectionId).stream().collect(Collectors.toSet());
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		} else {
 			return movieDao.getMoviesForCollection(collectionId);
@@ -59,14 +59,14 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString, String callingUsername) throws CollectionSharingException, CloudServicesException {
+	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString, String callingUsername) throws CollectionSharingException, WebServicesException {
 		MovieCollection movieCollection = collectionService.assertCollectionViewable(collectionId, callingUsername);
 		assertCloudReady(movieCollection);
 		if (movieCollection.isCloud()) {
 			try {
 				return dynamoMovieRepository.searchMoviesForCollection(collectionId, searchString);
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		} else {
 			return movieDao.searchMoviesForCollection(collectionId, searchString);
@@ -74,7 +74,7 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public Movie getMovie(String id, String callingUsername) throws CollectionSharingException, CloudServicesException {
+	public Movie getMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException {
 		// doing a blind retrieve here; if not in local db, then try AWS
 		Movie movie = movieDao.getMovie(id);
 		if ((movie == null) && applicationProperties.isAwsEnabled()) {
@@ -84,7 +84,7 @@ public class MovieServiceImpl implements MovieService {
 					movie = optional.get();
 				}
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		}
 		if (movie != null) {
@@ -94,7 +94,7 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public void addMovie(Movie movie, String callingUsername) throws CollectionSharingException, CloudServicesException {
+	public void addMovie(Movie movie, String callingUsername) throws CollectionSharingException, WebServicesException {
 		MovieCollection movieCollection = collectionService.assertCollectionEditable(movie.getCollectionId(), callingUsername);
 		assertCloudReady(movieCollection);
 		if (movieCollection.isCloud()) {
@@ -102,7 +102,7 @@ public class MovieServiceImpl implements MovieService {
 				movie.setId(keyGenerator.getKey());
 				dynamoMovieRepository.save(movie);
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		} else {
 			movieDao.addMovie(movie);
@@ -110,14 +110,14 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public void updateMovie(Movie movie, String callingUsername) throws CollectionSharingException, CloudServicesException {
+	public void updateMovie(Movie movie, String callingUsername) throws CollectionSharingException, WebServicesException {
 		MovieCollection movieCollection = collectionService.assertCollectionEditable(movie.getCollectionId(), callingUsername);
 		assertCloudReady(movieCollection);
 		if (movieCollection.isCloud()) {
 			try {
 				dynamoMovieRepository.save(movie);
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		} else {
 			movieDao.updateMovie(movie);
@@ -125,7 +125,7 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public void deleteMovie(String id, String callingUsername) throws CollectionSharingException, CloudServicesException {
+	public void deleteMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException {
 		// doing a blind retrieve here; if not in local db, then try AWS
 		Movie movie = movieDao.getMovie(id);
 		if ((movie == null) && applicationProperties.isAwsEnabled()) {
@@ -135,7 +135,7 @@ public class MovieServiceImpl implements MovieService {
 					movie = optional.get();
 				}
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		}		
 		MovieCollection movieCollection = collectionService.assertCollectionEditable(movie.getCollectionId(), callingUsername);
@@ -143,7 +143,7 @@ public class MovieServiceImpl implements MovieService {
 			try {
 				dynamoMovieRepository.delete(movie);
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		} else {
 			movieDao.deleteMovie(id);
@@ -182,7 +182,7 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public List<String> getAttributeKeysForCollection(String collectionId, String callingUsername) throws CollectionSharingException, CloudServicesException {
+	public List<String> getAttributeKeysForCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException {
 		MovieCollection movieCollection = collectionService.assertCollectionViewable(collectionId, callingUsername);
 		List<String> attributeKeys = null;
 		assertCloudReady(movieCollection);
@@ -190,7 +190,7 @@ public class MovieServiceImpl implements MovieService {
 			try {
 				attributeKeys = dynamoMovieRepository.getAttributeKeysForCollection(collectionId);
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		} else {
 			attributeKeys = movieDao.getAttributeKeysForCollection(collectionId);
@@ -200,7 +200,7 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public Set<String> getImdbIdsInDefaultCollection(String callingUsername) throws CloudServicesException {
+	public Set<String> getImdbIdsInDefaultCollection(String callingUsername) throws WebServicesException {
 		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(callingUsername);
 		if (!defaultMovieCollection.isPresent()) {
 			return Collections.emptySet();
@@ -210,7 +210,7 @@ public class MovieServiceImpl implements MovieService {
 			try {
 				return dynamoMovieRepository.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
 			} catch (Exception e) {
-				throw new CloudServicesException(e);
+				throw new WebServicesException(e);
 			}
 		} else {
 			return movieDao.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
