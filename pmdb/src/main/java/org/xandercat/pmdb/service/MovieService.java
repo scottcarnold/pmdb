@@ -1,6 +1,7 @@
 package org.xandercat.pmdb.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.xandercat.pmdb.dto.Movie;
@@ -19,7 +20,7 @@ public interface MovieService {
 	
 	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
-	public Movie getMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException;
+	public Optional<Movie> getMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
 	public void addMovie(Movie movie, String callingUsername) throws CollectionSharingException, WebServicesException;
 	

@@ -74,21 +74,21 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public Movie getMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException {
+	public Optional<Movie> getMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException {
 		// doing a blind retrieve here; if not in local db, then try AWS
-		Movie movie = movieDao.getMovie(id);
-		if ((movie == null) && applicationProperties.isAwsEnabled()) {
+		Optional<Movie> movie = movieDao.getMovie(id);
+		if (!movie.isPresent() && applicationProperties.isAwsEnabled()) {
 			try {
 				Optional<Movie> optional = dynamoMovieRepository.findById(id);
 				if (optional.isPresent()) {
-					movie = optional.get();
+					movie = optional;
 				}
 			} catch (Exception e) {
 				throw new WebServicesException(e);
 			}
 		}
-		if (movie != null) {
-			collectionService.assertCollectionViewable(movie.getCollectionId(), callingUsername);
+		if (movie.isPresent()) {
+			collectionService.assertCollectionViewable(movie.get().getCollectionId(), callingUsername);
 		}
 		return movie;
 	}
@@ -127,21 +127,21 @@ public class MovieServiceImpl implements MovieService {
 	@Override
 	public void deleteMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException {
 		// doing a blind retrieve here; if not in local db, then try AWS
-		Movie movie = movieDao.getMovie(id);
-		if ((movie == null) && applicationProperties.isAwsEnabled()) {
+		Optional<Movie> movie = movieDao.getMovie(id);
+		if ((!movie.isPresent()) && applicationProperties.isAwsEnabled()) {
 			try {
 				Optional<Movie> optional = dynamoMovieRepository.findById(id);
 				if (optional.isPresent()) {
-					movie = optional.get();
+					movie = optional;
 				}
 			} catch (Exception e) {
 				throw new WebServicesException(e);
 			}
 		}		
-		MovieCollection movieCollection = collectionService.assertCollectionEditable(movie.getCollectionId(), callingUsername);
+		MovieCollection movieCollection = collectionService.assertCollectionEditable(movie.get().getCollectionId(), callingUsername);
 		if (movieCollection.isCloud()) {
 			try {
-				dynamoMovieRepository.delete(movie);
+				dynamoMovieRepository.delete(movie.get());
 			} catch (Exception e) {
 				throw new WebServicesException(e);
 			}
@@ -166,11 +166,11 @@ public class MovieServiceImpl implements MovieService {
 		if (sourceIdx == targetIdx) {
 			return;
 		}
-		Integer max = movieDao.getMaxTableColumnPreferenceIndex(callingUsername);
-		if (max == null) {
+		Optional<Integer> max = movieDao.getMaxTableColumnPreferenceIndex(callingUsername);
+		if (!max.isPresent()) {
 			throw new PmdbException("User has no preferences to reorder.");
 		}
-		if (sourceIdx < 0 || targetIdx < 0 || sourceIdx > max || targetIdx > max) {
+		if (sourceIdx < 0 || targetIdx < 0 || sourceIdx > max.get() || targetIdx > max.get()) {
 			throw new PmdbException("source index or target index do not fall in acceptable range of 0 to " + max);
 		}
 		movieDao.reorderTableColumnPreference(sourceIdx, targetIdx, callingUsername);

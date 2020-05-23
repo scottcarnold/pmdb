@@ -2,6 +2,7 @@ package org.xandercat.pmdb.dao;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.xandercat.pmdb.dto.Movie;
@@ -14,7 +15,7 @@ public interface MovieDao {
 	
 	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString);
 	
-	public Movie getMovie(String id);
+	public Optional<Movie> getMovie(String id);
 	
 	public void addMovie(Movie movie);
 	
@@ -41,7 +42,7 @@ public interface MovieDao {
 	
 	public void deleteTableColumnPreference(int sourceIdx, String username);
 	
-	public Integer getMaxTableColumnPreferenceIndex(String username);
+	public Optional<Integer> getMaxTableColumnPreferenceIndex(String username);
 	
 	public List<String> getAttributeKeysForCollection(String collectionId);
 	

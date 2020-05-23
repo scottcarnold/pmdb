@@ -114,11 +114,11 @@ public class HomeController {
 	@RequestMapping("/movies/editMovie")
 	public String editMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
 		try {
-			Movie movie = movieService.getMovie(movieId, principal.getName());
-			if (movie == null) {
+			Optional<Movie> movie = movieService.getMovie(movieId, principal.getName());
+			if (!movie.isPresent()) {
 				throw new PmdbException("Movie ID " + movieId + " could not be retrieved.");
 			}
-			model.addAttribute("movieForm", new MovieForm(movie));
+			model.addAttribute("movieForm", new MovieForm(movie.get()));
 		} catch (Exception e) {
 			LOGGER.error("Unable to edit movie for ID: " + movieId, e);
 			Alerts.setErrorMessage(model, "This movie cannot be edited.");
@@ -156,7 +156,7 @@ public class HomeController {
 			return "movie/editMovie";
 		}
 		try {
-			Movie movieBefore = movieService.getMovie(movieForm.getId(), principal.getName());
+			Movie movieBefore = movieService.getMovie(movieForm.getId(), principal.getName()).get();
 			Movie movie = movieForm.toMovie();
 			movie.setId(movieBefore.getId());
 			movie.setCollectionId(movieBefore.getCollectionId());
@@ -174,7 +174,7 @@ public class HomeController {
 	public String deleteMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
 		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		try {
-			Movie movie = movieService.getMovie(movieId, principal.getName());
+			Movie movie = movieService.getMovie(movieId, principal.getName()).get();
 			if (!movie.getCollectionId().equals(movieCollection.get().getId())) {
 				Alerts.setErrorMessage(model, "Movies can only be deleted from your currently active collection.");
 				return home(model, principal, session);

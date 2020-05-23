@@ -47,12 +47,12 @@ public class UserServiceImpl implements UserService {
 	private ApplicationService applicationService;
 	
 	@Override
-	public PmdbUser getUser(String username) {
+	public Optional<PmdbUser> getUser(String username) {
 		return userDao.getUser(username);
 	}
 
 	@Override
-	public PmdbUser getUserByEmail(String email) {
+	public Optional<PmdbUser> getUserByEmail(String email) {
 		return userDao.getUserByEmail(email);
 	}
 
@@ -76,10 +76,11 @@ public class UserServiceImpl implements UserService {
 		if (!callingUsername.equals(user.getUsername())) {
 			throw new PmdbException("Username mismatch. Form has username " + user.getUsername() + " while authenticated username is " + callingUsername);
 		}
-		PmdbUser storedUser = userDao.getUser(callingUsername);
-		if (storedUser == null) {
+		Optional<PmdbUser> storedUserOptional = userDao.getUser(callingUsername);
+		if (!storedUserOptional.isPresent()) {
 			throw new PmdbException("User " + callingUsername + " not found.");
 		}
+		PmdbUser storedUser = storedUserOptional.get();
 		storedUser.setGrantedAuthorities(authDao.getAuthorities(storedUser.getUsername()));
 		storedUser.setEmail(user.getEmail());
 		storedUser.setFirstName(user.getFirstName());
@@ -181,7 +182,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public void syncUserToCloud(String username) throws WebServicesException {
 		if (applicationProperties.isAwsEnabled()) {
-			PmdbUser user = userDao.getUser(username);
+			PmdbUser user = userDao.getUser(username).get();
 			PmdbUserCredentials credentials = new PmdbUserCredentials(user.getUsername(), user.getPassword().getBytes());
 			try {
 				dynamoUserCredentialsRepository.save(credentials);
@@ -220,17 +221,17 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public void deleteUser(String username) throws PmdbException {
-		PmdbUser user = getUser(username);
-		if (user == null) {
+		Optional<PmdbUser> user = getUser(username);
+		if (!user.isPresent()) {
 			throw new PmdbException("User not found.");
 		}
-		if (user.getLastAccessDate() != null) {
+		if (user.get().getLastAccessDate() != null) {
 			throw new PmdbException("Only users who have no last access date (indicating they have never logged in) can be deleted.");
 		}
 		authDao.revoke(username, PmdbGrantedAuthority.values());
 		userDao.delete(username);
 		if (applicationProperties.isAwsEnabled()) {
-			PmdbUserCredentials userCredentials = new PmdbUserCredentials(user.getUsername(), user.getPassword().getBytes());
+			PmdbUserCredentials userCredentials = new PmdbUserCredentials(user.get().getUsername(), user.get().getPassword().getBytes());
 			dynamoUserCredentialsRepository.delete(userCredentials);
 		}
 	}

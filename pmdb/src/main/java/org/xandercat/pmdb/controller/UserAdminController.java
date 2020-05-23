@@ -77,7 +77,7 @@ public class UserAdminController {
 
 	@RequestMapping("/useradmin/editUser")
 	public String editUser(Model model, @RequestParam String username) {
-		PmdbUser user = userService.getUser(username);
+		PmdbUser user = userService.getUser(username).get();
 		boolean administrator = userService.isAdministrator(username);
 		UserForm userForm = new UserForm(user, administrator);
 		model.addAttribute("userForm", userForm);

@@ -272,11 +272,11 @@ public class CollectionController {
 	public String shareCollectionSubmit(Model model, Principal principal,
 			@ModelAttribute("shareCollectionForm") @Valid ShareCollectionForm shareCollectionForm,
 			BindingResult result) {
-		PmdbUser shareWithUser = userService.getUser(shareCollectionForm.getUsernameOrEmail());
-		if (shareWithUser == null) {
+		Optional<PmdbUser> shareWithUser = userService.getUser(shareCollectionForm.getUsernameOrEmail());
+		if (!shareWithUser.isPresent()) {
 			shareWithUser = userService.getUserByEmail(shareCollectionForm.getUsernameOrEmail());
 		}
-		if (shareWithUser == null) {
+		if (!shareWithUser.isPresent()) {
 			//TODO: Future educational activity -- see about using SpringConstraintValidationFactory to create a Spring wired validator for this
 			result.rejectValue("usernameOrEmail", "{validation.UserReference.message}", "Invalid user reference.");
 		}
@@ -291,7 +291,7 @@ public class CollectionController {
 		}
 		try {
 			collectionService.shareMovieCollection(shareCollectionForm.getCollectionId(), 
-					shareWithUser.getUsername(), shareCollectionForm.isEditable(), principal.getName());
+					shareWithUser.get().getUsername(), shareCollectionForm.isEditable(), principal.getName());
 			Alerts.setMessage(model, "Offer sent to share collection.");
 		} catch (CollectionSharingException e) {
 			LOGGER.error("Unable to share collection.", e);

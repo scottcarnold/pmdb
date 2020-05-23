@@ -1,19 +1,15 @@
 package org.xandercat.pmdb.dao;
 
 import java.io.UnsupportedEncodingException;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
-import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,27 +51,21 @@ public class UserDaoImpl implements UserDao {
 		}
 		String encryptedPassword = readd? user.getPassword() : passwordEncoder.encode(unencryptedPassword);
 		final String sql = "INSERT INTO users(username, password, enabled) VALUES (?, ?, ?)";
-		jdbcTemplate.update(sql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setString(1, user.getUsername());
-				ps.setBytes(2, encryptedPassword.getBytes());
-				ps.setBoolean(3, user.isEnabled());
-			}
+		jdbcTemplate.update(sql, ps -> {
+			ps.setString(1, user.getUsername());
+			ps.setBytes(2, encryptedPassword.getBytes());
+			ps.setBoolean(3, user.isEnabled());
 		});
 		user.setPassword(encryptedPassword);
 		final String detailsSql = "INSERT INTO user_details(username, firstName, lastName, email, createdTs, updatedTs) VALUES (?, ?, ?, ?, ?, ?)";
 		Date now = new Date();
-		jdbcTemplate.update(detailsSql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setString(1, user.getUsername());
-				ps.setString(2, user.getFirstName());
-				ps.setString(3, user.getLastName());
-				ps.setString(4, user.getEmail());
-				DBUtil.setGMTTimestamp(ps, 5, now);
-				DBUtil.setGMTTimestamp(ps, 6, now);
-			}
+		jdbcTemplate.update(detailsSql, ps -> {
+			ps.setString(1, user.getUsername());
+			ps.setString(2, user.getFirstName());
+			ps.setString(3, user.getLastName());
+			ps.setString(4, user.getEmail());
+			DBUtil.setGMTTimestamp(ps, 5, now);
+			DBUtil.setGMTTimestamp(ps, 6, now);
 		});
 	}
 
@@ -84,25 +74,19 @@ public class UserDaoImpl implements UserDao {
 	public void saveUser(PmdbUser user) {
 		LOGGER.debug("Request to save user: " + user.getUsername());
 		final String sql = "UPDATE users SET enabled = ? WHERE username = ?";
-		jdbcTemplate.update(sql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setBoolean(1, user.isEnabled());
-				ps.setString(2, user.getUsername());
-			}
+		jdbcTemplate.update(sql, ps -> {
+			ps.setBoolean(1, user.isEnabled());
+			ps.setString(2, user.getUsername());
 		});
 		final String detailsSql = "UPDATE user_details SET firstName = ?, lastName = ?, email = ?, updatedTs = ?"
 				+ " WHERE username = ?";
 		Date now = new Date();
-		jdbcTemplate.update(detailsSql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setString(1, user.getFirstName());
-				ps.setString(2, user.getLastName());
-				ps.setString(3, user.getEmail());
-				DBUtil.setGMTTimestamp(ps, 4, now);
-				ps.setString(5, user.getUsername());
-			}
+		jdbcTemplate.update(detailsSql, ps -> {
+			ps.setString(1, user.getFirstName());
+			ps.setString(2, user.getLastName());
+			ps.setString(3, user.getEmail());
+			DBUtil.setGMTTimestamp(ps, 4, now);
+			ps.setString(5, user.getUsername());
 		});
 	}
 
@@ -110,93 +94,73 @@ public class UserDaoImpl implements UserDao {
 	public String changePassword(String username, String newPassword) {
 		final String sql = "UPDATE users SET password = ? WHERE username = ?";
 		String encryptedPassword = passwordEncoder.encode(newPassword);
-		jdbcTemplate.update(sql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setBytes(1, encryptedPassword.getBytes());
-				ps.setString(2, username);
-			}
+		jdbcTemplate.update(sql, ps -> {
+			ps.setBytes(1, encryptedPassword.getBytes());
+			ps.setString(2, username);
 		});
 		return encryptedPassword;
 	}
 
 	@Override
-	public PmdbUser getUser(String username) {
+	public Optional<PmdbUser> getUser(String username) {
 		LOGGER.debug("Request to get user: " + username);
-		PmdbUser pmdbUser = new PmdbUser();
+		List<PmdbUser> pmdbUsers = new ArrayList<PmdbUser>();
 		final String sql = "SELECT users.username, password, enabled, firstName, lastName, email, createdTs, updatedTs, lastAccessTs FROM users"
 				+ " INNER JOIN user_details ON users.username = user_details.username"
 				+ " WHERE users.username = ?";
-		jdbcTemplate.query(sql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setString(1, username);
-			}
-		}, new RowCallbackHandler() {
-			@Override
-			public void processRow(ResultSet rs) throws SQLException {
-				pmdbUser.setUsername(rs.getString(1));
-				try {
-					pmdbUser.setPassword(new String(rs.getBytes(2), "UTF-8"));
-				} catch (UnsupportedEncodingException e) {
-					LOGGER.error("Unable to read password hash from database.", e);
-				} 
-				pmdbUser.setEnabled(rs.getBoolean(3));
-				pmdbUser.setFirstName(rs.getString(4));
-				pmdbUser.setLastName(rs.getString(5));
-				pmdbUser.setEmail(rs.getString(6));
-				pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));
-				pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));
-				pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));
-			}
+		jdbcTemplate.query(sql, ps -> ps.setString(1, username), rs-> {
+			PmdbUser pmdbUser = new PmdbUser();
+			pmdbUser.setUsername(rs.getString(1));
+			try {
+				pmdbUser.setPassword(new String(rs.getBytes(2), "UTF-8"));
+			} catch (UnsupportedEncodingException e) {
+				LOGGER.error("Unable to read password hash from database.", e);
+			} 
+			pmdbUser.setEnabled(rs.getBoolean(3));
+			pmdbUser.setFirstName(rs.getString(4));
+			pmdbUser.setLastName(rs.getString(5));
+			pmdbUser.setEmail(rs.getString(6));
+			pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));
+			pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));
+			pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));
+			pmdbUsers.add(pmdbUser);
 		});
-		return (pmdbUser.getUsername() == null)? null : pmdbUser;
+		return pmdbUsers.stream().findAny();
 	}
 
 	@Override
-	public PmdbUser getUserByEmail(String email) {
+	public Optional<PmdbUser> getUserByEmail(String email) {
 		LOGGER.debug("Request to get user by email: " + email);
-		PmdbUser pmdbUser = new PmdbUser();
+		List<PmdbUser> pmdbUsers = new ArrayList<PmdbUser>();
 		final String sql = "SELECT users.username, password, enabled, firstName, lastName, email, createdTs, updatedTs, lastAccessTs FROM users"
 				+ " INNER JOIN user_details ON users.username = user_details.username"
 				+ " WHERE user_details.email = ?";
-		final int[] count = new int[] {0};
-		jdbcTemplate.query(sql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setString(1, email);
-			}
-		}, new RowCallbackHandler() {
-			@Override
-			public void processRow(ResultSet rs) throws SQLException {
-				count[0]++;
-				pmdbUser.setUsername(rs.getString(1));
-				try {
-					pmdbUser.setPassword(new String(rs.getBytes(2), "UTF-8"));
-				} catch (UnsupportedEncodingException e) {
-					LOGGER.error("Unable to read password hash from database.", e);
-				} 
-				pmdbUser.setEnabled(rs.getBoolean(3));
-				pmdbUser.setFirstName(rs.getString(4));
-				pmdbUser.setLastName(rs.getString(5));
-				pmdbUser.setEmail(rs.getString(6));
-				pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));
-				pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));
-				pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));
-			}
+		jdbcTemplate.query(sql, ps -> ps.setString(1, email), rs -> {
+			PmdbUser pmdbUser = new PmdbUser();
+			pmdbUser.setUsername(rs.getString(1));
+			try {
+				pmdbUser.setPassword(new String(rs.getBytes(2), "UTF-8"));
+			} catch (UnsupportedEncodingException e) {
+				LOGGER.error("Unable to read password hash from database.", e);
+			} 
+			pmdbUser.setEnabled(rs.getBoolean(3));
+			pmdbUser.setFirstName(rs.getString(4));
+			pmdbUser.setLastName(rs.getString(5));
+			pmdbUser.setEmail(rs.getString(6));
+			pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));
+			pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));
+			pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));
+			pmdbUsers.add(pmdbUser);
 		});
-		return (count[0] != 1)? null : pmdbUser;
+		return (pmdbUsers.size() == 1)? pmdbUsers.stream().findAny() : Optional.empty();
 	}
 	
 	@Override
 	public void updateLastAccess(String username) {
 		final String sql = "UPDATE user_details SET lastAccessTs = ? WHERE username = ?";
-		jdbcTemplate.update(sql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				DBUtil.setGMTTimestamp(ps, 1, new Date());
-				ps.setString(2, username);
-			}
+		jdbcTemplate.update(sql, ps -> {
+			DBUtil.setGMTTimestamp(ps, 1, new Date());
+			ps.setString(2, username);
 		});
 	}
 
@@ -215,32 +179,26 @@ public class UserDaoImpl implements UserDao {
 				+ " OR LOWER(user_details.firstName) like ?"
 				+ " OR LOWER(user_details.lastName) like ?"
 				+ " ORDER BY LOWER(users.username)";
-		jdbcTemplate.query(sql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setString(1, "%" + lcSearchString + "%");
-				ps.setString(2, "%" + lcSearchString + "%");
-				ps.setString(3, "%" + lcSearchString + "%");
-			}
-		}, new RowCallbackHandler() {
-			@Override
-			public void processRow(ResultSet rs) throws SQLException {
-				PmdbUser pmdbUser = new PmdbUser();
-				pmdbUser.setUsername(rs.getString(1));
-				try {
-					pmdbUser.setPassword(new String(rs.getBytes(2), "UTF-8"));
-				} catch (UnsupportedEncodingException e) {
-					LOGGER.error("Unable to read password hash from database.", e);
-				} 
-				pmdbUser.setEnabled(rs.getBoolean(3));
-				pmdbUser.setFirstName(rs.getString(4));
-				pmdbUser.setLastName(rs.getString(5));
-				pmdbUser.setEmail(rs.getString(6));
-				pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));
-				pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));
-				pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));
-				users.add(pmdbUser);
-			}
+		jdbcTemplate.query(sql, ps -> {
+			ps.setString(1, "%" + lcSearchString + "%");
+			ps.setString(2, "%" + lcSearchString + "%");
+			ps.setString(3, "%" + lcSearchString + "%");
+		}, rs -> {
+			PmdbUser pmdbUser = new PmdbUser();
+			pmdbUser.setUsername(rs.getString(1));
+			try {
+				pmdbUser.setPassword(new String(rs.getBytes(2), "UTF-8"));
+			} catch (UnsupportedEncodingException e) {
+				LOGGER.error("Unable to read password hash from database.", e);
+			} 
+			pmdbUser.setEnabled(rs.getBoolean(3));
+			pmdbUser.setFirstName(rs.getString(4));
+			pmdbUser.setLastName(rs.getString(5));
+			pmdbUser.setEmail(rs.getString(6));
+			pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));
+			pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));
+			pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));
+			users.add(pmdbUser);
 		});		
 		return users;
 	}
@@ -250,17 +208,7 @@ public class UserDaoImpl implements UserDao {
 	public void delete(String username) {
 		final String detailsSql = "DELETE FROM user_details WHERE username = ?";
 		final String sql = "DELETE FROM users WHERE username = ?";
-		jdbcTemplate.update(detailsSql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setString(1, username);
-			}
-		});
-		jdbcTemplate.update(sql, new PreparedStatementSetter() {
-			@Override
-			public void setValues(PreparedStatement ps) throws SQLException {
-				ps.setString(1, username);
-			}			
-		});
+		jdbcTemplate.update(detailsSql, ps -> ps.setString(1, username));
+		jdbcTemplate.update(sql, ps -> ps.setString(1, username));
 	}
 }

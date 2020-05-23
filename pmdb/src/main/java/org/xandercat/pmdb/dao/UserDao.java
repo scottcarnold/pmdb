@@ -1,6 +1,7 @@
 package org.xandercat.pmdb.dao;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.PmdbException;
@@ -51,14 +52,14 @@ public interface UserDao {
 	 * @param username username
 	 * @return user of given username
 	 */
-	public PmdbUser getUser(String username);
+	public Optional<PmdbUser> getUser(String username);
 	
 	/**
 	 * Returns user with given email address.
 	 * @param email
 	 * @return user with given email address, or null if cannot be determined
 	 */
-	public PmdbUser getUserByEmail(String email);
+	public Optional<PmdbUser> getUserByEmail(String email);
 	
 	/**
 	 * Update the last access timestamp for the user of given username to the current date and time.

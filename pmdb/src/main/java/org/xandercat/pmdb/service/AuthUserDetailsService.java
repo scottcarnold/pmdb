@@ -1,5 +1,7 @@
 package org.xandercat.pmdb.service;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,12 +22,12 @@ public class AuthUserDetailsService implements UserDetailsService {
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		PmdbUser user = userDao.getUser(username);
-		if (user == null) {
+		Optional<PmdbUser> user = userDao.getUser(username);
+		if (!user.isPresent()) {
 			throw new UsernameNotFoundException("User " + username + " not found.");
 		}
-		user.setGrantedAuthorities(authDao.getAuthorities(username));
-		return user;
+		user.get().setGrantedAuthorities(authDao.getAuthorities(username));
+		return user.get();
 	}
 
 }

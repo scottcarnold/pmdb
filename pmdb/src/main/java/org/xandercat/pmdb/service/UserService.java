@@ -1,6 +1,7 @@
 package org.xandercat.pmdb.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
@@ -17,7 +18,7 @@ public interface UserService {
 	 * 
 	 * @return user object for user (will not contain granted authorities)
 	 */
-	public PmdbUser getUser(String username);
+	public Optional<PmdbUser> getUser(String username);
 	
 	/**
 	 * Returns a user by email address.
@@ -25,7 +26,7 @@ public interface UserService {
 	 * @param email  user email address
 	 * @return user with provided email address, or null if user could not be determined
 	 */
-	public PmdbUser getUserByEmail(String email);
+	public Optional<PmdbUser> getUserByEmail(String email);
 	
 	/**
 	 * Save user from the My Account page. When saved through this method, additional validation is performed

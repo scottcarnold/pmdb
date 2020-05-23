@@ -35,7 +35,7 @@ public class MyAccountController {
 	
 	@RequestMapping("/myaccount")
 	public String editUser(Model model, Principal principal) {
-		PmdbUser user = userService.getUser(principal.getName());
+		PmdbUser user = userService.getUser(principal.getName()).get();
 		boolean administrator = userService.isAdministrator(principal.getName());
 		UserForm userForm = new UserForm(user, administrator);
 		model.addAttribute("userForm", userForm);
