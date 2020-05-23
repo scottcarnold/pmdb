@@ -52,6 +52,6 @@ public class DataTransformerSelector {
 			// only use transformer if it could transform more than half the tested values
 			return Optional.of(maxEntry.get().getKey());
 		}
-		return Optional.ofNullable(null);
+		return Optional.empty();
 	}
 }

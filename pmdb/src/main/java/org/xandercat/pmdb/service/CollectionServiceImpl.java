@@ -56,7 +56,7 @@ public class CollectionServiceImpl implements CollectionService {
 	@Override
 	public Optional<MovieCollection> getDefaultMovieCollection(String username) {
 		Optional<String> collectionId = collectionDao.getDefaultCollectionId(username);
-		return collectionId.isPresent()? collectionDao.getViewableMovieCollection(collectionId.get(), username) : Optional.ofNullable(null);
+		return collectionId.isPresent()? collectionDao.getViewableMovieCollection(collectionId.get(), username) : Optional.empty();
 	}
 
 	@Override
