@@ -103,11 +103,9 @@ public class ImdbSearchController {
 				if (searchResults != null && searchResults.size() > 0) {
 					try {
 						Set<String> imdbIdsInCollection = movieService.getImdbIdsInDefaultCollection(principal.getName());
-						for (Result r : searchResults) {
-							if (imdbIdsInCollection.contains(r.getImdbID())) {
-								r.setInCollection(true);
-							}
-						}
+						searchResults.stream()
+								.filter(r -> imdbIdsInCollection.contains(r.getImdbID()))
+								.forEach(r -> r.setInCollection(true));
 					} catch (WebServicesException e) {
 						LOGGER.error("Unable to read IMDB IDs from collection.", e);
 						Alerts.setErrorMessage(model, "What movies you already have in your collection will not be indicated due to an error accessing your movie collection.");
