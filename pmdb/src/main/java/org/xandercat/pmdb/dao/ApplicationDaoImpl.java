@@ -1,6 +1,7 @@
 package org.xandercat.pmdb.dao;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -36,7 +37,7 @@ public class ApplicationDaoImpl implements ApplicationDao {
 	}
 
 	@Override
-	public ApplicationAttribute getApplicationAttribute(String name, LocalDate date) {
+	public Optional<ApplicationAttribute> getApplicationAttribute(String name, LocalDate date) {
 		final String sql = "SELECT attribute_value FROM application_attributes WHERE attribute_name = ? AND attribute_date = ?";
 		final ApplicationAttribute applicationAttribute = new ApplicationAttribute();
 		jdbcTemplate.query(sql, ps -> {
@@ -47,7 +48,7 @@ public class ApplicationDaoImpl implements ApplicationDao {
 			applicationAttribute.setDate(date);
 			applicationAttribute.setValue(rs.getString(1));
 		});
-		return StringUtils.isEmptyOrWhitespace(applicationAttribute.getName())? null : applicationAttribute;
+		return StringUtils.isEmptyOrWhitespace(applicationAttribute.getName())? Optional.empty() : Optional.of(applicationAttribute);
 	}
 
 }
