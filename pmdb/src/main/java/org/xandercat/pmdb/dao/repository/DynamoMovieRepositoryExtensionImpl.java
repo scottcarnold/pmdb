@@ -51,6 +51,7 @@ public class DynamoMovieRepositoryExtensionImpl implements DynamoMovieRepository
 		Set<Movie> movies = getMoviesForCollection(collectionId);
 		return movies.stream()
 				.flatMap(movie -> movie.getAttributes().keySet().stream())
+				.distinct()
 				.sorted()
 				.collect(Collectors.toList());
 	}
