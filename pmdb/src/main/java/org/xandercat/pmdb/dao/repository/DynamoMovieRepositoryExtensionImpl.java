@@ -1,10 +1,6 @@
 package org.xandercat.pmdb.dao.repository;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,41 +31,28 @@ public class DynamoMovieRepositoryExtensionImpl implements DynamoMovieRepository
 				.withKeyConditionExpression("collectionId = :collectionId") 
 				.withExpressionAttributeValues(parms);
 		PaginatedQueryList<Movie> queryList = dynamoDBTemplate.query(Movie.class, queryExpression);
-		Set<Movie> movies = new HashSet<Movie>();
-		movies.addAll(queryList);
-		return movies;
+		return queryList.stream().collect(Collectors.toSet());
 	}
 	
 	@Override
 	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString) {
 		Set<Movie> movies = getMoviesForCollection(collectionId);
-		searchString = searchString.toLowerCase();
-		for (Iterator<Movie> iter = movies.iterator(); iter.hasNext();) {
-			Movie movie = iter.next();
-			int found = movie.getTitle().toLowerCase().indexOf(searchString);
-			Iterator<String> attrIter = movie.getAttributes().values().iterator();
-			while (found < 0 && attrIter.hasNext()) {
-				String attrValue = attrIter.next().toLowerCase();
-				found = attrValue.indexOf(searchString);
-			}
-			if (found < 0) {
-				iter.remove();
-			}
-		}
-		return movies;
+		final String lcSearchString = searchString.toLowerCase();
+		return movies.stream().filter(movie -> {
+			if (movie.getTitle().toLowerCase().indexOf(lcSearchString) >= 0) return true;
+			return movie.getAttributes().values().stream()
+					.filter(value -> value.toLowerCase().indexOf(lcSearchString) >= 0)
+					.count() > 0;
+		}).collect(Collectors.toSet());
 	}
 
 	@Override
 	public List<String> getAttributeKeysForCollection(String collectionId) {
 		Set<Movie> movies = getMoviesForCollection(collectionId);
-		Set<String> attributeKeySet = new HashSet<String>();
-		for (Movie movie : movies) {
-			attributeKeySet.addAll(movie.getAttributes().keySet());
-		}
-		List<String> attributeKeys = new ArrayList<String>();
-		attributeKeys.addAll(attributeKeySet);
-		Collections.sort(attributeKeys);
-		return attributeKeys;
+		return movies.stream()
+				.flatMap(movie -> movie.getAttributes().keySet().stream())
+				.sorted()
+				.collect(Collectors.toList());
 	}
 
 	@Override
