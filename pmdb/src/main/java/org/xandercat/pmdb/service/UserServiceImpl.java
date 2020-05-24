@@ -96,7 +96,7 @@ public class UserServiceImpl implements UserService {
 		String username = user.getUsername().trim();
 		newPassword = StringUtils.isEmptyOrWhitespace(newPassword)? null : newPassword.trim();
 		if (newUser) {
-			if (getUser(username) != null) {
+			if (getUser(username).isPresent()) {
 				throw new PmdbException("User " + username + " already exists.");
 			}
 			if (applicationProperties.isAwsEnabled()) {
@@ -106,7 +106,7 @@ public class UserServiceImpl implements UserService {
 				}
 			}
 		} else {
-			if (getUser(username) == null) {
+			if (!getUser(username).isPresent()) {
 				throw new PmdbException("User " + username + " not found.");
 			}
 		}
@@ -167,12 +167,15 @@ public class UserServiceImpl implements UserService {
 		Iterable<PmdbUserCredentials> credentials = dynamoUserCredentialsRepository.findAll();
 		Set<String> cloudUsernames = new HashSet<String>();
 		credentials.forEach(credential -> cloudUsernames.add(credential.getUsername()));
-		Set<String> usersNotInCloud = regularSearchResults.stream()
+		Set<String> localUsernames = regularSearchResults.stream()
 				.map(user -> user.getUsername())
+				.collect(Collectors.toSet());
+		Set<String> usersNotInCloud = localUsernames.stream()
 				.filter(localUsername -> !cloudUsernames.contains(localUsername))
-				.collect(Collectors.toSet());					
+				.collect(Collectors.toSet());
 		Set<String> onlyInCloudUsernames = cloudUsernames.stream()
 				.filter(cloudUsername -> cloudUsername.contains(searchString))
+				.filter(cloudUsername -> !localUsernames.contains(cloudUsername))
 				.collect(Collectors.toSet());
 		results.setUsernamesNotInCloud(usersNotInCloud);
 		results.setUsernamesOnlyInCloud(onlyInCloudUsernames);

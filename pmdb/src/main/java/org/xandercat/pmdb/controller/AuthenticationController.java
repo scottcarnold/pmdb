@@ -81,7 +81,7 @@ public class AuthenticationController {
 		if (StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())) {
 			result.rejectValue("passwordPair", "{userform.password.required}", "Password cannot be blank.");
 		}
-		if (FormatUtil.isValidUsername(userForm.getUsername()) && userService.getUser(userForm.getUsername()) != null) {
+		if (FormatUtil.isValidUsername(userForm.getUsername()) && userService.getUser(userForm.getUsername()).isPresent()) {
 			result.rejectValue("username", "{userform.username.alreadyexists}", "A user with that username already exists.");
 		}
 		if (result.hasErrors()) {
