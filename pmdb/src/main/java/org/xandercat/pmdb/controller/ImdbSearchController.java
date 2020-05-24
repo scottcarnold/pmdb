@@ -63,93 +63,141 @@ public class ImdbSearchController {
 		return "imdbsearch/imdbSearch";
 	}
 
+	/**
+	 * Handle linking operation on movie, returning final view to navigate to.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param searchForm  search form
+	 * @param result      binding result
+	 * @param session     http session
+	 * @param movie       movie being linked
+	 * @return view to navigate to
+	 * @throws ServiceLimitExceededException 
+	 * @throws WebServicesException 
+	 * @throws CollectionSharingException 
+	 */
+	private String handleLinkImdb(Model model, Principal principal, SearchForm searchForm, BindingResult result, HttpSession session, Movie movie) 
+			throws WebServicesException, ServiceLimitExceededException, CollectionSharingException {
+		String linkId = searchForm.getLinkImdbId().trim();
+		if ("unlink".equals(linkId)) {
+			imdbSearchService.removeImdbAttributes(movie);
+			movieService.updateMovie(movie, principal.getName());	
+		} else if (!"skip".equals(linkId)) {
+			MovieDetails movieDetails = imdbSearchService.getMovieDetails(searchForm.getLinkImdbId().trim());
+			imdbSearchService.addImdbAttributes(movie, movieDetails);
+			movieService.updateMovie(movie, principal.getName());
+		}
+		if (searchForm.isLinkAll()) {
+			final String previousTitle = movie.getTitle().toLowerCase();
+			List<Movie> unlinkedMovies = movieService.getUnlinkedMoviesForDefaultCollection(principal.getName());
+			if (unlinkedMovies.size() > 0) {
+				Optional<Movie> nextMovie = unlinkedMovies.stream()
+						.filter(uMovie -> uMovie.getTitle().toLowerCase().compareTo(previousTitle) > 0)
+						.findFirst();
+				if (!nextMovie.isPresent()) {
+					// wrap back around to beginning of list
+					nextMovie = unlinkedMovies.stream().findFirst();
+				}
+				searchForm.setLinkMovieId(nextMovie.get().getId());
+				searchForm.setLinkImdbId(null); // this is critical or it would trigger infinite recursion
+				searchForm.setTitle(nextMovie.get().getTitle());
+				searchForm.setPage(1);
+				return imdbSearchSubmit(model, principal, searchForm, result, session);
+			}
+		}
+		return "redirect:/";		
+	}
+	
+	/**
+	 * Handles link mode operations, storing movie to link in the model, and either returning final view to navigate to, 
+	 * or empty if no actual link needs to be performed.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param searchForm  search form
+	 * @param result      binding result
+	 * @param session     http session
+	 * @return view to navigate to, or empty if unable to successfully handle linking
+	 */
+	private Optional<String> handleLinkMovie(Model model, Principal principal, SearchForm searchForm, BindingResult result, HttpSession session) {
+		try {
+			Optional<Movie> movie = movieService.getMovie(searchForm.getLinkMovieId(), principal.getName());
+			collectionService.assertCollectionEditable(movie.get().getCollectionId(), principal.getName());
+			if (!StringUtils.isEmptyOrWhitespace(searchForm.getLinkImdbId())) {
+				// link movie and return to movie list or go to next unlinked movie
+				return Optional.of(handleLinkImdb(model, principal, searchForm, result, session, movie.get()));
+			}
+			model.addAttribute("linkMovie", movie.get());
+		} catch (Exception e) {
+			LOGGER.error("Unable to get movie to link.", e);
+			Alerts.setErrorMessage(model, "This movie cannot be linked.");
+		}
+		return Optional.empty();
+	}
+	
 	@RequestMapping("/imdbsearch/searchSubmit")
 	public String imdbSearchSubmit(Model model, Principal principal,
 			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
 			BindingResult result, HttpSession session) {
+		
+		// handle alerts and errors
 		Alerts.setSessionAlertWithKey(model, session, "IMDBSearchLimit", Alerts.AlertType.WARNING, "alert.imdbsearch.limits");
-		if (!result.hasErrors()) {
-			if (!StringUtils.isEmptyOrWhitespace(searchForm.getLinkMovieId())) {
+		if (result.hasErrors()) {
+			return "imdbsearch/imdbSearch";
+		}
+		
+		// handle mode where user is linking movies in their collection to IMDB
+		if (!StringUtils.isEmptyOrWhitespace(searchForm.getLinkMovieId())) {
+			Optional<String> returnView = handleLinkMovie(model, principal, searchForm, result, session);
+			if (returnView.isPresent()) {
+				return returnView.get();
+			}
+		}
+		
+		// execute search
+		String title = searchForm.getTitle();
+		String year = (StringUtils.isEmptyOrWhitespace(searchForm.getYear()))? null : searchForm.getYear().trim();
+		SearchResult searchResult = null;
+		try {
+			Integer previousHash = (Integer) session.getAttribute(SESSION_KEY_LAST_SEARCH);
+			Integer currentHash = Integer.valueOf(searchForm.hashCode());
+			if (!currentHash.equals(previousHash)) {
+				// search criteria has changed; reset to page 1
+				searchForm.setPage(1);
+			}
+			searchResult = imdbSearchService.searchImdb(title, Integer.valueOf(searchForm.getPage()), year);
+			session.setAttribute(SESSION_KEY_LAST_SEARCH, currentHash);
+			model.addAttribute("searched", Boolean.TRUE);
+		} catch (ServiceLimitExceededException e) {
+			Alerts.setErrorMessage(model, "The maximum number of allowed IMDB service calls for today has been reached.  Please retry at a later date.");
+			return "imdbsearch/imdbSearch";
+		} catch (WebServicesException wse) {
+			// with a little more work we could still provide paginator, as sometimes only a specific page fails. (example: "dragon" page 3 results in error 5/23/2020)
+			Alerts.setErrorMessage(model, "Search results could not be obtained for this page.");
+			return "imdbsearch/imdbSearch";
+		}
+		List<Result> searchResults = searchResult.getResults();
+		if (StringUtils.isEmptyOrWhitespace(searchResult.getTotalResults())) {
+			model.addAttribute("totalResults", Integer.valueOf(0));
+		} else {
+			model.addAttribute("totalResults", Integer.valueOf(searchResult.getTotalResults()));
+		}
+		model.addAttribute("searchResults", searchResults);
+		
+		// store information about users default collection
+		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+		if (defaultMovieCollection.isPresent()) {
+			model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
+			if (searchResults != null && searchResults.size() > 0) {
 				try {
-					Optional<Movie> movie = movieService.getMovie(searchForm.getLinkMovieId(), principal.getName());
-					collectionService.assertCollectionEditable(movie.get().getCollectionId(), principal.getName());
-					if (!StringUtils.isEmptyOrWhitespace(searchForm.getLinkImdbId())) {
-						// link movie and return to movie list or go to next unlinked movie
-						String linkId = searchForm.getLinkImdbId().trim();
-						if ("unlink".equals(linkId)) {
-							imdbSearchService.removeImdbAttributes(movie.get());
-							movieService.updateMovie(movie.get(), principal.getName());	
-						} else if (!"skip".equals(linkId)) {
-							MovieDetails movieDetails = imdbSearchService.getMovieDetails(searchForm.getLinkImdbId().trim());
-							imdbSearchService.addImdbAttributes(movie.get(), movieDetails);
-							movieService.updateMovie(movie.get(), principal.getName());
-						}
-						if (searchForm.isLinkAll()) {
-							final String previousTitle = movie.get().getTitle().toLowerCase();
-							List<Movie> unlinkedMovies = movieService.getUnlinkedMoviesForDefaultCollection(principal.getName());
-							if (unlinkedMovies.size() > 0) {
-								Optional<Movie> nextMovie = unlinkedMovies.stream()
-										.filter(uMovie -> uMovie.getTitle().toLowerCase().compareTo(previousTitle) > 0)
-										.findFirst();
-								if (!nextMovie.isPresent()) {
-									nextMovie = unlinkedMovies.stream().findFirst();
-								}
-								searchForm.setLinkMovieId(nextMovie.get().getId());
-								searchForm.setLinkImdbId(null);
-								searchForm.setTitle(nextMovie.get().getTitle());
-								searchForm.setPage(1);
-								return imdbSearchSubmit(model, principal, searchForm, result, session);
-							}
-						}
-						return "redirect:/";
-					}
-					model.addAttribute("linkMovie", movie.get());
-				} catch (Exception e) {
-					LOGGER.error("Unable to get movie to link.", e);
-					Alerts.setErrorMessage(model, "This movie cannot be linked.");
-				}
-			}
-			String title = searchForm.getTitle();
-			String year = (StringUtils.isEmptyOrWhitespace(searchForm.getYear()))? null : searchForm.getYear().trim();
-			SearchResult searchResult = null;
-			try {
-				Integer previousHash = (Integer) session.getAttribute(SESSION_KEY_LAST_SEARCH);
-				Integer currentHash = Integer.valueOf(searchForm.hashCode());
-				if (!currentHash.equals(previousHash)) {
-					// search criteria has changed; reset to page 1
-					searchForm.setPage(1);
-				}
-				searchResult = imdbSearchService.searchImdb(title, Integer.valueOf(searchForm.getPage()), year);
-				session.setAttribute(SESSION_KEY_LAST_SEARCH, currentHash);
-				model.addAttribute("searched", Boolean.TRUE);
-			} catch (ServiceLimitExceededException e) {
-				Alerts.setErrorMessage(model, "The maximum number of allowed IMDB service calls for today has been reached.  Please retry at a later date.");
-				return "imdbsearch/imdbSearch";
-			} catch (WebServicesException wse) {
-				// with a little more work we could still provide paginator, as sometimes only a specific page fails. (example: "dragon" page 3 results in error 5/23/2020)
-				Alerts.setErrorMessage(model, "Search results could not be obtained for this page.");
-				return "imdbsearch/imdbSearch";
-			}
-			List<Result> searchResults = searchResult.getResults();
-			if (StringUtils.isEmptyOrWhitespace(searchResult.getTotalResults())) {
-				model.addAttribute("totalResults", Integer.valueOf(0));
-			} else {
-				model.addAttribute("totalResults", Integer.valueOf(searchResult.getTotalResults()));
-			}
-			model.addAttribute("searchResults", searchResults);
-			Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
-			if (defaultMovieCollection.isPresent()) {
-				model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
-				if (searchResults != null && searchResults.size() > 0) {
-					try {
-						Set<String> imdbIdsInCollection = movieService.getImdbIdsInDefaultCollection(principal.getName());
-						searchResults.stream()
-								.filter(r -> imdbIdsInCollection.contains(r.getImdbID()))
-								.forEach(r -> r.setInCollection(true));
-					} catch (WebServicesException e) {
-						LOGGER.error("Unable to read IMDB IDs from collection.", e);
-						Alerts.setErrorMessage(model, "What movies you already have in your collection will not be indicated due to an error accessing your movie collection.");
-					}
+					Set<String> imdbIdsInCollection = movieService.getImdbIdsInDefaultCollection(principal.getName());
+					searchResults.stream()
+							.filter(r -> imdbIdsInCollection.contains(r.getImdbID()))
+							.forEach(r -> r.setInCollection(true));
+				} catch (WebServicesException e) {
+					LOGGER.error("Unable to read IMDB IDs from collection.", e);
+					Alerts.setErrorMessage(model, "What movies you already have in your collection will not be indicated due to an error accessing your movie collection.");
 				}
 			}
 		}
