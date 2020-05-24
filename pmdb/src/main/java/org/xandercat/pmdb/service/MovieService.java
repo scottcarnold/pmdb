@@ -20,6 +20,8 @@ public interface MovieService {
 	
 	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
+	public List<Movie> getUnlinkedMoviesForDefaultCollection(String callingUsername) throws WebServicesException;
+	
 	public Optional<Movie> getMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
 	public void addMovie(Movie movie, String callingUsername) throws CollectionSharingException, WebServicesException;

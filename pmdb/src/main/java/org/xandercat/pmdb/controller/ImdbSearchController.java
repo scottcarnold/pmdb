@@ -69,6 +69,46 @@ public class ImdbSearchController {
 			BindingResult result, HttpSession session) {
 		Alerts.setSessionAlertWithKey(model, session, "IMDBSearchLimit", Alerts.AlertType.WARNING, "alert.imdbsearch.limits");
 		if (!result.hasErrors()) {
+			if (!StringUtils.isEmptyOrWhitespace(searchForm.getLinkMovieId())) {
+				try {
+					Optional<Movie> movie = movieService.getMovie(searchForm.getLinkMovieId(), principal.getName());
+					collectionService.assertCollectionEditable(movie.get().getCollectionId(), principal.getName());
+					if (!StringUtils.isEmptyOrWhitespace(searchForm.getLinkImdbId())) {
+						// link movie and return to movie list or go to next unlinked movie
+						String linkId = searchForm.getLinkImdbId().trim();
+						if ("unlink".equals(linkId)) {
+							imdbSearchService.removeImdbAttributes(movie.get());
+							movieService.updateMovie(movie.get(), principal.getName());	
+						} else if (!"skip".equals(linkId)) {
+							MovieDetails movieDetails = imdbSearchService.getMovieDetails(searchForm.getLinkImdbId().trim());
+							imdbSearchService.addImdbAttributes(movie.get(), movieDetails);
+							movieService.updateMovie(movie.get(), principal.getName());
+						}
+						if (searchForm.isLinkAll()) {
+							final String previousTitle = movie.get().getTitle().toLowerCase();
+							List<Movie> unlinkedMovies = movieService.getUnlinkedMoviesForDefaultCollection(principal.getName());
+							if (unlinkedMovies.size() > 0) {
+								Optional<Movie> nextMovie = unlinkedMovies.stream()
+										.filter(uMovie -> uMovie.getTitle().toLowerCase().compareTo(previousTitle) > 0)
+										.findFirst();
+								if (!nextMovie.isPresent()) {
+									nextMovie = unlinkedMovies.stream().findFirst();
+								}
+								searchForm.setLinkMovieId(nextMovie.get().getId());
+								searchForm.setLinkImdbId(null);
+								searchForm.setTitle(nextMovie.get().getTitle());
+								searchForm.setPage(1);
+								return imdbSearchSubmit(model, principal, searchForm, result, session);
+							}
+						}
+						return "redirect:/";
+					}
+					model.addAttribute("linkMovie", movie.get());
+				} catch (Exception e) {
+					LOGGER.error("Unable to get movie to link.", e);
+					Alerts.setErrorMessage(model, "This movie cannot be linked.");
+				}
+			}
 			String title = searchForm.getTitle();
 			String year = (StringUtils.isEmptyOrWhitespace(searchForm.getYear()))? null : searchForm.getYear().trim();
 			SearchResult searchResult = null;
@@ -134,7 +174,9 @@ public class ImdbSearchController {
 			return response;
 		}
 		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
-		Movie movie = new Movie(movieDetails, movieCollection.get().getId());
+		Movie movie = new Movie();
+		movie.setCollectionId(movieCollection.get().getId());
+		imdbSearchService.addImdbAttributes(movie, movieDetails);
 		try {
 			movieService.addMovie(movie, principal.getName());
 		} catch (CollectionSharingException e) {
@@ -149,5 +191,35 @@ public class ImdbSearchController {
 			return response;			
 		}
 		return response;
+	}
+	
+	@RequestMapping("/imdbsearch/link")
+	public String link(Model model, Principal principal, @RequestParam String movieId, @RequestParam boolean linkAll, HttpSession session) {
+		try {
+			if ("any".equals(movieId)) {
+				Optional<Movie> anyMovie = movieService.getUnlinkedMoviesForDefaultCollection(principal.getName()).stream().findFirst();
+				if (anyMovie.isPresent()) {
+					movieId = anyMovie.get().getId();
+				}
+			}
+			Optional<Movie> movie = movieService.getMovie(movieId, principal.getName());
+			if (!movie.isPresent()) {
+				Alerts.setErrorMessage(model, "Requested movie not found.");
+				return imdbSearch(model, session);
+			}
+			collectionService.assertCollectionEditable(movie.get().getCollectionId(), principal.getName());
+			SearchForm searchForm = new SearchForm();
+			searchForm.setTitle(movie.get().getTitle());
+			searchForm.setLinkMovieId(movie.get().getId());
+			searchForm.setLinkAll(linkAll);
+			model.addAttribute("searchForm", searchForm);
+			return imdbSearchSubmit(model, principal, searchForm, ViewUtil.emptyBindingResult("searchForm"), session);
+		} catch (Exception e) {
+			LOGGER.error("Unable to access movie collection.", e);
+			Alerts.setErrorMessage(model, "You cannot add movies to the collection.");
+			return imdbSearch(model, session);
+		} 
+		
+		
 	}
 }

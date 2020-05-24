@@ -216,4 +216,22 @@ public class MovieServiceImpl implements MovieService {
 			return movieDao.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
 		}		
 	}
+
+	@Override
+	public List<Movie> getUnlinkedMoviesForDefaultCollection(String callingUsername) throws WebServicesException {
+		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(callingUsername);
+		if (!defaultMovieCollection.isPresent()) {
+			return Collections.emptyList();
+		}
+		assertCloudReady(defaultMovieCollection.get());
+		if (defaultMovieCollection.get().isCloud()) {
+			try {
+				return dynamoMovieRepository.getMoviesWithoutAttribute(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
+			} catch (Exception e) {
+				throw new WebServicesException(e);
+			}
+		} else {
+			return movieDao.getMoviesWithoutAttribute(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
+		}
+	}
 }

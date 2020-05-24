@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.util.StringUtils;
+import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.dto.imdb.MovieDetailsWrapper;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
@@ -21,11 +22,13 @@ import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.util.Pair;
 
-//TODO: Switch the parameter setting to an object that can be marshalled
 @Component
 public class ImdbRestService implements ImdbSearchService {
 	
 	private static final Logger LOGGER = LogManager.getLogger(ImdbRestService.class);
+	
+	private static final int MAX_ATTRIBUTE_VALUE_LENGTH = 400;
+	private static final String IMDB_URL_BASE = "https://www.imdb.com/title/";
 	
 	@Value("${imdb.rapidapi.host.url}")
 	private String hostUrl;
@@ -106,5 +109,60 @@ public class ImdbRestService implements ImdbSearchService {
 			throw new WebServicesException(e);
 		}
 		return movieDetailsWrapper.getMovieDetails();
+	}
+
+	private void setAttribute(Movie movie, String name, String value) {
+		if (!StringUtils.isEmptyOrWhitespace(value)) {
+			if (value.length() > MAX_ATTRIBUTE_VALUE_LENGTH) {
+				value = value.substring(0, MAX_ATTRIBUTE_VALUE_LENGTH);
+			}
+			movie.addAttribute(name, value);
+		}
+	}
+	
+	@Override
+	public void addImdbAttributes(Movie movie, MovieDetails movieDetails) {
+		setAttribute(movie, "year", movieDetails.getYear());
+		setAttribute(movie, "genre", movieDetails.getGenre());
+		setAttribute(movie, "rated", movieDetails.getRated());
+		setAttribute(movie, "plot", movieDetails.getPlot());
+		setAttribute(movie, "actors", movieDetails.getActors());
+		setAttribute(movie, "director", movieDetails.getDirector());
+		setAttribute(movie, "awards", movieDetails.getAwards());
+		setAttribute(movie, ImdbSearchService.IMDB_ID_KEY, movieDetails.getImdbId());
+		if (!StringUtils.isEmptyOrWhitespace(movieDetails.getImdbId())) {
+			setAttribute(movie, "imdb url", IMDB_URL_BASE + movieDetails.getImdbId());
+		}
+		setAttribute(movie, "imdb rating", movieDetails.getImdbRating());
+		setAttribute(movie, "imdb votes", movieDetails.getImdbVotes());
+		setAttribute(movie, "language", movieDetails.getLanguage());
+		setAttribute(movie, "metascore", movieDetails.getMetascore());		
+		setAttribute(movie, "poster", movieDetails.getPoster());		
+		setAttribute(movie, "released", movieDetails.getReleased());
+		setAttribute(movie, "runtime", movieDetails.getRuntime());
+		setAttribute(movie, "type", movieDetails.getType());
+		setAttribute(movie, "country", movieDetails.getCountry());
+	}
+
+	@Override
+	public void removeImdbAttributes(Movie movie) {
+		movie.removeAttribute("year");
+		movie.removeAttribute("genre");
+		movie.removeAttribute("rated");
+		movie.removeAttribute("plot");
+		movie.removeAttribute("actors");
+		movie.removeAttribute("director");
+		movie.removeAttribute("awards");
+		movie.removeAttribute(ImdbSearchService.IMDB_ID_KEY);
+		movie.removeAttribute("imdb url");
+		movie.removeAttribute("imdb rating");
+		movie.removeAttribute("imdb votes");
+		movie.removeAttribute("language");
+		movie.removeAttribute("metascore");		
+		movie.removeAttribute("poster");		
+		movie.removeAttribute("released");
+		movie.removeAttribute("runtime");
+		movie.removeAttribute("type");
+		movie.removeAttribute("country");	
 	}
 }

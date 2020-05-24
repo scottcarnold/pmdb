@@ -106,7 +106,9 @@ public class Alerts {
 			alerts = new ArrayList<Alert>();
 			model.addAttribute(KEY_OTHER_MESSAGES, alerts);
 		}
-		alerts.add(new Alert(key, type, message, messageKey));
+		if (!alerts.stream().anyMatch(alert -> key.equals(alert.getSessionKey()))) {
+			alerts.add(new Alert(key, type, message, messageKey));
+		}
 	}
 	
 	@SuppressWarnings("unchecked")

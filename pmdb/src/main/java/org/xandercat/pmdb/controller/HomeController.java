@@ -30,6 +30,7 @@ import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.movie.MovieForm;
 import org.xandercat.pmdb.form.movie.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
+import org.xandercat.pmdb.service.ImdbSearchService;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
@@ -90,6 +91,9 @@ public class HomeController {
 		try {
 			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.get().getId(), principal.getName());
 			model.addAttribute("totalMoviesInCollection", movies.size());
+			model.addAttribute("unlinkCount", movies.stream()
+					.filter(movie -> StringUtils.isEmptyOrWhitespace(movie.getAttribute(ImdbSearchService.IMDB_ID_KEY)))
+					.count());
 			if (!StringUtils.isEmptyOrWhitespace(searchString)) {
 				movies = movieService.searchMoviesForCollection(defaultMovieCollection.get().getId(), searchString, principal.getName());
 			}

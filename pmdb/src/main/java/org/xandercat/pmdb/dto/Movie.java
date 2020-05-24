@@ -5,9 +5,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.springframework.data.annotation.Id;
-import org.thymeleaf.util.StringUtils;
-import org.xandercat.pmdb.dto.imdb.MovieDetails;
-import org.xandercat.pmdb.service.ImdbSearchService;
 import org.xandercat.pmdb.util.format.FormatUtil;
 import org.xandercat.pmdb.util.format.MovieAttributesConverter;
 
@@ -30,9 +27,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted;
 @DynamoDBTable(tableName="Movie")
 public class Movie {
 
-	private static final int MAX_ATTRIBUTE_VALUE_LENGTH = 400;
-	private static final String IMDB_URL_BASE = "https://www.imdb.com/title/";
-	
 	@Id
 	@DynamoDBHashKey
 	private String id;
@@ -48,39 +42,6 @@ public class Movie {
 	private String collectionId;
 	
 	public Movie() {
-	}
-	public Movie(MovieDetails movieDetails, String collectionId) {
-		this.title = movieDetails.getTitle();
-		this.collectionId = collectionId;
-		setAttribute("year", movieDetails.getYear());
-		setAttribute("genre", movieDetails.getGenre());
-		setAttribute("rated", movieDetails.getRated());
-		setAttribute("plot", movieDetails.getPlot());
-		setAttribute("actors", movieDetails.getActors());
-		setAttribute("director", movieDetails.getDirector());
-		setAttribute("awards", movieDetails.getAwards());
-		setAttribute(ImdbSearchService.IMDB_ID_KEY, movieDetails.getImdbId());
-		if (!StringUtils.isEmptyOrWhitespace(movieDetails.getImdbId())) {
-			setAttribute("imdb url", IMDB_URL_BASE + movieDetails.getImdbId());
-		}
-		setAttribute("imdb rating", movieDetails.getImdbRating());
-		setAttribute("imdb votes", movieDetails.getImdbVotes());
-		setAttribute("language", movieDetails.getLanguage());
-		setAttribute("metascore", movieDetails.getMetascore());		
-		setAttribute("poster", movieDetails.getPoster());		
-		setAttribute("released", movieDetails.getReleased());
-		setAttribute("runtime", movieDetails.getRuntime());
-		setAttribute("type", movieDetails.getType());
-		setAttribute("country", movieDetails.getCountry());
-		
-	}
-	private void setAttribute(String name, String value) {
-		if (!StringUtils.isEmptyOrWhitespace(value)) {
-			if (value.length() > MAX_ATTRIBUTE_VALUE_LENGTH) {
-				value = value.substring(0, MAX_ATTRIBUTE_VALUE_LENGTH);
-			}
-			addAttribute(name, value);
-		}
 	}
 	public String getId() {
 		return id;
@@ -108,6 +69,9 @@ public class Movie {
 		for (Map.Entry<String, String> entry : attributes.entrySet()) {
 			addAttribute(entry.getKey(), entry.getValue());
 		}
+	}
+	public void removeAttribute(String key) {
+		this.attributes.remove(FormatUtil.titleCase(key));
 	}
 	public String getCollectionId() {
 		return collectionId;

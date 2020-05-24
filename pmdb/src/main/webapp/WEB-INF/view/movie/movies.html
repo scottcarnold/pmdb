@@ -8,7 +8,7 @@
 		<div layout:fragment="content">
 			<div class="panel panel-info">
 				<div class="panel-heading">
-					<h3 th:text="'Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</h3>
+					<h3><span th:text="'Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</span><a href="#" th:href="@{/imdbsearch/link(movieId='any',linkAll=true)}" th:if="${unlinkCount > 0}" data-toggle="tooltip" data-placement="right" title="Link all movies in this collection to IMDB"><span style="padding-left: 10px" class="glyphicon glyphicon-link" aria-hidden="true"></span></a></h3>
 					<p th:if="${totalMoviesInCollection} and ${movies.size() != totalMoviesInCollection}">Filtered to <span th:text="${movies.size()}">0</span> out of <span th:text="${totalMoviesInCollection}">0</span> movies in the collection.</p>
 					<form id="cSearchForm" th:action="@{/movies/search}" th:object="${searchForm}" method="post" class="form-inline">
 						<div class="input-group">
@@ -38,11 +38,12 @@
 					</thead>
 					<tbody>
 					<tr th:each="movie : ${movies}">
-						<td th:text="${movie.title}" th:attr="data-order=${movie.title}">Movie Title</td>
+						<td th:attr="data-order=${movie.title}"><span th:text="${movie.title}">Movie Title</span><a href="#" th:href="@{/imdbsearch/link(movieId=${movie.id},linkAll=false)}" th:if="${#strings.isEmpty(movie.getAttribute('Imdb Id'))}"><span style="padding-left: 10px" class="glyphicon glyphicon-link" aria-hidden="true"></span></a></td>
 						<!--/* System wide, attribute names are not allowed to have special characters, so it's safe to preprocess the column names */-->
 						<td th:each="columnName : ${attrColumns}" th:text="${movie.getAttributeDisplayValue('__${columnName}__')}" th:attr="data-order=${movie.getAttributeSortValue('__${columnName}__')}"></td>
 						<td th:if="${defaultMovieCollection.editable and editMode}">
 							<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/editMovie(movieId=${movie.id})}" class="btn btn-default" role="button">Edit</a> 
+							<a href="#" th:if="not ${#strings.isEmpty(movie.getAttribute('Imdb Id'))}" th:href="@{/imdbsearch/link(movieId=${movie.id},linkAll=false)}" class="btn btn-default" role="button">Relink</a>
 							<form th:if="${defaultMovieCollection.editable}" th:action="@{/movies/deleteMovie}" method="post" style="display: inline">
 								<input type="hidden" name="movieId" th:value="${movie.id}"/>
 								<button type="submit" class="confirmDelete btn btn-default">Delete</button>
@@ -81,6 +82,11 @@
 			        	$("#cSearchForm").submit();
 			        });
 			} );	
+			</script>
+			<script th:if="${unlinkCount > 0}" type="text/javascript">
+			$(document).ready(function() { 
+					$('[data-toggle="tooltip"]').tooltip();
+			});
 			</script>
 		</div>
 	</body>

@@ -11,10 +11,13 @@
 					<h3>Search IMDB</h3>
 				</div>
 				<div class="panel-body">
-					<form th:action="@{/imdbsearch/searchSubmit}" th:object="${searchForm}" method="post" class="form-horizontal">
+					<form th:id="searchForm" th:action="@{/imdbsearch/searchSubmit}" th:object="${searchForm}" method="post" class="form-horizontal">
 						<div th:replace="form/input :: text('Movie Title', 'title')"></div>
 						<div th:replace="form/input :: text('Year', 'year')"></div>
 						<input th:id="searchFormPage" type="hidden" th:field="*{page}"/>
+						<input type="hidden" th:field="*{linkMovieId}"/>
+						<input th:id="linkImdbId" type="hidden" th:field="*{linkImdbId}"/>
+						<input type="hidden" th:field="*{linkAll}"/>
 						<div th:replace="form/input :: submit('Search IMDB')"></div>
 					</form>
 				</div>
@@ -30,7 +33,18 @@
 						<div th:replace="imdbsearch/paginator :: paginator(${searchForm.page}, ${totalResults}, 'searchFormPage')"></div>
 					</div>
 				</div>
-			</div>	
+			</div>
+			<div th:if="${linkMovie}" class="row">
+				<div class="col-xs-12">
+					<div class="panel panel-primary">
+						<div class="panel-heading">
+							<h4 style="display: inline">Linking movie <span th:text="${linkMovie.title}">Movie Title</span> to IMDB...</h4>
+							<button style="padding-left: 15px" id="unlinkMovieButton" type="button" class="btn btn-default" th:if="not ${#strings.isEmpty(linkMovie.getAttribute('Imdb Id'))}">Unlink</button>
+							<button style="padding-left: 15px" id="skipMovieButton" type="button" class="btn btn-default" th:if="${searchForm.linkAll}">Skip To Next</button>
+						</div>
+					</div>
+				</div>
+			</div>
 			<div th:if="${searchResults}">
 				<div th:each="searchResult : ${searchResults}">
 					<div class="panel panel-default">
@@ -50,7 +64,10 @@
 											<div class="row"><div class="col-xs-4">IMDB:</div><div class="col-xs-8"><a th:href="@{https://www.imdb.com/title/{imdbId}(imdbId=${searchResult.imdbID})}" th:text="${searchResult.imdbID}"></a></div></div>
 											<div class="row"><div class="col-xs-12"><p th:id="${searchResult.imdbID}" th:classappend="${!searchResult.inCollection}? pmdbInvisible" style="color: green; font-weight: bold"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> In Your Movie Collection</p></div></div>
 											<div th:if="${defaultMovieCollection != null and defaultMovieCollection.editable}" class="row">
-												<div class="col-xs-12"><button type="button" th:id="${searchResult.imdbID} + '-button'" class="btn btn-default addToMovieCollection" th:attr="data-href='/pmdb/imdbsearch/addToCollection?imdbId=__${searchResult.imdbID}__'">Add To Collection</button></div>
+												<div class="col-xs-12">
+													<button th:if="not ${linkMovie}" type="button" th:id="${searchResult.imdbID} + '-button'" class="btn btn-default addToMovieCollection" th:attr="data-href='/pmdb/imdbsearch/addToCollection?imdbId=__${searchResult.imdbID}__'">Add To Collection</button>
+													<button th:if="${linkMovie}" type="button" th:id="${searchResult.imdbID} + '-button'" class="btn btn-default linkToMovie" th:attr="data-imdbid=${searchResult.imdbID}">Link To This Movie</button>
+												</div>
 											</div>
 										</div>
 									</div>
@@ -67,7 +84,29 @@
 					</div>
 				</div>
 			</div>
-			<script type="text/javascript">
+			<script th:if="${linkMovie}" type="text/javascript">
+			$(document).ready(function() { 
+				$(".linkToMovie").click(function (e) {
+					e.preventDefault();
+					$(this).attr("disabled", true);
+					$("#linkImdbId").val($(this).data("imdbid"));
+					$("#searchForm").submit();
+				});
+				$("#unlinkMovieButton").click(function (e) {
+					e.preventDefault();
+					$(this).attr("disabled", true);
+					$("#linkImdbId").val("unlink");
+					$("#searchForm").submit();
+				});
+				$("#skipMovieButton").click(function (e) {
+					e.preventDefault();
+					$(this).attr("disabled", true);
+					$("#linkImdbId").val("skip");
+					$("#searchForm").submit();
+				});
+			});
+			</script>
+			<script th:if="not ${linkMovie}" type="text/javascript">
 			$(document).ready(function() {  
 				$(".addToMovieCollection").click(function (e) {
 					e.preventDefault();

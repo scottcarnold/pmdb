@@ -15,6 +15,10 @@ public class SearchForm {
 	@Range(min=1)
 	private int page = 1;
 	
+	private String linkMovieId;
+	private String linkImdbId;
+	private boolean linkAll;
+	
 	public String getTitle() {
 		return title;
 	}
@@ -32,6 +36,24 @@ public class SearchForm {
 	}
 	public void setPage(int page) {
 		this.page = page;
+	}
+	public String getLinkMovieId() {
+		return linkMovieId;
+	}
+	public void setLinkMovieId(String linkMovieId) {
+		this.linkMovieId = linkMovieId;
+	}
+	public String getLinkImdbId() {
+		return linkImdbId;
+	}
+	public void setLinkImdbId(String linkImdbId) {
+		this.linkImdbId = linkImdbId;
+	}
+	public boolean isLinkAll() {
+		return linkAll;
+	}
+	public void setLinkAll(boolean linkAll) {
+		this.linkAll = linkAll;
 	}
 	@Override
 	public int hashCode() {

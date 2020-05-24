@@ -2,11 +2,14 @@ package org.xandercat.pmdb.util;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpSession;
 
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.MapBindingResult;
 import org.springframework.web.multipart.MultipartFile;
 import org.xandercat.pmdb.form.Option;
 import org.xandercat.pmdb.service.CollectionService;
@@ -125,5 +128,9 @@ public class ViewUtil {
 	 */
 	public static List<Option> getOptions(Collection<String> strings) {
 		return strings.stream().map(ViewUtil::getOption).collect(Collectors.toList());
+	}
+	
+	public static BindingResult emptyBindingResult(String objectName) {
+		return new MapBindingResult(new HashMap<String, String>(), objectName);
 	}
 }

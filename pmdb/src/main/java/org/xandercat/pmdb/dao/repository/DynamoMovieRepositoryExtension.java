@@ -12,4 +12,6 @@ public interface DynamoMovieRepositoryExtension {
 	public List<String> getAttributeKeysForCollection(String collectionId);
 	
 	public Set<String> getAttributeValuesForCollection(String collectionId, String attributeName);
+	
+	public List<Movie> getMoviesWithoutAttribute(String collectionId, String attributeKey);
 }

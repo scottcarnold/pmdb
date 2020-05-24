@@ -12,7 +12,9 @@ import java.util.stream.Collectors;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.util.MovieTitleComparator;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
@@ -84,5 +86,13 @@ public class DynamoMovieRepositoryExtensionImpl implements DynamoMovieRepository
 		return queryList.stream()
 				.map(movie -> movie.getAttribute(attributeName))
 				.collect(Collectors.toSet());
+	}
+
+	@Override
+	public List<Movie> getMoviesWithoutAttribute(String collectionId, String attributeKey) {
+		return getMoviesForCollection(collectionId).stream()
+				.filter(movie -> StringUtils.isEmptyOrWhitespace(movie.getAttribute(attributeKey)))
+				.sorted(new MovieTitleComparator())
+				.collect(Collectors.toList());
 	}
 }
