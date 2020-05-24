@@ -122,6 +122,10 @@ public class ImdbRestService implements ImdbSearchService {
 	
 	@Override
 	public void addImdbAttributes(Movie movie, MovieDetails movieDetails) {
+		if (StringUtils.isEmptyOrWhitespace(movie.getTitle())) {
+			// only add title if it doesn't already have one; this allows custom names for pre-existing movies
+			movie.setTitle(movieDetails.getTitle());
+		}
 		setAttribute(movie, "year", movieDetails.getYear());
 		setAttribute(movie, "genre", movieDetails.getGenre());
 		setAttribute(movie, "rated", movieDetails.getRated());

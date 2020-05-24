@@ -185,7 +185,7 @@ public class ImdbSearchController {
 		}
 		model.addAttribute("searchResults", searchResults);
 		
-		// store information about users default collection
+		// pass information about users default collection to view
 		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		if (defaultMovieCollection.isPresent()) {
 			model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
