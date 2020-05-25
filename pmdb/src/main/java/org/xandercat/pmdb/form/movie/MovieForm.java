@@ -753,7 +753,6 @@ public class MovieForm {
 			Method method = ReflectionUtils.findRequiredMethod(MovieForm.class, "setAttrKey" + index, String.class);
 			method.invoke(this, key);
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 	
@@ -762,7 +761,6 @@ public class MovieForm {
 			Method method = ReflectionUtils.findRequiredMethod(MovieForm.class, "setAttrValue" + index, String.class);
 			method.invoke(this, value);
 		} catch (Exception e) {
-			e.printStackTrace();
 		}		
 	}
 	
