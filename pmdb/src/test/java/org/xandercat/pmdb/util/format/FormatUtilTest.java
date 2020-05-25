@@ -1,4 +1,4 @@
-package org.xandercat.pmdb.util;
+package org.xandercat.pmdb.util.format;
 
 import org.junit.jupiter.api.Test;
 import org.xandercat.pmdb.util.format.FormatUtil;

@@ -26,7 +26,10 @@ public class PasswordValidator implements ConstraintValidator<Password, Object> 
 		}
 		String password = null;
 		if (Pair.class.isAssignableFrom(value.getClass())) {
-			if (((Pair<?>) value).getFirst() == null || ((Pair<?>) value).getFirst().getClass() != String.class) {
+			if (((Pair<?>) value).getFirst() == null) {
+				return true;
+			}
+			if (((Pair<?>) value).getFirst().getClass() != String.class) {
 				return false;
 			}
 			password = (String) ((Pair<?>) value).getFirst();
