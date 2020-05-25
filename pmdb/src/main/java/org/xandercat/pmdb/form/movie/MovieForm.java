@@ -1,5 +1,6 @@
 package org.xandercat.pmdb.form.movie;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,10 +9,10 @@ import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotBlank;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.validation.annotation.Validated;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
-import org.xandercat.pmdb.util.ReflectionUtil;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
 /**
@@ -731,7 +732,8 @@ public class MovieForm {
 
 	public String getAttrKey(int index) {
 		try {
-			return ReflectionUtil.invokeGetter(this, "attrKey" + index, String.class);
+			Method method = ReflectionUtils.findRequiredMethod(MovieForm.class, "getAttrKey" + index, (Class<?>[]) null);
+			return (String) method.invoke(this, (Object[]) null);
 		} catch (Exception e) {
 			return null;
 		}
@@ -739,7 +741,8 @@ public class MovieForm {
 	
 	public String getAttrValue(int index) {
 		try {
-			return ReflectionUtil.invokeGetter(this, "attrValue" + index, String.class);
+			Method method = ReflectionUtils.findRequiredMethod(MovieForm.class, "getAttrValue" + index, (Class<?>[]) null);
+			return (String) method.invoke(this, (Object[]) null);
 		} catch (Exception e) {
 			return null;
 		}		
@@ -747,15 +750,19 @@ public class MovieForm {
 	
 	public void setAttrKey(int index, String key) {
 		try {
-			ReflectionUtil.invokeSetter(this, "attrKey" + index, String.class, key);
+			Method method = ReflectionUtils.findRequiredMethod(MovieForm.class, "setAttrKey" + index, String.class);
+			method.invoke(this, key);
 		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
 	public void setAttrValue(int index, String value) {
 		try {
-			ReflectionUtil.invokeSetter(this, "attrValue" + index, String.class, value);
+			Method method = ReflectionUtils.findRequiredMethod(MovieForm.class, "setAttrValue" + index, String.class);
+			method.invoke(this, value);
 		} catch (Exception e) {
+			e.printStackTrace();
 		}		
 	}
 	

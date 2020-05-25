@@ -7,9 +7,9 @@ public class Option {
 	
 	public Option() {
 	}
-	public Option(String value, String text) {
-		this.value = value;
-		this.text = text;
+	public Option(Object value, Object text) {
+		this.value = String.valueOf(value);
+		this.text = String.valueOf(text);
 	}
 	public Option(int value, String text) {
 		this.value = String.valueOf(value);

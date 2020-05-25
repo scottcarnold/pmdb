@@ -22,8 +22,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.dto.imdb.MovieDetailsRequest;
 import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.dto.imdb.Result;
+import org.xandercat.pmdb.dto.imdb.SearchRequest;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
 import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
@@ -84,7 +86,7 @@ public class ImdbSearchController {
 			imdbSearchService.removeImdbAttributes(movie);
 			movieService.updateMovie(movie, principal.getName());	
 		} else if (!"skip".equals(linkId)) {
-			MovieDetails movieDetails = imdbSearchService.getMovieDetails(searchForm.getLinkImdbId().trim());
+			MovieDetails movieDetails = imdbSearchService.getMovieDetails(new MovieDetailsRequest(searchForm.getLinkImdbId().trim()));
 			imdbSearchService.addImdbAttributes(movie, movieDetails);
 			movieService.updateMovie(movie, principal.getName());
 		}
@@ -166,7 +168,7 @@ public class ImdbSearchController {
 				// search criteria has changed; reset to page 1
 				searchForm.setPage(1);
 			}
-			searchResult = imdbSearchService.searchImdb(title, Integer.valueOf(searchForm.getPage()), year);
+			searchResult = imdbSearchService.searchImdb(new SearchRequest(title, year, Integer.valueOf(searchForm.getPage())));
 			session.setAttribute(SESSION_KEY_LAST_SEARCH, currentHash);
 			model.addAttribute("searched", Boolean.TRUE);
 		} catch (ServiceLimitExceededException e) {
@@ -211,7 +213,7 @@ public class ImdbSearchController {
 		response.put("imdbId", imdbId);
 		MovieDetails movieDetails = null;
 		try {
-			movieDetails = imdbSearchService.getMovieDetails(imdbId);
+			movieDetails = imdbSearchService.getMovieDetails(new MovieDetailsRequest(imdbId));
 		} catch (ServiceLimitExceededException e1) {
 			response.setOk(false);
 			response.setErrorMessage("Service limit exceeded. You will not be able to add any more movies to your collection today through the IMDB Search function.");

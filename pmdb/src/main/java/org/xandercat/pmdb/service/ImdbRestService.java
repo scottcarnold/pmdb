@@ -1,8 +1,5 @@
 package org.xandercat.pmdb.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
@@ -15,12 +12,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.dto.imdb.MovieDetailsRequest;
 import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.dto.imdb.MovieDetailsWrapper;
+import org.xandercat.pmdb.dto.imdb.ResponseType;
+import org.xandercat.pmdb.dto.imdb.SearchRequest;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
 import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.exception.WebServicesException;
-import org.xandercat.pmdb.util.Pair;
+import org.xandercat.pmdb.ws.ClientQueryParamMarshaller;
 
 @Component
 public class ImdbRestService implements ImdbSearchService {
@@ -52,59 +52,49 @@ public class ImdbRestService implements ImdbSearchService {
 	private Client restClient;
 	
 	@Autowired
-	private ApplicationService applicationService;
+	private ClientQueryParamMarshaller clientQueryParamMarshaller;
 	
-	private Builder builder(List<Pair<String>> queryParams) {
+	@Autowired
+	private ApplicationService applicationService;
+
+	private Builder builder(Object request) {
 		WebTarget webTarget = restClient.target(hostUrl);
-		for (Pair<String> queryParam : queryParams) {
-			webTarget = webTarget.queryParam(queryParam.getFirst(), queryParam.getSecond());
-		}
+		webTarget = clientQueryParamMarshaller.queryParams(webTarget, request);
 		return webTarget.request()
 			.header(hostHeaderKey, hostHeaderValue)
 			.header(apiKeyHeaderKey, apiKeyHeaderValue);
 	}
 	
-	@Override
-	public SearchResult searchImdb(String title, Integer page, String year) throws WebServicesException, ServiceLimitExceededException {
+	public SearchResult searchImdb(SearchRequest request) throws WebServicesException, ServiceLimitExceededException {
 		int serviceCalls = applicationService.getImdbServiceCallCount();
 		if (serviceCalls >= maxServiceCallsPerDay) {
 			throw new ServiceLimitExceededException(serviceCalls);
 		} else {
 			applicationService.incrementImdbServiceCallCount();
 		}
-		if (StringUtils.isEmptyOrWhitespace(title)) {
+		if (StringUtils.isEmptyOrWhitespace(request.getTitle())) {
 			throw new IllegalArgumentException("Title is required.");
 		}
-		List<Pair<String>> queryParams = new ArrayList<Pair<String>>();
-		queryParams.add(new Pair<String>("s", title.trim()));
-		if (page != null) {
-			queryParams.add(new Pair<String>("page", page.toString()));
-		}
-		if (!StringUtils.isEmptyOrWhitespace(year)) {
-			queryParams.add(new Pair<String>("y", year.trim()));
-		}
-		queryParams.add(new Pair<String>("r", "xml"));
+		request.setResponseType(ResponseType.XML);
 		try {
-			return builder(queryParams).get(new GenericType<SearchResult>() {});
+			return builder(request).get(new GenericType<SearchResult>() {});
 		} catch (Exception e) {
 			throw new WebServicesException(e);
 		}
 	}
 	
 	@Override
-	public MovieDetails getMovieDetails(String imdbId) throws WebServicesException, ServiceLimitExceededException {
+	public MovieDetails getMovieDetails(MovieDetailsRequest request) throws WebServicesException, ServiceLimitExceededException {
 		int serviceCalls = applicationService.getImdbServiceCallCount();
 		if (serviceCalls >= maxServiceCallsPerDay) {
 			throw new ServiceLimitExceededException(serviceCalls);
 		} else {
 			applicationService.incrementImdbServiceCallCount();
 		}
-		List<Pair<String>> queryParams = new ArrayList<Pair<String>>();
-		queryParams.add(new Pair<String>("i", imdbId));
-		queryParams.add(new Pair<String>("r", "xml"));
+		request.setResponseType(ResponseType.XML);
 		MovieDetailsWrapper movieDetailsWrapper = null;
 		try {
-			movieDetailsWrapper = builder(queryParams).get(new GenericType<MovieDetailsWrapper>() {});
+			movieDetailsWrapper = builder(request).get(new GenericType<MovieDetailsWrapper>() {});
 		} catch (Exception e) {
 			throw new WebServicesException(e);
 		}

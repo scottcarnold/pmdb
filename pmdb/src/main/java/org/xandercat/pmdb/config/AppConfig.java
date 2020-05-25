@@ -9,6 +9,7 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.SystemPropertyUtils;
+import org.xandercat.pmdb.ws.ClientQueryParamMarshaller;
 
 @Configuration
 public class AppConfig {
@@ -29,5 +30,10 @@ public class AppConfig {
 	@Bean
 	public Client restClient() {
 		return ClientBuilder.newBuilder().build();
+	}
+	
+	@Bean
+	public ClientQueryParamMarshaller clientQueryParamMarshaller() {
+		return new ClientQueryParamMarshaller();
 	}
 }

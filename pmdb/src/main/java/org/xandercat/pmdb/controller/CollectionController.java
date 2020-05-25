@@ -313,7 +313,7 @@ public class CollectionController {
 			exportCollectionId = defaultMovieCollection.get().getId();
 		}
 		model.addAttribute("exportForm", new ExportForm(exportCollectionId, ExportType.XLSX));
-		model.addAttribute("collectionOptions", ViewUtil.getOptions(movieCollections, "id", "name"));
+		model.addAttribute("collectionOptions", ViewUtil.getOptions(movieCollections, "getId", "getName"));
 		model.addAttribute("typeOptions", ViewUtil.getOptions(ExportType.class));
 		return "collection/export";
 	}

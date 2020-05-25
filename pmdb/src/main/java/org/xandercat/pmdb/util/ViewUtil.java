@@ -1,5 +1,6 @@
 package org.xandercat.pmdb.util;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpSession;
 
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.web.multipart.MultipartFile;
@@ -74,10 +76,12 @@ public class ViewUtil {
 		session.removeAttribute(SESSION_COLLECTION_UPLOAD_COLUMNS);
 	}
 	
-	private static Option reflectOptionWithIntValue(Object item, String valueFieldName, String textFieldName) {
+	private static Option reflectOptionWithIntValue(Object item, String valueGetterName, String textGetterName) {
 		try {
-			String value = String.valueOf(ReflectionUtil.invokeGetter(item, valueFieldName, Integer.TYPE));
-			String text = ReflectionUtil.invokeGetter(item, textFieldName, String.class);
+			Method valueMethod = ReflectionUtils.findRequiredMethod(item.getClass(), valueGetterName, (Class<?>[]) null);
+			Method textMethod = ReflectionUtils.findRequiredMethod(item.getClass(), textGetterName, (Class<?>[]) null);
+			Object value = valueMethod.invoke(item, (Object[]) null);
+			Object text = textMethod.invoke(item, (Object[]) null);
 			return new Option(value, text);	
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Unable to obtain option text and value with reflection.");
@@ -97,14 +101,14 @@ public class ViewUtil {
 	 * limited to primitive int type.  Text field is currently limited to String type.
 	 * 
 	 * @param items            items to create list of options for
-	 * @param valueFieldName   field name for the value (int type)
-	 * @param textFieldName    field name for the text (String type)
+	 * @param valueGetterName   getter method name for the value (int type)
+	 * @param textGetterName    getter method name for the text (String type)
 	 * 
 	 * @return list of options for the items
 	 */
-	public static List<Option> getOptions(Collection<?> items, String valueFieldName, String textFieldName) {
+	public static List<Option> getOptions(Collection<?> items, String valueGetterName, String textGetterName) {
 		return items.stream().map(item -> { 
-			return reflectOptionWithIntValue(item, valueFieldName, textFieldName); 
+			return reflectOptionWithIntValue(item, valueGetterName, textGetterName); 
 		}).collect(Collectors.toList());
 	}
 	
