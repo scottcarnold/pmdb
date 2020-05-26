@@ -36,6 +36,12 @@ import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
 import org.xandercat.pmdb.util.format.Transformers;
 
+/**
+ * Controller for movie functions on the user's active movie collection.  Primarily includes
+ * searching, adding, editing, and deleting movies.
+ * 
+ * @author Scott Arnold
+ */
 @Controller
 public class HomeController {
 

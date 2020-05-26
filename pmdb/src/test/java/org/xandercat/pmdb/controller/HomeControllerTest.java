@@ -16,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -60,12 +60,23 @@ public class HomeControllerTest {
 	}
 	
 	@Test
-	public void HomeControllerTestTestingSetup() throws Exception {
+	public void testHomePage() throws Exception {
 		mockMvc.perform(get("/")
 				.flashAttr("attributeNames", new ArrayList<String>())
 				.principal(principal)
 		)		
+				.andExpect(model().attributeExists("viewTab", "attributeNames", "searchForm", "defaultMovieCollection", "movies", "attrColumns", "unlinkCount", "editMode"))
 				.andExpect(view().name("movie/movies"));
+	}
+	
+	@Test
+	public void testHomePageRedirectToCollections() throws Exception {
+		when(collectionService.getDefaultMovieCollection(any())).thenReturn(Optional.empty());
+		mockMvc.perform(get("/")
+				.flashAttr("attributeNames", new ArrayList<String>())
+				.principal(principal)
+		)
+				.andExpect(redirectedUrlPattern("/collections?**"));
 	}
 
 }

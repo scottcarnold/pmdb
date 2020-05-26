@@ -20,6 +20,11 @@ import org.xandercat.pmdb.service.UserService;
 import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
 
+/**
+ * Controller for user updating their own account.
+ * 
+ * @author Scott Arnold
+ */
 @Controller
 public class MyAccountController {
 

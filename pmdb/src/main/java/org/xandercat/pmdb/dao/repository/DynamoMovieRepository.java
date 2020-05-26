@@ -7,9 +7,9 @@ import org.xandercat.pmdb.dto.Movie;
 
 public interface DynamoMovieRepository extends CrudRepository<Movie, String>, DynamoMovieRepositoryExtension {
 
-	public List<Movie> findByCollectionId(String collectionId); // should be implemented automatically by spring-data-dynamodb
+	public List<Movie> findByCollectionId(String collectionId); // implemented automatically by spring-data-dynamodb
 	
-	public void deleteByCollectionId(String collectionId); //TODO: might need to implement this one myself
+	public void deleteByCollectionId(String collectionId); // implemented automatically by spring-data-dynamodb
 	
 
 }

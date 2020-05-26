@@ -27,6 +27,11 @@ import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ApplicationProperties;
 import org.xandercat.pmdb.util.ViewUtil;
 
+/**
+ * Controller for administrators to perform user management functions.
+ * 
+ * @author Scott Arnold
+ */
 @Controller
 public class UserAdminController {
 

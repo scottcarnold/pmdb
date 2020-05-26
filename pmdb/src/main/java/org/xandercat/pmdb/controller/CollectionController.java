@@ -40,6 +40,11 @@ import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ExcelPorter;
 import org.xandercat.pmdb.util.ViewUtil;
 
+/**
+ * Controller for functions specific to movie collections management.
+ * 
+ * @author Scott Arnold
+ */
 @Controller
 public class CollectionController {
 

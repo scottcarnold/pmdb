@@ -26,6 +26,11 @@ import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
+/**
+ * Controller for basic authentication and registration functions.
+ * 
+ * @author Scott Arnold
+ */
 @Controller
 public class AuthenticationController {
 

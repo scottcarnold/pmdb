@@ -38,6 +38,13 @@ import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
 import org.xandercat.pmdb.util.ajax.JsonResponse;
 
+/**
+ * Controller for functions involving IMDB search.  This includes IMDB browsing, adding new
+ * movies using IMDB as the information source, and associating existing movie collection 
+ * movies with movies on the IMDB.
+ * 
+ * @author Scott Arnold
+ */
 @Controller
 public class ImdbSearchController {
 
