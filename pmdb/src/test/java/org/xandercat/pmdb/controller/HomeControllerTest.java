@@ -47,7 +47,7 @@ public class HomeControllerTest {
 		defaultMovieCollection = new MovieCollection();
 		defaultMovieCollection.setId("1");
 		defaultMovieCollection.setName("Test Collection");
-		defaultMovieCollection.setOwner("User", "User");
+		defaultMovieCollection.setOwnerAndOwned("User", "User");
 		Optional<MovieCollection> optional = Optional.of(defaultMovieCollection);
 		MockitoAnnotations.initMocks(this);
 		mockMvc = MockMvcBuilders.standaloneSetup(homeController).build();

@@ -87,7 +87,7 @@ public class CollectionServiceImpl implements CollectionService {
 
 	@Override
 	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) throws WebServicesException {
-		movieCollection.setOwner(callingUsername, callingUsername); // enforce that movie collection owner is the calling username
+		movieCollection.setOwnerAndOwned(callingUsername, callingUsername); // enforce that movie collection owner is the calling username
 		assertCloudReady(movieCollection);
 		//TODO: Need to consider error control, especially considering the mirroring of movie collections (check other methods too)
 		collectionDao.addMovieCollection(movieCollection);
@@ -231,7 +231,7 @@ public class CollectionServiceImpl implements CollectionService {
 		long parseTime = System.currentTimeMillis();
 		MovieCollection movieCollection = new MovieCollection();
 		movieCollection.setName(collectionName);
-		movieCollection.setOwner(callingUsername, callingUsername);
+		movieCollection.setOwnerAndOwned(callingUsername, callingUsername);
 		movieCollection.setEditable(true);
 		movieCollection.setCloud(cloud);
 		collectionDao.addMovieCollection(movieCollection);
