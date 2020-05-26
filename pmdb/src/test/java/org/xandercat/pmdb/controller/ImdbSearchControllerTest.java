@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.hamcrest.Matchers;
@@ -16,6 +17,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.imdb.Result;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
@@ -68,6 +70,7 @@ public class ImdbSearchControllerTest {
 		mockMvc = MockMvcBuilders.standaloneSetup(imdbSearchController).build();
 		when(principal.getName()).thenReturn("User");
 		when(collectionService.getDefaultMovieCollection(any())).thenReturn(optional);
+		when(collectionService.assertCollectionEditable(any(), any())).thenReturn(defaultMovieCollection);
 		when(imdbSearchService.searchImdb(any())).thenReturn(searchResult);
 	}
 	
@@ -97,15 +100,58 @@ public class ImdbSearchControllerTest {
 				.andExpect(view().name("imdbsearch/imdbSearch"));		
 	}
 
-	public void testLinkSingleMovieLink() {
-		
+	public void testLinkSingleMovieLink() throws Exception {
+		mockMvc.perform(post("/imdbsearch/searchSubmit")
+				.param("title", "different")
+				.param("page", "1")
+				.param("linkMovieId", "abcdedf")
+				.principal(principal)
+				.session(session)
+		)
+				.andExpect(model().attributeExists("defaultMovieCollection", "linkMovie"))
+				.andExpect(view().name("imdbsearch/imdbSearch"));			
 	}
 	
-	public void testLinkAllMovieLink() {
-		
+	public void testLinkAllMovieLink() throws Exception {
+		Movie previousMovie = new Movie();
+		previousMovie.setTitle("previous");
+		previousMovie.setId("abcdef");
+		List<Movie> movies = new ArrayList<>();
+		Movie movie = new Movie();
+		movie.setTitle("title");
+		movie.setId("nextId");
+		movies.add(movie);
+		when(movieService.getUnlinkedMoviesForDefaultCollection(any())).thenReturn(movies);
+		when(movieService.getMovie("abcdef", "User")).thenReturn(Optional.of(previousMovie));
+		mockMvc.perform(post("/imdbsearch/searchSubmit")
+				.param("title", "different")
+				.param("page", "1")
+				.param("linkMovieId", "abcdedf")
+				.param("linkImdbId", "tt123456789")
+				.principal(principal)
+				.session(session)
+		)
+				.andExpect(model().attributeExists("defaultMovieCollection", "linkMovie"))
+				.andExpect(model().attribute("searchForm", Matchers.hasProperty("linkImdbId", Matchers.isEmptyOrNullString())))
+				.andExpect(model().attribute("searchForm", Matchers.hasProperty("linkMovieId", Matchers.equalTo("nextId"))))
+				.andExpect(view().name("imdbsearch/imdbSearch"));			
 	}
 	
-	public void testLinkAllMovieLinkEnd() {
-		
+	public void testLinkAllMovieLinkEnd() throws Exception {
+		Movie previousMovie = new Movie();
+		previousMovie.setTitle("previous");
+		previousMovie.setId("abcdef");
+		List<Movie> movies = new ArrayList<>();
+		when(movieService.getUnlinkedMoviesForDefaultCollection(any())).thenReturn(movies);
+		when(movieService.getMovie("abcdef", "User")).thenReturn(Optional.of(previousMovie));
+		mockMvc.perform(post("/imdbsearch/searchSubmit")
+				.param("title", "different")
+				.param("page", "1")
+				.param("linkMovieId", "abcdedf")
+				.param("linkImdbId", "tt123456789")
+				.principal(principal)
+				.session(session)
+		)
+				.andExpect(redirectedUrl("/"));			
 	}
 }
