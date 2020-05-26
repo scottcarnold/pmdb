@@ -100,18 +100,26 @@ public class ImdbSearchControllerTest {
 				.andExpect(view().name("imdbsearch/imdbSearch"));		
 	}
 
-	public void testLinkSingleMovieLink() throws Exception {
-		mockMvc.perform(post("/imdbsearch/searchSubmit")
-				.param("title", "different")
-				.param("page", "1")
-				.param("linkMovieId", "abcdedf")
+	@Test
+	public void testLinkSingleMovieSearch() throws Exception {
+		Movie movie = new Movie();
+		movie.setTitle("title");
+		movie.setId("abcdef");
+		when(movieService.getMovie("abcdef", "User")).thenReturn(Optional.of(movie));
+		mockMvc.perform(post("/imdbsearch/link")
+				.param("movieId", "abcdef")
+				.param("linkAll", "false")
 				.principal(principal)
 				.session(session)
 		)
 				.andExpect(model().attributeExists("defaultMovieCollection", "linkMovie"))
+				.andExpect(model().attribute("searchForm", Matchers.hasProperty("linkImdbId", Matchers.isEmptyOrNullString())))
+				.andExpect(model().attribute("searchForm", Matchers.hasProperty("linkMovieId", Matchers.equalTo("abcdef"))))
+				.andExpect(model().attribute("searchForm", Matchers.hasProperty("linkAll", Matchers.equalTo(false))))
 				.andExpect(view().name("imdbsearch/imdbSearch"));			
 	}
 	
+	@Test
 	public void testLinkAllMovieLink() throws Exception {
 		Movie previousMovie = new Movie();
 		previousMovie.setTitle("previous");
@@ -123,11 +131,13 @@ public class ImdbSearchControllerTest {
 		movies.add(movie);
 		when(movieService.getUnlinkedMoviesForDefaultCollection(any())).thenReturn(movies);
 		when(movieService.getMovie("abcdef", "User")).thenReturn(Optional.of(previousMovie));
+		when(movieService.getMovie("nextId", "User")).thenReturn(Optional.of(movie));
 		mockMvc.perform(post("/imdbsearch/searchSubmit")
 				.param("title", "different")
 				.param("page", "1")
-				.param("linkMovieId", "abcdedf")
+				.param("linkMovieId", "abcdef")
 				.param("linkImdbId", "tt123456789")
+				.param("linkAll", "true")
 				.principal(principal)
 				.session(session)
 		)
@@ -137,6 +147,7 @@ public class ImdbSearchControllerTest {
 				.andExpect(view().name("imdbsearch/imdbSearch"));			
 	}
 	
+	@Test
 	public void testLinkAllMovieLinkEnd() throws Exception {
 		Movie previousMovie = new Movie();
 		previousMovie.setTitle("previous");
@@ -147,11 +158,11 @@ public class ImdbSearchControllerTest {
 		mockMvc.perform(post("/imdbsearch/searchSubmit")
 				.param("title", "different")
 				.param("page", "1")
-				.param("linkMovieId", "abcdedf")
+				.param("linkMovieId", "abcdef")
 				.param("linkImdbId", "tt123456789")
 				.principal(principal)
 				.session(session)
 		)
-				.andExpect(redirectedUrl("/"));			
+				.andExpect(redirectedUrlPattern("/?**"));			
 	}
 }
