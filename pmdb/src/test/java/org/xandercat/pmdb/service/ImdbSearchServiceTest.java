@@ -60,6 +60,7 @@ public class ImdbSearchServiceTest {
 		ReflectionTestUtils.setField(service, "hostHeaderValue", "hostHeaderValue");
 		ReflectionTestUtils.setField(service, "apiKeyHeaderValue", "apiKeyHeaderValue");
 	}
+	
 	@Test
 	public void testSettingMovieAttributesAddsTitle() {
 		MovieDetails movieDetails = new MovieDetails();

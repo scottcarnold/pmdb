@@ -76,6 +76,7 @@ public class ImdbRestService implements ImdbSearchService {
 			throw new IllegalArgumentException("Title is required.");
 		}
 		request.setResponseType(ResponseType.XML);
+		request.setTitle(request.getTitle().replaceAll("[\\u0091\\u0092]", "'")); // for clients that insist on using curly quotes that would cause search to fail
 		try {
 			return builder(request).get(new GenericType<SearchResult>() {});
 		} catch (Exception e) {

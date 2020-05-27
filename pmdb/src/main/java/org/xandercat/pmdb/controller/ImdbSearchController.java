@@ -1,6 +1,8 @@
 package org.xandercat.pmdb.controller;
 
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -50,6 +52,7 @@ public class ImdbSearchController {
 
 	private static final Logger LOGGER = LogManager.getLogger(ImdbSearchController.class);
 	private static final String SESSION_KEY_LAST_SEARCH = "imdbLastSearchString";
+	public static final String IMDB_ID_PATTERN = "^tt[0-9]+$";
 	
 	@Autowired
 	private ImdbSearchService imdbSearchService;
@@ -145,6 +148,26 @@ public class ImdbSearchController {
 		return Optional.empty();
 	}
 	
+	private SearchResult buildSearchResultFromImdbId(String imdbId) throws WebServicesException, ServiceLimitExceededException {
+		MovieDetailsRequest request = new MovieDetailsRequest(imdbId);
+		MovieDetails movieDetails = imdbSearchService.getMovieDetails(request);
+		SearchResult searchResult = new SearchResult();
+		if (movieDetails == null) {
+			searchResult.setTotalResults("0");
+			searchResult.setResults(new ArrayList<Result>());
+		} else {
+			searchResult.setTotalResults("1");
+			Result result = new Result();
+			result.setImdbID(imdbId);
+			result.setPoster(movieDetails.getPoster());
+			result.setTitle(movieDetails.getTitle());
+			result.setType(movieDetails.getType());
+			result.setYear(movieDetails.getYear());
+			searchResult.setResults(Collections.singletonList(result));
+		}
+		return searchResult;
+	}
+	
 	@RequestMapping("/imdbsearch/searchSubmit")
 	public String imdbSearchSubmit(Model model, Principal principal,
 			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
@@ -175,7 +198,12 @@ public class ImdbSearchController {
 				// search criteria has changed; reset to page 1
 				searchForm.setPage(1);
 			}
-			searchResult = imdbSearchService.searchImdb(new SearchRequest(title, year, Integer.valueOf(searchForm.getPage())));
+			if (title.matches(IMDB_ID_PATTERN)) {
+				// shortcut for finding movie by the IMDB ID when regular search is insufficient (the RapidAPI web service has some limitations on title format)
+				searchResult = buildSearchResultFromImdbId(title);
+			} else {
+				searchResult = imdbSearchService.searchImdb(new SearchRequest(title, year, Integer.valueOf(searchForm.getPage())));
+			}
 			session.setAttribute(SESSION_KEY_LAST_SEARCH, currentHash);
 			model.addAttribute("searched", Boolean.TRUE);
 		} catch (ServiceLimitExceededException e) {
