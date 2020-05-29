@@ -25,7 +25,6 @@
 							</ul>
 						</div>
 						<a href="#" th:href="@{/movies/configureColumns}" class="btn btn-default" role="button">Table Settings</a>
-						<label th:if="${defaultMovieCollection.editable}"><input type="checkbox" id="editModeCheckbox" th:field="*{editMode}"> Edit Mode</label>
 					</form>
 				</div>
 				<table id="movieTable" class="table table-striped">
@@ -38,48 +37,43 @@
 					</thead>
 					<tbody>
 					<tr th:each="movie : ${movies}">
-						<td th:attr="data-order=${movie.title}"><span th:text="${movie.title}">Movie Title</span><a href="#" th:href="@{/imdbsearch/link(movieId=${movie.id},linkAll=false)}" th:if="${#strings.isEmpty(movie.getAttribute('Imdb Id'))}"><span style="padding-left: 10px" class="glyphicon glyphicon-link" aria-hidden="true"></span></a></td>
+						<td th:attr="data-order=${movie.title}"><a href="#" th:href="@{/movies/movieDetails(movieId=${movie.id})}" class="movieTitleLink"><span th:text="${movie.title}">Movie Title</span></a><a href="#" th:href="@{/imdbsearch/link(movieId=${movie.id},linkAll=false)}" th:if="${#strings.isEmpty(movie.getAttribute('Imdb Id'))}"><span style="padding-left: 10px" class="glyphicon glyphicon-link" aria-hidden="true"></span></a></td>
 						<!--/* System wide, attribute names are not allowed to have special characters, so it's safe to preprocess the column names */-->
 						<td th:each="columnName : ${attrColumns}" th:text="${movie.getAttributeDisplayValue('__${columnName}__')}" th:attr="data-order=${movie.getAttributeSortValue('__${columnName}__')}"></td>
-						<td th:if="${defaultMovieCollection.editable and editMode}">
-							<a href="#" th:if="${defaultMovieCollection.editable}" th:href="@{/movies/editMovie(movieId=${movie.id})}" class="btn btn-default" role="button">Edit</a> 
-							<a href="#" th:if="not ${#strings.isEmpty(movie.getAttribute('Imdb Id'))}" th:href="@{/imdbsearch/link(movieId=${movie.id},linkAll=false)}" class="btn btn-default" role="button">Relink</a>
-							<form th:if="${defaultMovieCollection.editable}" th:action="@{/movies/deleteMovie}" method="post" style="display: inline">
-								<input type="hidden" name="movieId" th:value="${movie.id}"/>
-								<button type="submit" class="confirmDelete btn btn-default">Delete</button>
-							</form>
-						</td>
 					</tr>
 					</tbody>
 				</table>
 			</div>
-			<div th:if="${defaultMovieCollection.editable and editMode}" id="confirmDeleteDialog" title="Confirm Delete">
-				<p>Are you sure you wish to delete this movie?</p>
-			</div>
-			<!--/* We can't put a th:if on the script because th:replace executes first, but it doesn't hurt to have script without dialog and buttons present, so just always include it */-->
-			<script th:replace="script/script :: confirmDialog('#confirmDeleteDialog', '.confirmDelete')"></script>
-			<script th:if="${defaultMovieCollection.editable and editMode}" type="text/javascript">
-			$(document).ready(function() {  
-			        $("#movieTable").DataTable({
-			        	searching: false,
-			        	columnDefs: [
-			        		{ targets: -1, orderable: false}
-			        	]
-			        });
-			} );	
-			
+			<div id="movieDetailsDialog" title="Movie Details">&nbsp;</div>
+			<script type="text/javascript">
+			$(document).ready(function() { 
+				$("#movieDetailsDialog").dialog({
+					autoOpen: false, modal: false, width: 400
+				});
+				$("#movieDetailsDialog").dialog("option", "width", $(window).width()*0.9);
+				$(".movieTitleLink").click(function (e) {
+					e.preventDefault();
+					if ($("#movieDetailsDialog").dialog("isOpen")) {
+						$("#movieDetailsDialog").dialog("close");
+					};
+					$.ajax({
+						dataType: "html",
+						url: $(this).attr("href")
+					}).done(function (data) {
+						$("#movieDetailsDialog").html(data);
+						$("#movieDetailsDialog").dialog("open");
+						$("#movieDetailsDialog").closest(".ui-dialog")   // workaround to fix conflict causing close X to not appear
+							.find(".ui-dialog-titlebar-close")
+							.removeClass("ui-button-icon-only")
+							.html("<span class='glyphicon glyphicon-remove'></span>");
+					});
+				});
+			});
 			</script>
-			<script th:if="not ${defaultMovieCollection.editable and editMode}" type="text/javascript">
+			<script type="text/javascript">
 			$(document).ready(function() {  
 			        $("#movieTable").DataTable({
 			        	searching: false
-			        });
-			} );	
-			</script>
-			<script th:if="${defaultMovieCollection.editable}" type="text/javascript">
-			$(document).ready(function() {  
-			        $("#editModeCheckbox").click(function () {
-			        	$("#cSearchForm").submit();
 			        });
 			} );	
 			</script>

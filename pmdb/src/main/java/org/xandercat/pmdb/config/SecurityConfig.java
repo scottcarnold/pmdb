@@ -39,7 +39,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 		LOGGER.info("SecurityConfig configure http security method called");
 		http
 			.authorizeRequests()
-				.antMatchers("/login*").anonymous()  // note -- you actually can't visit the login pages after logging in with this setup
+				.antMatchers("/login*").permitAll()
 				.antMatchers("/css/**").permitAll()
 				.antMatchers("/fonts/**").permitAll()
 				.antMatchers("/js/**").permitAll()

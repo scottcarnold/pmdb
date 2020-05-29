@@ -10,15 +10,15 @@
 			$(document).ready(function() {  
 				$([[${dialogSelector}]]).dialog({
 					autoOpen: false, modal: true,
-				      buttons : {
-					        "Confirm" : function() {
-					          $(this).dialog("close");
-					          currentForm.submit();
-					        },
-					        "Cancel" : function() {
-					          $(this).dialog("close");
-					        }
-					      }
+					buttons : {
+						"Confirm" : function() {
+							$(this).dialog("close");
+							currentForm.submit();
+						},
+						"Cancel" : function() {
+							$(this).dialog("close");
+						}
+					}
 				});
 		        $([[${buttonSelector}]]).click(function() {
 		            currentForm = $(this).closest('form');

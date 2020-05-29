@@ -25,7 +25,6 @@ public class ViewUtil {
 	public static String TAB_MY_ACCOUNT = "isMyAccountTab";
 	
 	public static String SESSION_NUM_SHARE_OFFERS_KEY = "numShareOffers";
-	public static String SESSION_MOVIES_EDIT_MODE_KEY = "moviesEditMode";
 	public static String SESSION_COLLECTION_UPLOAD_FILE = "importedCollectionFile";
 	public static String SESSION_COLLECTION_UPLOAD_SHEETS = "importedCollectionSheetNames";
 	public static String SESSION_COLLECTION_UPLOAD_COLUMNS = "importedCollectionColumnNames";
@@ -36,18 +35,6 @@ public class ViewUtil {
 			session.setAttribute(SESSION_NUM_SHARE_OFFERS_KEY, Integer.valueOf(numShareOffers));
 		} else {
 			session.removeAttribute(SESSION_NUM_SHARE_OFFERS_KEY);
-		}
-	}
-	
-	public static boolean isMoviesEditMode(HttpSession session) {
-		return Boolean.TRUE.equals(session.getAttribute(SESSION_MOVIES_EDIT_MODE_KEY));
-	}
-	
-	public static void setMoviesEditMode(HttpSession session, boolean editMode) {
-		if (editMode) {
-			session.setAttribute(SESSION_MOVIES_EDIT_MODE_KEY, Boolean.TRUE);
-		} else {
-			session.removeAttribute(SESSION_MOVIES_EDIT_MODE_KEY);
 		}
 	}
 	

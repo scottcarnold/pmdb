@@ -65,7 +65,7 @@ public class HomeControllerTest {
 				.flashAttr("attributeNames", new ArrayList<String>())
 				.principal(principal)
 		)		
-				.andExpect(model().attributeExists("viewTab", "attributeNames", "searchForm", "defaultMovieCollection", "movies", "attrColumns", "unlinkCount", "editMode"))
+				.andExpect(model().attributeExists("viewTab", "attributeNames", "searchForm", "defaultMovieCollection", "movies", "attrColumns", "unlinkCount"))
 				.andExpect(view().name("movie/movies"));
 	}
 	

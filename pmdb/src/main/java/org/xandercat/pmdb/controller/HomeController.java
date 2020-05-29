@@ -73,26 +73,23 @@ public class HomeController {
 	
 	@GetMapping("/")
 	public String home(Model model, Principal principal, HttpSession session) {
-		boolean editMode = ViewUtil.isMoviesEditMode(session);
-		model.addAttribute("searchForm", new SearchForm(editMode));
-		return prepareHome(model, principal, null, editMode, session);
+		model.addAttribute("searchForm", new SearchForm());
+		return prepareHome(model, principal, null, session);
 	}
 	
 	@RequestMapping("/movies/search")
 	public String search(Model model, Principal principal, HttpSession session,
 			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
 			BindingResult result) {
-		return prepareHome(model, principal, searchForm.getSearchString(), searchForm.isEditMode(), session);
+		return prepareHome(model, principal, searchForm.getSearchString(), session);
 	}
 	
-	private String prepareHome(Model model, Principal principal, String searchString, boolean editMode, HttpSession session) {
+	private String prepareHome(Model model, Principal principal, String searchString, HttpSession session) {
 		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		if (!defaultMovieCollection.isPresent()) {
 			// send them to collections so they can set a default movie collection
 			return "redirect:/collections";
 		}
-		ViewUtil.setMoviesEditMode(session, editMode);
-		model.addAttribute("editMode", Boolean.valueOf(editMode));
 		model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
 		try {
 			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.get().getId(), principal.getName());
@@ -113,6 +110,21 @@ public class HomeController {
 			Alerts.setErrorMessage(model, "Unable to get movies for the collection.");
 		}
 		return "movie/movies";		
+	}
+	
+	@RequestMapping("/movies/movieDetails")
+	public String movieDetails(Model model, Principal principal, @RequestParam String movieId) {
+		try {
+			Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+			model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
+			Optional<Movie> movie = movieService.getMovie(movieId, principal.getName());
+			if (movie.isPresent()) {
+				model.addAttribute("movie", movie.get());
+			}
+		} catch (CollectionSharingException | WebServicesException e) {
+			LOGGER.error("Unable to load movie id " + movieId + " for user " + principal.getName(), e);
+		}
+		return "movie/movieDetails";
 	}
 	
 	@RequestMapping("/movies/addMovie")
