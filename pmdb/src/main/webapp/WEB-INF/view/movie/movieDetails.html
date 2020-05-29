@@ -5,6 +5,7 @@
 		<input type="hidden" name="movieId" th:value="${movie.id}"/>
 		<button type="submit" class="confirmDelete btn btn-default">Delete</button>
 	</form>
+	<button type="button" class="btn btn-default movieDetailsClose">Close</button>
 </div>
 <div class="panel panel-info">
 	<div th:if="${movie}">
@@ -22,7 +23,7 @@
 		</div>
 	</div>
 </div>
-<button id="movieDetailsClose" type="button" class="btn btn-default">Close</button>
+<button type="button" class="btn btn-default movieDetailsClose">Close</button>
 <div th:if="${defaultMovieCollection.editable}" id="confirmDeleteDialog" title="Confirm Delete">
 	<p>Are you sure you wish to delete this movie?</p>
 </div>
@@ -31,7 +32,7 @@
 <script th:inline="javascript" type="text/javascript">
 $(document).ready(function() {
 	$("#movieDetailsDialog").dialog("option", "title", [[${movie.title}]]);
-	$("#movieDetailsClose").click(function (e) {
+	$(".movieDetailsClose").click(function (e) {
 		$("#movieDetailsDialog").dialog("close");
 	});
 });
