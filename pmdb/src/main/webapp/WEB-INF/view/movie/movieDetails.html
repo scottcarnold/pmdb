@@ -1,4 +1,4 @@
-<div th:if="${defaultMovieCollection.editable}" class="text-right">
+<div th:if="${defaultMovieCollection.editable}" class="text-right" style="overflow: visible; white-space: nowrap">
 	<a href="#" th:href="@{/movies/editMovie(movieId=${movie.id})}" class="btn btn-default" role="button">Edit</a> 
 	<a href="#" th:if="not ${#strings.isEmpty(movie.getAttribute('Imdb Id'))}" th:href="@{/imdbsearch/link(movieId=${movie.id},linkAll=false)}" class="btn btn-default" role="button">Relink</a>
 	<form th:action="@{/movies/deleteMovie}" method="post" style="display: inline">
