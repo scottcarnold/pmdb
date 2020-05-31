@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
@@ -257,7 +258,7 @@ public class HomeController {
 	}
 	
 	@RequestMapping("/dismissSessionAlert")
-	public void dismissSessionAlert(HttpSession session, @RequestParam String key) {
+	public @ResponseBody void dismissSessionAlert(HttpSession session, @RequestParam String key) {
 		Alerts.dismissSessionAlert(session, key);
 	}
 }
