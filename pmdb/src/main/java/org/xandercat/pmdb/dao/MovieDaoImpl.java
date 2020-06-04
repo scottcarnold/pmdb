@@ -235,6 +235,7 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
+	@Transactional
 	public void addTableColumnPreference(String attributeName, String username) {
 		final String insertSql = "INSERT INTO movie_attributes_table_columns(username, idx, attribute_name) VALUES (?, ?, ?)";
 		Optional<Integer> max = getMaxTableColumnPreferenceIndex(username);
@@ -275,6 +276,7 @@ public class MovieDaoImpl implements MovieDao {
 	}
 	
 	@Override
+	@Transactional
 	public void deleteTableColumnPreference(int sourceIdx, String username) {
 		List<String> shiftPreferences = getTableColumnPreferences(username, sourceIdx+1, null);
 		final String sql = "DELETE FROM movie_attributes_table_columns WHERE username = ? AND idx >= ?";
