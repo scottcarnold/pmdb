@@ -1,0 +1,7 @@
+org.xandercat.pmdb.controller
+org.xandercat.pmdb.form.movie
+org.xandercat.pmdb.service
+org.xandercat.pmdb.util.ajax
+org.xandercat.pmdb.util.format
+org.xandercat.pmdb.validation
+org.xandercat.pmdb.ws
