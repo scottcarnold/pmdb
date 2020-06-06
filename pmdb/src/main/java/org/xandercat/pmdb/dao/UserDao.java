@@ -18,7 +18,7 @@ public interface UserDao {
 	 * 
 	 * @param user user to add
 	 * @param unencryptedPassword new password for user
-	 * @throws PmdbException
+	 * @throws PmdbException if any error occurs
 	 */
 	public void addUser(PmdbUser user, String unencryptedPassword) throws PmdbException;
 	
@@ -29,7 +29,7 @@ public interface UserDao {
 	 * is set accordingly.
 	 * 
 	 * @param user user to add
-	 * @throws PmdbException
+	 * @throws PmdbException if any error occurs
 	 */
 	public void readdUser(PmdbUser user) throws PmdbException;
 	
@@ -61,7 +61,7 @@ public interface UserDao {
 	
 	/**
 	 * Returns user with given email address.
-	 * @param email
+	 * @param email email address
 	 * @return user with given email address, or null if cannot be determined
 	 */
 	public Optional<PmdbUser> getUserByEmail(String email);
@@ -93,7 +93,7 @@ public interface UserDao {
 	 * Deletes user of given username.  Operation will fail if there are any other tables
 	 * other than the user details table with foreign keys referencing the user.
 	 * 
-	 * @param username
+	 * @param username username of user to delete
 	 */
 	public void delete(String username);
 }

@@ -49,7 +49,7 @@ public class DynamoDBConfig extends AbstractDynamoDBConfiguration {
 	 * @param secretAccessKey  AWS secret access key
 	 * 
 	 * @return AWS credentials
-	 * @throws Exception
+	 * @throws Exception if AWS credentials provider cannot be created
 	 */
 	@Bean
 	public AWSCredentialsProvider awsCredentialsProvider(

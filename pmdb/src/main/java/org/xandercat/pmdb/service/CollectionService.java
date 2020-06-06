@@ -33,7 +33,7 @@ public interface CollectionService {
 	 * @param collectionId     movie collection id
 	 * @param callingUsername  user making the call
 	 * 
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public void setDefaultMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException;
 	
@@ -45,7 +45,7 @@ public interface CollectionService {
 	 * @param callingUsername  user making the call
 	 * 
 	 * @return movie collection of given id
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public MovieCollection getViewableMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException;
 	
@@ -73,7 +73,7 @@ public interface CollectionService {
 	 * 
 	 * @param movieCollection  movie collection to add
 	 * @param callingUsername  user adding the movie collection
-	 * @throws WebServicesException
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) throws WebServicesException;
 	
@@ -83,8 +83,8 @@ public interface CollectionService {
 	 * @param movieCollection  movie collection to update
 	 * @param callingUsername  user making the call
 	 * 
-	 * @throws CollectionSharingException
-	 * @throws WebServicesException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public void updateMovieCollection(MovieCollection movieCollection, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
@@ -95,8 +95,8 @@ public interface CollectionService {
 	 * @param collectionId     movie collection id
 	 * @param callingUsername  user making the call
 	 * 
-	 * @throws CollectionSharingException
-	 * @throws WebServicesException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public void deleteMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
@@ -108,7 +108,7 @@ public interface CollectionService {
 	 * @param editable           whether or not the user being shared with should be able to edit the movie collection
 	 * @param callingUsername    user making the share offer
 	 * 
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public void shareMovieCollection(String collectionId, String shareWithUsername, boolean editable, String callingUsername) throws CollectionSharingException;
 	
@@ -119,7 +119,7 @@ public interface CollectionService {
 	 * @param unshareWithUsername  username of user to stop sharing with
 	 * @param callingUsername      user making the call
 	 * 
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public void unshareMovieCollection(String collectionId, String unshareWithUsername, String callingUsername) throws CollectionSharingException;
 	
@@ -131,7 +131,7 @@ public interface CollectionService {
 	 * @param editable         whether or not the updated user should be able to update the movie collection
 	 * @param callingUsername  user making the call
 	 * 
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public void updateEditable(String collectionId, String updateUsername, boolean editable, String callingUsername) throws CollectionSharingException;
 	
@@ -141,7 +141,7 @@ public interface CollectionService {
 	 * @param collectionId     the movie collection id
 	 * @param callingUsername  user making the call
 	 * 
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public void acceptShareOffer(String collectionId, String callingUsername) throws CollectionSharingException;
 	
@@ -151,7 +151,7 @@ public interface CollectionService {
 	 * @param collectionId     the movie collection id
 	 * @param callingUsername  user making the call
 	 * 
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public void declineShareOffer(String collectionId, String callingUsername) throws CollectionSharingException;
 	
@@ -162,7 +162,7 @@ public interface CollectionService {
 	 * @param callingUsername  user
 	 * 
 	 * @return movie collection being asserted viewable
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public MovieCollection assertCollectionViewable(String collectionId, String callingUsername) throws CollectionSharingException;
 	
@@ -173,7 +173,7 @@ public interface CollectionService {
 	 * @param callingUsername  user
 	 * 
 	 * @return movie collection being asserted editable
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public MovieCollection assertCollectionEditable(String collectionId, String callingUsername) throws CollectionSharingException;
 	
@@ -184,7 +184,7 @@ public interface CollectionService {
 	 * @param callingUsername  user making the call
 	 * 
 	 * @return list of collection permissions on the movie collection
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public List<CollectionPermission> getCollectionPermissions(String collectionId, String callingUsername) throws CollectionSharingException;
 	
@@ -196,7 +196,7 @@ public interface CollectionService {
 	 * @param callingUsername  user making the call
 	 * 
 	 * @return collection permission for provided username over given movie collection
-	 * @throws CollectionSharingException
+	 * @throws CollectionSharingException if user does not have permission to perform operation
 	 */
 	public Optional<CollectionPermission> getCollectionPermission(String collectionId, String username, String callingUsername) throws CollectionSharingException;
 	
@@ -210,7 +210,7 @@ public interface CollectionService {
 	 * @param columnNames      column names to import
 	 * @param callingUsername  user making the call
 	 * 
-	 * @throws IOException
+	 * @throws IOException if IO error occurs
 	 */
 	public void importCollection(MultipartFile mFile, String collectionName, boolean cloud, List<String> sheetNames, List<String> columnNames, String callingUsername) throws IOException;
 }

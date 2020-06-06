@@ -23,8 +23,8 @@ public interface ImdbSearchService {
 	 * @param request  search request for movies
 	 * 
 	 * @return result of search
-	 * @throws WebServicesException
-	 * @throws ServiceLimitExceededException
+	 * @throws WebServicesException if a web service failure occurs
+	 * @throws ServiceLimitExceededException if there are too many requests to the IMDB search service for the day
 	 */
 	public SearchResult searchImdb(SearchRequest request) throws WebServicesException, ServiceLimitExceededException;
 	
@@ -34,8 +34,8 @@ public interface ImdbSearchService {
 	 * @param request  movie details request
 	 * 
 	 * @return movie details for movie
-	 * @throws WebServicesException
-	 * @throws ServiceLimitExceededException
+	 * @throws WebServicesException if a web service failure occurs
+	 * @throws ServiceLimitExceededException if there are too many requests to the IMDB search service for the day
 	 */
 	public MovieDetails getMovieDetails(MovieDetailsRequest request) throws WebServicesException, ServiceLimitExceededException;
 	

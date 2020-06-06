@@ -101,7 +101,7 @@ public class ExcelPorter {
 	 * 
 	 * @param inputStream input stream
 	 * @param fileName    name of file for given input stream
-	 * @throws IOException
+	 * @throws IOException if any io errors occur
 	 */
 	public ExcelPorter(InputStream inputStream, String fileName) throws IOException {
 		if (fileName.toLowerCase().endsWith(Format.XLSX.getExtension())) {
@@ -293,7 +293,7 @@ public class ExcelPorter {
 	 * Write out and close the workbook.  This only need be called when exporting.
 	 * 
 	 * @param outputStream the output stream to write to
-	 * @throws IOException
+	 * @throws IOException if any io errors occur
 	 */
 	public void writeWorkbook(OutputStream outputStream) throws IOException {
 		workbook.write(outputStream);

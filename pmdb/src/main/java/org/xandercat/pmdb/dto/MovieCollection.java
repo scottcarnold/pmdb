@@ -11,8 +11,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
  * 
  * Annotated for storage in AWS DynamoDB.
  * 
- * @author Scott
- *
+ * @author Scott Arnold
  */
 @DynamoDBTable(tableName="MovieCollection")
 public class MovieCollection {
@@ -78,7 +77,7 @@ public class MovieCollection {
 	 * No-op method needed for DynamoDB mapping.  Owner flag should
 	 * be set by calling setOwnerAndOwned(String, String).
 	 * 
-	 * @param owned
+	 * @param owned whether or not current user is owner of collection
 	 */
 	public void setOwned(boolean owned) {
 	}

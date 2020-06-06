@@ -18,21 +18,21 @@ public interface CollectionDao {
 	 * Add a new movie collection.  Editable property is ignored.  Owner is set based on
 	 * value provided in the movie collection.  Id will be set within this method.
 	 * 
-	 * @param movieCollection
+	 * @param movieCollection movie collection to add
 	 */
 	public void addMovieCollection(MovieCollection movieCollection);
 	
 	/**
 	 * Update the provided movie collection. Owner and editable properties are ignored.
 	 * 
-	 * @param movieCollection
+	 * @param movieCollection movie collection to update
 	 */
 	public void updateMovieCollection(MovieCollection movieCollection);
 	
 	/**
 	 * Delete the movie collection of given id.
 	 * 
-	 * @param collectionId
+	 * @param collectionId id of movie collection
 	 */
 	public void deleteMovieCollection(String collectionId);
 	
@@ -60,8 +60,8 @@ public interface CollectionDao {
 	 * set based on provided username.  If username does not have valid permission for
 	 * collection, null is returned.
 	 * 
-	 * @param collectionId
-	 * @param username
+	 * @param collectionId id of movie collection
+	 * @param username     user to get collection for
 	 * 
 	 * @return viewable movie collection of given id (or null if collection is not viewable)
 	 */
@@ -115,7 +115,7 @@ public interface CollectionDao {
 	 * Return list of collection permissions for the given collection excluding permission for the owner.
 	 * The owner does not need to see their own permission entry.
 	 * 
-	 * @param collectionId
+	 * @param collectionId id of movie collection
 	 * @return list of collection permissions for the collection
 	 */
 	public List<CollectionPermission> getCollectionPermissions(String collectionId);

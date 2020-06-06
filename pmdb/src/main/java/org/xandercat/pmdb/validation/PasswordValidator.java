@@ -6,8 +6,8 @@ import javax.validation.ConstraintValidatorContext;
 import org.xandercat.pmdb.util.Pair;
 
 /**
- * Validator for passwords.  Validated class can either be a String or a Pair<String>.
- * If validated class is a Pair<String>, only the Pair first value is validated.
+ * Validator for passwords.  Validated class can either be a String or a Pair&lt;String&gt;.
+ * If validated class is a Pair&lt;String&gt;, only the Pair first value is validated.
  * 
  * To allow for editing users without changing passwords, an empty password is currently accepted.
  * 

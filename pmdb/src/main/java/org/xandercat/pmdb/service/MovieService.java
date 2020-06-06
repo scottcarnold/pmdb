@@ -28,8 +28,8 @@ public interface MovieService {
 	 * @param callingUsername   user making the call
 	 * 
 	 * @return all movies for the given movie collection
-	 * @throws CollectionSharingException
-	 * @throws WebServicesException
+	 * @throws CollectionSharingException if user does not have permission to perform the operation
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public Set<Movie> getMoviesForCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
@@ -42,8 +42,8 @@ public interface MovieService {
 	 * @param callingUsername  user making the call
 	 * 
 	 * @return movies matching the provided search string
-	 * @throws CollectionSharingException
-	 * @throws WebServicesException
+	 * @throws CollectionSharingException if user does not have permission to perform the operation
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
@@ -53,7 +53,7 @@ public interface MovieService {
 	 * @param callingUsername  user making the call
 	 * 
 	 * @return list of movies within default collection not linked to movies on the IMDB.
-	 * @throws WebServicesException
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public List<Movie> getUnlinkedMoviesForDefaultCollection(String callingUsername) throws WebServicesException;
 	
@@ -64,8 +64,8 @@ public interface MovieService {
 	 * @param callingUsername   user making the call
 	 * 
 	 * @return movie of given id
-	 * @throws CollectionSharingException
-	 * @throws WebServicesException
+	 * @throws CollectionSharingException if user does not have permission to perform the operation
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public Optional<Movie> getMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
@@ -75,8 +75,8 @@ public interface MovieService {
 	 * @param movie            movie to add
 	 * @param callingUsername  user making the call
 	 * 
-	 * @throws CollectionSharingException
-	 * @throws WebServicesException
+	 * @throws CollectionSharingException if user does not have permission to perform the operation
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public void addMovie(Movie movie, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
@@ -86,8 +86,8 @@ public interface MovieService {
 	 * @param movie            movie to update
 	 * @param callingUsername  user making the call
 	 * 
-	 * @throws CollectionSharingException
-	 * @throws WebServicesException
+	 * @throws CollectionSharingException if user does not have permission to perform the operation
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public void updateMovie(Movie movie, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
@@ -97,8 +97,8 @@ public interface MovieService {
 	 * @param id               id of movie
 	 * @param callingUsername  user making the call
 	 * 
-	 * @throws CollectionSharingException
-	 * @throws WebServicesException
+	 * @throws CollectionSharingException if user does not have permission to perform the operation
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public void deleteMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException;
 	
@@ -149,8 +149,8 @@ public interface MovieService {
 	 * @param callingUsername  user making the call
 	 * 
 	 * @return list of all distinct attribute names for the movies of the given movie collection
-	 * @throws CollectionSharingException
-	 * @throws WebServicesException
+	 * @throws CollectionSharingException if user does not have permission to perform the operation
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public List<String> getAttributeKeysForCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException; 
 	
@@ -161,7 +161,7 @@ public interface MovieService {
 	 * @param callingUsername  user making the call
 	 * 
 	 * @return distinct list of IMDB ids in user's default/active movie collection
-	 * @throws WebServicesException
+	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public Set<String> getImdbIdsInDefaultCollection(String callingUsername) throws WebServicesException;
 }

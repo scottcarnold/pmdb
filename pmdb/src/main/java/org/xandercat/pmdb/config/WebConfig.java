@@ -109,7 +109,7 @@ public class WebConfig implements WebMvcConfigurer {
 	 * Template engine for view.  Constructs and configures Thymeleaf template engine.
 	 * 
 	 * @param templateResolver Thymeleaf template resolver
-	 * @return
+	 * @return template engine
 	 */
 	@Bean
 	public SpringTemplateEngine templateEngine(SpringResourceTemplateResolver templateResolver) {
