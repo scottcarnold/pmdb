@@ -35,6 +35,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import nz.net.ultraq.thymeleaf.LayoutDialect;
 
+/**
+ * Application web configuration.
+ * 
+ * @author Scott Arnold
+ */
 @EnableWebMvc
 @Configuration
 @ComponentScan(basePackages={"org.xandercat.pmdb"})
@@ -45,6 +50,11 @@ public class WebConfig implements WebMvcConfigurer {
 	@Autowired
 	private ApplicationContext applicationContext;
 	
+	/**
+	 * LocaleResolver for i18n support.
+	 * 
+	 * @return LocaleResolver
+	 */
 	@Bean
 	public LocaleResolver localeResolver() {
 		SessionLocaleResolver localeResolver = new SessionLocaleResolver();
@@ -52,6 +62,11 @@ public class WebConfig implements WebMvcConfigurer {
 		return localeResolver;
 	}
 	
+	/**
+	 * Interceptor for locale change and i18n support.  Defines parameter that can be used to specify what language to use.
+	 * 
+	 * @return interceptor for locale change
+	 */
 	@Bean
 	public LocaleChangeInterceptor localeChangeInterceptor() {
 		LocaleChangeInterceptor localeChangeInterceptor = new LocaleChangeInterceptor();
@@ -59,6 +74,11 @@ public class WebConfig implements WebMvcConfigurer {
 		return localeChangeInterceptor;
 	}
 	
+	/**
+	 * Source for application messages for i18n support.
+	 * 
+	 * @return message source for application messages
+	 */
 	@Bean
 	public MessageSource messageSource() {
 		ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
@@ -68,6 +88,12 @@ public class WebConfig implements WebMvcConfigurer {
 		return messageSource;
 	}
 	
+	/**
+	 * Template resolver for view.  Constructs Thymeleaf resolver, defines where view files are located,
+	 * and what extension they use.
+	 * 
+	 * @return template resolver
+	 */
 	@Bean
 	public SpringResourceTemplateResolver templateResolver() {
 		LOGGER.debug("WebConfig templateResolver bean creation called");
@@ -79,6 +105,12 @@ public class WebConfig implements WebMvcConfigurer {
 		return templateResolver;
 	}
 	
+	/**
+	 * Template engine for view.  Constructs and configures Thymeleaf template engine.
+	 * 
+	 * @param templateResolver Thymeleaf template resolver
+	 * @return
+	 */
 	@Bean
 	public SpringTemplateEngine templateEngine(SpringResourceTemplateResolver templateResolver) {
 		LOGGER.debug("WebConfig templateEngine bean creation called");
@@ -90,6 +122,11 @@ public class WebConfig implements WebMvcConfigurer {
 		return templateEngine;
 	}
 	
+	/**
+	 * Bean for handling file uploads.
+	 * 
+	 * @return multipart resolver
+	 */
 	@Bean
 	public MultipartResolver multipartResolver() {
 		return new StandardServletMultipartResolver(); // for file upload support

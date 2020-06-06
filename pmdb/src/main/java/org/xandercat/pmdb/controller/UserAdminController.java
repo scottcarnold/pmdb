@@ -48,6 +48,13 @@ public class UserAdminController {
 		return ViewUtil.TAB_USER_ADMIN;
 	}
 	
+	/**
+	 * Page for user administration.
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page for user administration
+	 */
 	@GetMapping("/useradmin")
 	public String userAdmin(Model model) {
 		SearchForm searchForm = new SearchForm();
@@ -55,6 +62,15 @@ public class UserAdminController {
 		return "useradmin/useradmin";
 	}
 
+	/**
+	 * Search users.
+	 * 
+	 * @param model       model
+	 * @param searchForm  user search form
+	 * @param result      binding result
+	 * 
+	 * @return page for user administration
+	 */
 	@RequestMapping("/useradmin/search")
 	public String userAdminSearch(Model model,
 			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
@@ -74,12 +90,27 @@ public class UserAdminController {
 		return "useradmin/useradmin";
 	}
 	
+	/**
+	 * Page for adding a new user.
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page for adding a new user
+	 */
 	@RequestMapping("/useradmin/addNewUser")
 	public String addNewUser(Model model) {
 		model.addAttribute("userForm", new UserForm());
 		return "useradmin/adduser";
 	}
 
+	/**
+	 * Page for editing an existing user.
+	 * 
+	 * @param model     model
+	 * @param username  username of user to edit
+	 * 
+	 * @return page for editing an existing user
+	 */
 	@RequestMapping("/useradmin/editUser")
 	public String editUser(Model model, @RequestParam String username) {
 		PmdbUser user = userService.getUser(username).get();
@@ -89,6 +120,15 @@ public class UserAdminController {
 		return "useradmin/edituser";
 	}
 	
+	/**
+	 * Processing adding a new user.
+	 * 
+	 * @param model     model
+	 * @param userForm  user form
+	 * @param result    binding result
+	 * 
+	 * @return page for user administration
+	 */
 	@RequestMapping("/useradmin/addNewUserSubmit")
 	public String addNewUserSubmit(Model model,
 			@ModelAttribute("userForm") @Valid UserForm userForm,
@@ -111,6 +151,15 @@ public class UserAdminController {
 		return userAdmin(model);
 	}
 	
+	/**
+	 * Process editing user details for a user.
+	 * 
+	 * @param model     model
+	 * @param userForm  user form
+	 * @param result    binding result
+	 * 
+	 * @return page for user administration
+	 */
 	@RequestMapping("/useradmin/editUserSubmit")
 	public String editUserSubmit(Model model,
 			@ModelAttribute("userForm") @Valid UserForm userForm,
@@ -129,6 +178,14 @@ public class UserAdminController {
 		return userAdmin(model);
 	}
 
+	/**
+	 * Process of copying user credentials from local database to the cloud.
+	 * 
+	 * @param model     model
+	 * @param username  username to sync
+	 * 
+	 * @return page for user administration
+	 */
 	@RequestMapping("/useradmin/syncUserToCloud")
 	public String syncUserToCloud(Model model, @RequestParam String username) {
 		try {
@@ -141,6 +198,15 @@ public class UserAdminController {
 		return userAdmin(model);
 	}
 	
+	/**
+	 * Process of copying user credentials from cloud to local database.  User will be in a disabled state
+	 * after copy down and will need to have details re-added to their account.
+	 * 
+	 * @param model     model
+	 * @param username  user to sync
+	 * 
+	 * @return page for user administration
+	 */
 	@RequestMapping("/useradmin/syncUserFromCloud")
 	public String syncUserFromCloud(Model model, @RequestParam String username) {
 		try {
@@ -153,6 +219,15 @@ public class UserAdminController {
 		return userAdmin(model);
 	}
 	
+	/**
+	 * Delete a user.  User can only be deleted if they have never logged in before.  If administrator needs to remove access for a user
+	 * that has previously logged in, the user account should just be disabled.
+	 * 
+	 * @param model     model
+	 * @param username  username of user to delete
+	 * 
+	 * @return page for user administration
+	 */
 	@RequestMapping(value="/useradmin/deleteUser", method=RequestMethod.POST)
 	public String deleteUser(Model model, @RequestParam String username) {
 		try {

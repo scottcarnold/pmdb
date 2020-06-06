@@ -38,6 +38,14 @@ public class MyAccountController {
 		return ViewUtil.TAB_MY_ACCOUNT;
 	}
 	
+	/**
+	 * Page for editing user details.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * 
+	 * @return page for editing user details
+	 */
 	@RequestMapping("/myaccount")
 	public String editUser(Model model, Principal principal) {
 		PmdbUser user = userService.getUser(principal.getName()).get();
@@ -47,6 +55,16 @@ public class MyAccountController {
 		return "myaccount/edituser";
 	}
 	
+	/**
+	 * Processing editing of user details.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param userForm   form for user details
+	 * @param result     binding result
+	 * 
+	 * @return page for editing user details
+	 */
 	@RequestMapping("/myaccount/editUserSubmit")
 	public String editUserSubmit(Model model, Principal principal,
 			@ModelAttribute("userForm") @Valid UserForm userForm,

@@ -15,12 +15,24 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.xandercat.pmdb.dao.KeyGenerator;
 import org.xandercat.pmdb.dao.RandomKeyGenerator;
 
+/**
+ * Data configuration for generic data and RDBMS services.
+ *  
+ * @author Scott Arnold
+ */
 @Configuration
 @EnableTransactionManagement
 public class DataConfig {
 
 	private static final Logger LOGGER = LogManager.getLogger(DataConfig.class);
 	
+	/**
+	 * Bean to provide application the JNDI linkage for a data source.
+	 * 
+	 * @param dataSourceJndiName JNDI name for datasource
+	 * 
+	 * @return JNDI object factory bean for datasource
+	 */
 	@Bean
 	public JndiObjectFactoryBean dataSource(@Value("${datasource.jndi.name}") String dataSourceJndiName) {
 		LOGGER.info("Getting DataSource as JNDI resource with JNDI name: " + dataSourceJndiName);
@@ -30,16 +42,35 @@ public class DataConfig {
 		return jndiBean;
 	}
 	
+	/**
+	 * JDBC template for queries against the datasource.
+	 * 
+	 * @param dataSource datasource for application
+	 * 
+	 * @return JDBC template for datasource
+	 */
 	@Bean
 	public JdbcTemplate jdbcTemplate(DataSource dataSource) {
 		return new JdbcTemplate(dataSource);
 	}
 	
+	/**
+	 * Bean for datasource transaction management.
+	 * 
+	 * @param dataSource datasource for transaction management
+	 * 
+	 * @return transaction manager for datasource
+	 */
 	@Bean
 	public PlatformTransactionManager platformTransactionManager(DataSource dataSource) {
 		return new DataSourceTransactionManager(dataSource);
 	}
   
+	/**
+	 * Bean for generating keys for use with both local and cloud datasources.
+	 * 
+	 * @return bean for generating key values
+	 */
 	@Bean
 	public KeyGenerator keyGenerator() {
 		return new RandomKeyGenerator();

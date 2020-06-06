@@ -11,6 +11,11 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
+/**
+ * Application initialization.
+ * 
+ * @author Scott Arnold
+ */
 public class PmdbWebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
 
 	private static final Logger LOGGER = LogManager.getLogger(PmdbWebAppInitializer.class);

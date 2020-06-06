@@ -64,6 +64,14 @@ public class CollectionController {
 		return ViewUtil.TAB_COLLECTIONS;
 	}
 
+	/**
+	 * Page for showing viewable movie collections and actions that can be taken for them.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * 
+	 * @return page for showing viewable movie collections and actions that can be taken for them
+	 */
 	@RequestMapping("/collections")
 	public String collections(Model model, Principal principal) {
 		String username = principal.getName();
@@ -80,12 +88,32 @@ public class CollectionController {
 		return "collection/collections";
 	}
 	
+	/**
+	 * Page for adding a new movie collection.
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page for adding a new movie collection
+	 */
 	@RequestMapping("/collections/addCollection")
 	public String addCollection(Model model) {
 		model.addAttribute("collectionForm", new CollectionForm());
 		return "collection/addCollection";
 	}
 	
+	/**
+	 * Process adding a new movie collection.  If it is the user's first movie collection,
+	 * automatically set it as the default/active collection for the user and take them to
+	 * the home page (movie list) for that collection.  If it is not the user's first movie
+	 * collection, just return them to the movie collections management page.
+	 * 
+	 * @param model           model
+	 * @param principal       principal
+	 * @param collectionForm  movie collection form
+	 * @param result          binding result
+	 * 
+	 * @return page following adding a new movie collection.
+	 */
 	@RequestMapping("/collections/addCollectionSubmit")
 	public String addCollectionSubmit(Model model, Principal principal,
 			@ModelAttribute("collectionForm") @Valid CollectionForm collectionForm,
@@ -118,6 +146,16 @@ public class CollectionController {
 		return collections(model, principal);
 	}
 	
+	/**
+	 * Change the default/active collection for the user to the collection of given id and return them to the 
+	 * home page (movie list) for that collection.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to change to
+	 * 
+	 * @return home page for the new default/active collection
+	 */
 	@RequestMapping("/collections/changeDefaultCollection")
 	public String changeDefaultCollection(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
@@ -130,6 +168,15 @@ public class CollectionController {
 		}
 	}
 	
+	/**
+	 * Page for editing a movie collection.  
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to edit
+	 * 
+	 * @return page for editing movie collection of given id
+	 */
 	@RequestMapping("/collections/editCollection")
 	public String editCollection(Model model, Principal principal, @RequestParam String collectionId) {
 		MovieCollection movieCollection = null;
@@ -145,6 +192,16 @@ public class CollectionController {
 		return "collection/editCollection";
 	}
 
+	/**
+	 * Process editing of a movie collection and return to collections management.
+	 * 
+	 * @param model           model
+	 * @param principal       principal
+	 * @param collectionForm  movie collection form
+	 * @param result          binding result
+	 * 
+	 * @return collections management page
+	 */
 	@RequestMapping("/collections/editCollectionSubmit")
 	public String editCollectionSubmit(Model model, Principal principal,
 			@ModelAttribute("collectionForm") @Valid CollectionForm collectionForm,
@@ -167,6 +224,16 @@ public class CollectionController {
 		return collections(model, principal);
 	}
 	
+	/**
+	 * Delete movie collection of given id and return to collections management.  There is no intermediate
+	 * confirmation page; confirmation should be handled on client side.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to delete
+	 * 
+	 * @return movie collections management page
+	 */
 	@RequestMapping(value="/collections/deleteCollection", method=RequestMethod.POST)
 	public String deleteCollection(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
@@ -180,6 +247,15 @@ public class CollectionController {
 		return collections(model, principal);
 	}
 	
+	/**
+	 * Page for changing who a movie collection is shared with.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to edit sharing of
+	 * 
+	 * @return page for changing who a movie collection is shared with
+	 */
 	@RequestMapping("/collections/editSharing")
 	public String editSharing(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
@@ -195,6 +271,16 @@ public class CollectionController {
 		return "collection/editSharing";
 	}
 	
+	/**
+	 * Accept a movie collection share offer and return to collections management.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to accept share offer of
+	 * @param session       session
+	 * 
+	 * @return collections management page
+	 */
 	@RequestMapping("/collections/acceptShareOffer")
 	public String acceptShareOffer(Model model, Principal principal, @RequestParam String collectionId, HttpSession session) {
 		try {
@@ -207,6 +293,16 @@ public class CollectionController {
 		return collections(model, principal);
 	}
 	
+	/**
+	 * Decline a movie collection share offer and return to collections management.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to decline share offer of
+	 * @param session       session
+	 * 
+	 * @return collections management page
+	 */
 	@RequestMapping("/collections/declineShareOffer")
 	public String declineShareOffer(Model model, Principal principal, @RequestParam String collectionId, HttpSession session) {
 		try {
@@ -219,6 +315,16 @@ public class CollectionController {
 		return collections(model, principal);
 	}
 	
+	/**
+	 * Toggle whether or not a user can edit the shared movie collection.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to toggle edit permission on
+	 * @param username      username of user to toggle edit permission for
+	 * 
+	 * @return edit sharing page
+	 */
 	@RequestMapping("/collections/toggleEditPermission")
 	public String toggleEditPermission(Model model, Principal principal, @RequestParam String collectionId, @RequestParam String username) {
 		try {
@@ -235,6 +341,16 @@ public class CollectionController {
 		return editSharing(model, principal, collectionId);		
 	}
 	
+	/**
+	 * Revoke share of movie collection with user.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to revoke share permission to
+	 * @param username      username of user to revoke share permission from
+	 * 
+	 * @return edit sharing page
+	 */
 	@RequestMapping(value="/collections/revokePermission", method=RequestMethod.POST)
 	public String revokePermission(Model model, Principal principal, @RequestParam String collectionId, @RequestParam String username) {
 		try {
@@ -247,6 +363,16 @@ public class CollectionController {
 		return editSharing(model, principal, collectionId);
 	}
 	
+	/**
+	 * Revoke share of movie collection on self.  This is for users who no longer want access to a movie collection
+	 * that was previously shared with them.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection that share is no longer desired of
+	 * 
+	 * @return collections management page
+	 */
 	@RequestMapping(value="/collections/revokeMyPermission", method=RequestMethod.POST)
 	public String revokeMyPermission(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
@@ -259,6 +385,15 @@ public class CollectionController {
 		return collections(model, principal);
 	}
 	
+	/**
+	 * Page for sharing a movie collection with other users.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to update sharing on
+	 * 
+	 * @return page for sharing a movie collection with other users.
+	 */
 	@RequestMapping("/collections/shareCollection")
 	public String shareCollection(Model model, Principal principal, @RequestParam String collectionId) {
 		try {
@@ -273,6 +408,20 @@ public class CollectionController {
 		return "collection/shareCollection";
 	}
 	
+	/**
+	 * Process sharing of movie collection with another user.  
+	 * 
+	 * This is a low security process intended for a generally trusted user base.  With a less
+	 * trusted user base, the user would not be notified if the user reference was invalid, and users would have some measure of
+	 * control over who could share collections with them.
+	 * 
+	 * @param model                model
+	 * @param principal            principal
+	 * @param shareCollectionForm  form for sharing collection with another user
+	 * @param result               binding result
+	 * 
+	 * @return edit sharing page
+	 */
 	@RequestMapping("/collections/shareCollectionSubmit")
 	public String shareCollectionSubmit(Model model, Principal principal,
 			@ModelAttribute("shareCollectionForm") @Valid ShareCollectionForm shareCollectionForm,
@@ -305,6 +454,14 @@ public class CollectionController {
 		return editSharing(model, principal, shareCollectionForm.getCollectionId());
 	}
 	
+	/**
+	 * Page for exporting a movie collection.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * 
+	 * @return collections export page
+	 */
 	@RequestMapping("/collections/export")
 	public String export(Model model, Principal principal) {
 		List<MovieCollection> movieCollections = collectionService.getViewableMovieCollections(principal.getName());
@@ -323,6 +480,16 @@ public class CollectionController {
 		return "collection/export";
 	}
 	
+	/**
+	 * Export a movie collection.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param exportForm  form for exporting a movie collection
+	 * @param response    HTTP servlet response
+	 * 
+	 * @return export page
+	 */
 	@RequestMapping(value="/collections/exportSubmit", method=RequestMethod.POST)
 	public String exportSubmit(Model model, Principal principal,
 			@ModelAttribute("exportForm") ExportForm exportForm, HttpServletResponse response) {
@@ -354,12 +521,31 @@ public class CollectionController {
 		return export(model, principal);
 	}
 	
+	/**
+	 * Page for importing movie collections.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * 
+	 * @return page for importing movie collections.
+	 */
 	@RequestMapping("/collections/import")
 	public String importCollections(Model model, Principal principal) {
 		model.addAttribute("importForm", new ImportForm());
 		return "collection/import";
 	}
 	
+	/**
+	 * Import a movie collection.  This does not fully import the movie collection; it performs an initial
+	 * analysis of the import in order to provide a series of import options before completing the import process.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param session     session
+	 * @param importForm  form for importing a movie
+	 * 
+	 * @return import options page
+	 */
 	@RequestMapping("/collections/importSubmit")
 	public String importCollectionsSubmit(Model model, Principal principal, HttpSession session,
 			@ModelAttribute("importForm") ImportForm importForm) {
@@ -385,6 +571,17 @@ public class CollectionController {
 		return "collection/importOptions";
 	}
 	
+	/**
+	 * Import a movie collection.  This performs the final import of the movie collection using the user options provided.
+	 * 
+	 * @param model              model
+	 * @param principal          principal
+	 * @param session            session
+	 * @param importOptionsForm  form of users import options
+	 * @param result             binding result
+	 * 
+	 * @return collections management page
+	 */
 	@RequestMapping("/collections/importOptionsSubmit")
 	public String importOptionsSubmit(Model model, Principal principal, HttpSession session,
 			@ModelAttribute("importOptionsForm") @Valid ImportOptionsForm importOptionsForm,

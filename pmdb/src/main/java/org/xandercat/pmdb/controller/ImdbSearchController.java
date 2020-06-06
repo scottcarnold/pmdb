@@ -68,6 +68,14 @@ public class ImdbSearchController {
 		return ViewUtil.TAB_IMDB_SEARCH;
 	}
 	
+	/**
+	 * Page for performing IMDB search.
+	 * 
+	 * @param model    model
+	 * @param session  session
+	 * 
+	 * @return page for performing IMDB search
+	 */
 	@RequestMapping("/imdbsearch")
 	public String imdbSearch(Model model, HttpSession session) {
 		model.addAttribute("searchForm", new SearchForm());
@@ -148,6 +156,18 @@ public class ImdbSearchController {
 		return Optional.empty();
 	}
 	
+	/**
+	 * Helper method to build a search result from a movie details pull.  This allows a user to search by IMDB id.  This can be 
+	 * helpful if a movie cannot be found via the IMDB search service but can be found on the IMDB website itself.  Example:  the
+	 * movie "F/X" cannot be found in the IMDB search service due to limitations of their API in handling the slash character, but can 
+	 * be found on the IMDB site itself.
+	 * 
+	 * @param imdbId IMDB id
+	 * 
+	 * @return search result
+	 * @throws WebServicesException
+	 * @throws ServiceLimitExceededException
+	 */
 	private SearchResult buildSearchResultFromImdbId(String imdbId) throws WebServicesException, ServiceLimitExceededException {
 		MovieDetailsRequest request = new MovieDetailsRequest(imdbId);
 		MovieDetails movieDetails = imdbSearchService.getMovieDetails(request);
@@ -168,6 +188,17 @@ public class ImdbSearchController {
 		return searchResult;
 	}
 	
+	/**
+	 * Search the IMDB.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param searchForm  search form
+	 * @param result      binding result
+	 * @param session     session
+	 * 
+	 * @return search results page
+	 */
 	@RequestMapping("/imdbsearch/searchSubmit")
 	public String imdbSearchSubmit(Model model, Principal principal,
 			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
@@ -241,6 +272,15 @@ public class ImdbSearchController {
 		return "imdbsearch/imdbSearch";
 	}
 	
+	/**
+	 * AJAX request to add movie of given IMDB id to the user's default/active movie collection.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param imdbId     IMDB id for the movie to add to the movie collecction
+	 * 
+	 * @return JSON response with results of adding movie to the collection
+	 */
 	@RequestMapping(value="/imdbsearch/addToCollection", produces=MediaType.APPLICATION_JSON_VALUE)
 	public @ResponseBody JsonResponse addToCollection(Model model, Principal principal, @RequestParam String imdbId) {
 		LOGGER.debug("Add To Collection called with ID " + imdbId);
@@ -278,6 +318,17 @@ public class ImdbSearchController {
 		return response;
 	}
 	
+	/**
+	 * Process of linking a movie or movie collection to their corresponding movie or movies in the IMDB.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param movieId    movie ID of movie to link, or "any" if should link first available unlinked movie
+	 * @param linkAll    whether or not all movies in a movie collection are being linked
+	 * @param session    session
+	 * 
+	 * @return search result page (executes automatic search for movie being linked)
+	 */
 	@RequestMapping("/imdbsearch/link")
 	public String link(Model model, Principal principal, @RequestParam String movieId, @RequestParam boolean linkAll, HttpSession session) {
 		try {

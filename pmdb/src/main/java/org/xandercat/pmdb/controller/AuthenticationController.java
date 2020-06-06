@@ -45,12 +45,26 @@ public class AuthenticationController {
 	@Autowired
 	private CollectionService collectionService;
 	
+	/**
+	 * Page for presenting user login.
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page for presenting user login
+	 */
 	@RequestMapping(value="/login.html", method=RequestMethod.GET)
 	public String login(Model model) {
 		model.addAttribute("environment", environment);
 		return "authentication/login";
 	}
 	
+	/**
+	 * Page for presenting user login error.
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page for presenting user login error
+	 */
 	@RequestMapping("/login-error.html")
 	public String loginError(Model model) {
 		model.addAttribute("loginError", "Unable to login.");
@@ -58,6 +72,13 @@ public class AuthenticationController {
 		return "authentication/login";
 	}
 	
+	/**
+	 * Process user login and redirect to user home page. Prepares session for user and updates user login information.
+	 * 
+	 * @param session  session
+	 * 
+	 * @return redirect to user home page
+	 */
 	@RequestMapping(value="/afterLogin.html", method=RequestMethod.GET)
 	public String loginProcess(HttpSession session) {
 		UsernamePasswordAuthenticationToken authentication = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
@@ -72,12 +93,28 @@ public class AuthenticationController {
 		return "redirect:/";
 	}
 	
+	/**
+	 * Page for presenting new user registration.
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page for presenting new user registration
+	 */
 	@RequestMapping(value="/loginRegister", method=RequestMethod.GET)
 	public String register(Model model) {
 		model.addAttribute("userForm", new UserForm());
 		return "authentication/register";
 	}
 	
+	/**
+	 * Process new user registration and present registration result.
+	 * 
+	 * @param model     model
+	 * @param userForm  user information form
+	 * @param result    binding result
+	 * 
+	 * @return registration result page
+	 */
 	@RequestMapping(value="/loginRegisterSubmit", method=RequestMethod.POST)
 	public String registerSubmit(Model model,
 			@ModelAttribute("userForm") @Valid UserForm userForm,

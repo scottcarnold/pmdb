@@ -72,12 +72,34 @@ public class HomeController {
 		return new ArrayList<String>();
 	}
 	
+	/**
+	 * Page for listing movies within user's default/active movie collection.  This is considered the main "home" page 
+	 * of the application, where users can search and update their movie collection.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param session    session
+	 * 
+	 * @return home page
+	 */
 	@GetMapping("/")
 	public String home(Model model, Principal principal, HttpSession session) {
 		model.addAttribute("searchForm", new SearchForm());
 		return prepareHome(model, principal, null, session);
 	}
 	
+	/**
+	 * Search user's default/active movie collection.  This filters the list of movies in the user's default/active movie
+	 * collection to those that match their search.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param session     session
+	 * @param searchForm  search form
+	 * @param result      binding result
+	 * 
+	 * @return home page, filtered to only movies matching their search
+	 */
 	@RequestMapping("/movies/search")
 	public String search(Model model, Principal principal, HttpSession session,
 			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
@@ -113,6 +135,16 @@ public class HomeController {
 		return "movie/movies";		
 	}
 	
+	/**
+	 * AJAX method for returning the full details of a single movie in the user's movie collection.  Returned result is 
+	 * an HTML fragment that can be loaded into a dialog.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param movieId    id of movie to get details for
+	 * 
+	 * @return page fragment for movie details
+	 */
 	@RequestMapping("/movies/movieDetails")
 	public String movieDetails(Model model, Principal principal, @RequestParam String movieId) {
 		try {
@@ -128,12 +160,29 @@ public class HomeController {
 		return "movie/movieDetails";
 	}
 	
+	/**
+	 * Page to add a new movie to the movie collection (manual entry).
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page to add a new movie to the movie collection
+	 */
 	@RequestMapping("/movies/addMovie")
 	public String addMovie(Model model) {
 		model.addAttribute("movieForm", new MovieForm());
 		return "movie/addMovie";
 	}
 	
+	/**
+	 * Page to edit a movie in the movie collection.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param movieId    id of movie to edit
+	 * @param session    session
+	 * 
+	 * @return page to edit movie
+	 */
 	@RequestMapping("/movies/editMovie")
 	public String editMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
 		try {
@@ -150,6 +199,17 @@ public class HomeController {
 		return "movie/editMovie";
 	}
 	
+	/**
+	 * Add a new movie to the movie collection (manual entry). 
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param session    session
+	 * @param movieForm  movie form
+	 * @param result     binding result
+	 * 
+	 * @return home page
+	 */
 	@RequestMapping("/movies/addMovieSubmit")
 	public String addMovieSubmit(Model model, Principal principal, HttpSession session,
 			@ModelAttribute("movieForm") @Valid MovieForm movieForm,
@@ -171,6 +231,17 @@ public class HomeController {
 		return home(model, principal, session);
 	}
 	
+	/**
+	 * Update a movie in the movie collection.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param session    session
+	 * @param movieForm  movie form
+	 * @param result     binding result
+	 * 
+	 * @return home page
+	 */
 	@RequestMapping("/movies/editMovieSubmit")
 	public String editMovieSubmit(Model model, Principal principal, HttpSession session,
 			@ModelAttribute("movieForm") @Valid MovieForm movieForm,
@@ -193,6 +264,16 @@ public class HomeController {
 		return home(model, principal, session);
 	}
 	
+	/**
+	 * Delete movie from the movie collection.  Confirmation should be handled on client side.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param movieId    id of movie to delete
+	 * @param session    session
+	 * 
+	 * @return home page
+	 */
 	@RequestMapping(value="/movies/deleteMovie", method=RequestMethod.POST)
 	public String deleteMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
 		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
@@ -212,6 +293,15 @@ public class HomeController {
 		return home(model, principal, session);
 	}
 	
+	/**
+	 * Page for configuring what columns of data are included in the table of movies listed on the home page.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param session    session
+	 * 
+	 * @return page for configuring movie table columns
+	 */
 	@RequestMapping("/movies/configureColumns")
 	public String configureColumns(Model model, Principal principal, HttpSession session) {
 		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
@@ -230,6 +320,17 @@ public class HomeController {
 		return "movie/configureColumns";
 	}
 	
+	/**
+	 * Reorder columns shown on the home page table of movies using drag and drop indicies for columns.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param dragIndex  index of column being moved
+	 * @param dropIndex  index of column where target column is being moved to
+	 * @param session    session
+	 * 
+	 * @return page for configuring movie table columns
+	 */
 	@RequestMapping("/movies/reorderColumns")
 	public String reorderColumns(Model model, Principal principal, @RequestParam int dragIndex, @RequestParam int dropIndex, HttpSession session) {
 		LOGGER.debug("Requested drag from " + dragIndex + " to " + dropIndex);
@@ -243,6 +344,16 @@ public class HomeController {
 		return configureColumns(model, principal, session);
 	}
 	
+	/**
+	 * Add a new attribute as a column in the table of movies shown on the home page.
+	 * 
+	 * @param model          model
+	 * @param principal      principal
+	 * @param attributeName  name of attribute to add as a column in the table
+	 * @param session        session
+	 * 
+	 * @return page for configuring movie table columns
+	 */
 	@RequestMapping("/movies/addColumnPreference")
 	public String addColumnPreference(Model model, Principal principal, @RequestParam String attributeName, HttpSession session) {
 		movieService.addTableColumnPreference(attributeName, principal.getName());
@@ -250,6 +361,16 @@ public class HomeController {
 		return configureColumns(model, principal, session);
 	}
 	
+	/**
+	 * Remove a column from the table of movies shown on the home page.
+	 * 
+	 * @param model        model
+	 * @param principal    principal
+	 * @param deleteIndex  index of column to be removed
+	 * @param session      session
+	 * 
+	 * @return page for configuring movie table columns
+	 */
 	@RequestMapping("/movies/deleteColumnPreference")
 	public String deleteColumnPreference(Model model, Principal principal, @RequestParam int deleteIndex, HttpSession session) {
 		movieService.deleteTableColumnPreference(deleteIndex, principal.getName());
@@ -257,6 +378,13 @@ public class HomeController {
 		return configureColumns(model, principal, session);		
 	}
 	
+	/**
+	 * AJAX generic request to dismiss a "session alert".  Once a session alert is dismissed, it will remain dismissed for the
+	 * duration of the user's session.  Provides no response.
+	 * 
+	 * @param session  session
+	 * @param key      key for alert
+	 */
 	@RequestMapping("/dismissSessionAlert")
 	public @ResponseBody void dismissSessionAlert(HttpSession session, @RequestParam String key) {
 		Alerts.dismissSessionAlert(session, key);
