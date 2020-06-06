@@ -4,6 +4,13 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
+/**
+ * Lightweight user credentials class for storage in cloud.  This provides support for synchronizing
+ * users between local and cloud and linking of cloud movie collections to their owners.
+ * 
+ * @author Scott
+ *
+ */
 @DynamoDBTable(tableName="User")
 public class PmdbUserCredentials {
 

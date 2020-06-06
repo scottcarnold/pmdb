@@ -4,6 +4,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
+/**
+ * Class to represent the individual movies found from an IMDB search result.
+ * 
+ * @author Scott Arnold
+ */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Result {
 

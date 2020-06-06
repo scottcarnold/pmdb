@@ -11,6 +11,11 @@ import org.xandercat.pmdb.dao.AuthDao;
 import org.xandercat.pmdb.dao.UserDao;
 import org.xandercat.pmdb.dto.PmdbUser;
 
+/**
+ * User details service for use by Spring security when loading user information.
+ * 
+ * @author Scott Arnold
+ */
 @Component
 public class AuthUserDetailsService implements UserDetailsService {
 

@@ -5,6 +5,12 @@ import javax.validation.ConstraintValidatorContext;
 
 import org.xandercat.pmdb.util.Pair;
 
+/**
+ * Validator for validating that two values from a pair are equal to each other.  Pair object
+ * must be non-null to be considered potentially valid, but objects within the pair can be null.
+ * 
+ * @author Scott Arnold
+ */
 public class ValuesMatchValidator implements ConstraintValidator<ValuesMatch, Pair<?>> {
 
 	@Override

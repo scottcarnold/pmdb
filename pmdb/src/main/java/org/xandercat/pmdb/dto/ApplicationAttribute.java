@@ -2,6 +2,11 @@ package org.xandercat.pmdb.dto;
 
 import java.time.LocalDate;
 
+/**
+ * Class to represent a generic dated application attribute.
+ * 
+ * @author Scott Arnold
+ */
 public class ApplicationAttribute {
 
 	private String name;

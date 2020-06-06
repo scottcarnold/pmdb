@@ -2,6 +2,11 @@ package org.xandercat.pmdb.dto;
 
 import java.util.Set;
 
+/**
+ * Class for storing cloud user synchronization information.
+ * 
+ * @author Scott Arnold
+ */
 public class CloudUserSearchResults {
 
 	private Set<String> usernamesNotInCloud;

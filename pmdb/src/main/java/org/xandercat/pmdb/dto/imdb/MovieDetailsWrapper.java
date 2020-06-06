@@ -5,6 +5,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/**
+ * Class to represent an IMDB movie details result.
+ * 
+ * @author Scott Arnold
+ */
 @XmlRootElement(name="root")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MovieDetailsWrapper {

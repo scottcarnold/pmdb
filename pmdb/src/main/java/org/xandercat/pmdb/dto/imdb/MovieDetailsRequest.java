@@ -2,6 +2,11 @@ package org.xandercat.pmdb.dto.imdb;
 
 import javax.ws.rs.QueryParam;
 
+/**
+ * Class to represent and IMDB movie details request.
+ * 
+ * @author Scott Arnold
+ */
 public class MovieDetailsRequest {
 
 	@QueryParam("r")

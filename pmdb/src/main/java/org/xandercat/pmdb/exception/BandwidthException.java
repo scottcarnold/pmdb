@@ -1,5 +1,13 @@
 package org.xandercat.pmdb.exception;
 
+/**
+ * Exception class for when too many requests of a particular type have been performed.
+ * 
+ * To be removed or replaced by ServieLimitExceededException.
+ * 
+ * @author Scott Arnold
+ */
+@Deprecated
 public class BandwidthException extends Exception {
 
 	private static final long serialVersionUID = 6186550261880652210L;

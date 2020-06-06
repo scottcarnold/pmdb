@@ -22,6 +22,13 @@ import org.springframework.util.StringUtils;
  */
 public class ClientQueryParamMarshaller {
 	
+	/**
+	 * Return a query param map from a QueryParam annotated class object.
+	 * 
+	 * @param object object to produce a query param map from
+	 * 
+	 * @return query param map for the object
+	 */
 	public Map<String, String> queryParamMap(Object object) {
 		Field[] fields = object.getClass().getDeclaredFields();
 		List<Field> paramFields = Arrays.stream(fields)
@@ -36,6 +43,14 @@ public class ClientQueryParamMarshaller {
 				.collect(Collectors.toMap(Map.Entry::getValue, entry -> ReflectionUtils.getField(entry.getKey(), object).toString()));		
 	}
 	
+	/**
+	 * Configure a WebTarget with query parameters from the provided QueryParam annotated class object.
+	 * 
+	 * @param webTarget WebTarget to configure with query parameters
+	 * @param object QueryParam annotated class object to pull query parameters from
+	 * 
+	 * @return WebTarget configured with query parameters from provided QueryParam annotated class object
+	 */
 	public WebTarget queryParams(WebTarget webTarget, Object object) {
 		Map<String, String> queryParams = queryParamMap(object);
 		for (Map.Entry<String, String> entry : queryParams.entrySet()) {

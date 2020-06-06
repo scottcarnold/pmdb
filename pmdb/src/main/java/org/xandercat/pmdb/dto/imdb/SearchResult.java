@@ -8,6 +8,11 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/**
+ * Class to represent an IMDB search result.
+ * 
+ * @author Scott Arnold
+ */
 @XmlRootElement(name="root")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SearchResult {

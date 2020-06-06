@@ -5,6 +5,11 @@ import javax.validation.ConstraintValidatorContext;
 
 import org.xandercat.pmdb.util.format.FormatUtil;
 
+/**
+ * Validator class for usernames.  Usernames must conform to valid username format dictated by the FormatUtil class.
+ * 
+ * @author Scott Arnold
+ */
 public class UsernameValidator implements ConstraintValidator<Username, String> {
 
 	@Override

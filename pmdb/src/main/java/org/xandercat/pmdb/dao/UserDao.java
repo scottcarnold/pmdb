@@ -6,6 +6,11 @@ import java.util.Optional;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.PmdbException;
 
+/**
+ * Interface for user operations.
+ * 
+ * @author Scott Arnold
+ */
 public interface UserDao {
 
 	/**

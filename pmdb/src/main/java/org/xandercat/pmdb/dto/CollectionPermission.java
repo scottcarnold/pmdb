@@ -1,5 +1,10 @@
 package org.xandercat.pmdb.dto;
 
+/**
+ * Class to represent the permission a user has for a movie collection.
+ * 
+ * @author Scott Arnold
+ */
 public class CollectionPermission {
 
 	private String collectionId;

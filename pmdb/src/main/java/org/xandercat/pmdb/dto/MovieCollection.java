@@ -6,6 +6,14 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 
+/**
+ * Class for representing a movie collection.
+ * 
+ * Annotated for storage in AWS DynamoDB.
+ * 
+ * @author Scott
+ *
+ */
 @DynamoDBTable(tableName="MovieCollection")
 public class MovieCollection {
 

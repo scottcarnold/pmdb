@@ -5,6 +5,11 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
 import org.xandercat.pmdb.dto.MovieCollection;
 
+/**
+ * Form for updating movie collection details.
+ * 
+ * @author Scott Arnold
+ */
 @Validated
 public class CollectionForm {
 

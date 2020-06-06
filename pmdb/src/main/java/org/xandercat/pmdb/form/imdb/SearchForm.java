@@ -4,6 +4,16 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.validation.annotation.Validated;
 
+/**
+ * Form for IMDB searches. Hash code for this form hashes on user criteria excluding page number.
+ * By excluding page number, search hashes can be compared to determine if search criteria
+ * has changed.
+ * 
+ * Only the title, year, and page are meant to be manipulated by the user.  linkMovieId,
+ * linkImdbId, and linkAll flag are for use internally for link processing.
+ * 
+ * @author Scott Arnold
+ */
 @Validated
 public class SearchForm {
 

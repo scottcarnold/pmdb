@@ -10,6 +10,11 @@ import org.xandercat.pmdb.validation.Password;
 import org.xandercat.pmdb.validation.Username;
 import org.xandercat.pmdb.validation.ValuesMatch;
 
+/**
+ * Form for user details.
+ * 
+ * @author Scott Arnold
+ */
 @Validated
 public class UserForm {
 

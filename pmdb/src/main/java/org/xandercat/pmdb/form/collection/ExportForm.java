@@ -3,6 +3,11 @@ package org.xandercat.pmdb.form.collection;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Form for exporting movie collections.
+ * 
+ * @author Scott Arnold
+ */
 public class ExportForm {
 
 	private List<String> collections;

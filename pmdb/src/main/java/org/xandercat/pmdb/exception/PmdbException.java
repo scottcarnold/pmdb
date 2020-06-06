@@ -1,5 +1,11 @@
 package org.xandercat.pmdb.exception;
 
+/**
+ * Exception class for generic application exceptions.
+ * 
+ * @author Scott Arnold
+ */
+@Deprecated
 public class PmdbException extends Exception {
 
 	private static final long serialVersionUID = -309343344281958673L;

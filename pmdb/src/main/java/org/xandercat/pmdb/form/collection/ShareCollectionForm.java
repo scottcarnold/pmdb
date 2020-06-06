@@ -3,6 +3,11 @@ package org.xandercat.pmdb.form.collection;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.validation.annotation.Validated;
 
+/**
+ * Form for sharing a movie collection with another user.
+ * 
+ * @author Scott Arnold
+ */
 @Validated
 public class ShareCollectionForm {
 

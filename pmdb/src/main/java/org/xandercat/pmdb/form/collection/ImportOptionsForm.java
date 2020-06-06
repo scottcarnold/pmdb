@@ -6,6 +6,11 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.validation.annotation.Validated;
 
+/**
+ * Form for selecting options when importing a movie collection.
+ * 
+ * @author Scott Arnold
+ */
 @Validated
 public class ImportOptionsForm {
 

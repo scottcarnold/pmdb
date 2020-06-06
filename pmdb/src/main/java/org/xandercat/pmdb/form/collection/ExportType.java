@@ -1,5 +1,10 @@
 package org.xandercat.pmdb.form.collection;
 
+/**
+ * Enum to represent what format to export movie collections in.
+ * 
+ * @author Scott Arnold
+ */
 public enum ExportType {
 
 	XLS("XLS Format"), XLSX("XLSX Format");

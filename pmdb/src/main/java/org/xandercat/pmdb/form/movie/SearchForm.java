@@ -2,6 +2,11 @@ package org.xandercat.pmdb.form.movie;
 
 import org.springframework.validation.annotation.Validated;
 
+/**
+ * Form for searching a movie collection.
+ * 
+ * @author Scott Arnold
+ */
 @Validated
 public class SearchForm {
 

@@ -1,5 +1,10 @@
 package org.xandercat.pmdb.exception;
 
+/**
+ * Exception class for any errors that happen when performing functions against web services.
+ * 
+ * @author Scott Arnold
+ */
 public class WebServicesException extends Exception {
 
 	private static final long serialVersionUID = 8938442483844216256L;

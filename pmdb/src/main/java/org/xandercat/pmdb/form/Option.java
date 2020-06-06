@@ -1,5 +1,10 @@
 package org.xandercat.pmdb.form;
 
+/**
+ * Class for representing an option for a select or other form list option.
+ * 
+ * @author Scott Arnold
+ */
 public class Option {
 
 	private String value;
