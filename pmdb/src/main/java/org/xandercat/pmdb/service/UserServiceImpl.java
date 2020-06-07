@@ -19,9 +19,9 @@ import org.xandercat.pmdb.dao.repository.DynamoUserCredentialsRepository;
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.dto.PmdbUserCredentials;
-import org.xandercat.pmdb.exception.BandwidthException;
 import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
+import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.util.ApplicationProperties;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
@@ -136,10 +136,10 @@ public class UserServiceImpl implements UserService {
 	}
 	
 	@Override
-	public void registerUser(PmdbUser user, String newPassword) throws PmdbException, BandwidthException {
+	public void registerUser(PmdbUser user, String newPassword) throws PmdbException, ServiceLimitExceededException {
 		int count = applicationService.incrementRegistrationsTriggerCount();
 		if (count >= regMax) {
-			throw new BandwidthException("Too many registrations in a short period of time.", count, regMax);
+			throw new ServiceLimitExceededException("Too many registrations in a short period of time.", count, regMax);
 		}
 		if (!FormatUtil.isValidUsername(user.getUsername())) {
 			// defensive double check on username, though validation should have already caught this

@@ -68,7 +68,7 @@ public class ImdbRestService implements ImdbSearchService {
 	public SearchResult searchImdb(SearchRequest request) throws WebServicesException, ServiceLimitExceededException {
 		int serviceCalls = applicationService.getImdbServiceCallCount();
 		if (serviceCalls >= maxServiceCallsPerDay) {
-			throw new ServiceLimitExceededException(serviceCalls);
+			throw new ServiceLimitExceededException(serviceCalls, maxServiceCallsPerDay);
 		} else {
 			applicationService.incrementImdbServiceCallCount();
 		}
@@ -88,7 +88,7 @@ public class ImdbRestService implements ImdbSearchService {
 	public MovieDetails getMovieDetails(MovieDetailsRequest request) throws WebServicesException, ServiceLimitExceededException {
 		int serviceCalls = applicationService.getImdbServiceCallCount();
 		if (serviceCalls >= maxServiceCallsPerDay) {
-			throw new ServiceLimitExceededException(serviceCalls);
+			throw new ServiceLimitExceededException(serviceCalls, maxServiceCallsPerDay);
 		} else {
 			applicationService.incrementImdbServiceCallCount();
 		}

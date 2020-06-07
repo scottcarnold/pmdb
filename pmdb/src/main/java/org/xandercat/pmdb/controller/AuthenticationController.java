@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.PmdbUser;
-import org.xandercat.pmdb.exception.BandwidthException;
 import org.xandercat.pmdb.exception.PmdbException;
+import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.UserService;
@@ -136,9 +136,9 @@ public class AuthenticationController {
 		} catch (PmdbException e) {
 			LOGGER.error("Unable to register user.", e);
 			Alerts.setErrorMessage(model, "The system was unable to register your account.");
-		} catch (BandwidthException be) {
-			if (be.isInitialTrigger()) {
-				LOGGER.error("Excessive registrations.", be);
+		} catch (ServiceLimitExceededException slee) {
+			if (slee.isInitialTrigger()) {
+				LOGGER.error("Excessive registrations.", slee);
 			}
 			Alerts.setErrorMessage(model, "Too many user accounts have been created in a short amount of time.  Please try again later.");
 		}

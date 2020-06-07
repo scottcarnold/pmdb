@@ -5,9 +5,9 @@ import java.util.Optional;
 
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
-import org.xandercat.pmdb.exception.BandwidthException;
 import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.PmdbException;
+import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 
 public interface UserService {
 
@@ -55,9 +55,9 @@ public interface UserService {
 	 * @param user user to register
 	 * @param newPassword new password
 	 * @throws PmdbException if any errors occur
-	 * @throws BandwidthException if too many user registrations in short period of time
+	 * @throws ServiceLimitExceededException if too many user registrations in short period of time
 	 */
-	public void registerUser(PmdbUser user, String newPassword) throws PmdbException, BandwidthException;
+	public void registerUser(PmdbUser user, String newPassword) throws PmdbException, ServiceLimitExceededException;
 	
 		
 	/**
