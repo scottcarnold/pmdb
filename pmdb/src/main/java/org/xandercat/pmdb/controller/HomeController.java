@@ -27,7 +27,6 @@ import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.FormattedMovie;
 import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
-import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.movie.MovieForm;
 import org.xandercat.pmdb.form.movie.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
@@ -188,7 +187,7 @@ public class HomeController {
 		try {
 			Optional<Movie> movie = movieService.getMovie(movieId, principal.getName());
 			if (!movie.isPresent()) {
-				throw new PmdbException("Movie ID " + movieId + " could not be retrieved.");
+				throw new IllegalArgumentException("Movie ID " + movieId + " could not be retrieved.");
 			}
 			model.addAttribute("movieForm", new MovieForm(movie.get()));
 		} catch (Exception e) {
@@ -337,7 +336,7 @@ public class HomeController {
 		try {
 			movieService.reorderTableColumnPreference(dragIndex, dropIndex, principal.getName());
 			// not going to set success messages here as it would reduce usability of the interface and be of little value
-		} catch (PmdbException e) {
+		} catch (Exception e) {
 			LOGGER.error("Unable to reorder columns.", e);
 			Alerts.setErrorMessage(model, "Table columns could not be reordered.");
 		}

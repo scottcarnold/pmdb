@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.PmdbUser;
-import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.service.UserService;
 import org.xandercat.pmdb.util.Alerts;
@@ -76,7 +75,7 @@ public class MyAccountController {
 			String newPassword = StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
 			userService.saveMyAccountUser(userForm.toUser(), newPassword, principal.getName());
 			Alerts.setMessage(model, "Account information saved.");
-		} catch (PmdbException e) {
+		} catch (Exception e) {
 			LOGGER.error("Unexpected error when updating user.", e);
 			Alerts.setErrorMessage(model, "An unexpected error occurred while attempting to save account information.");
 		}

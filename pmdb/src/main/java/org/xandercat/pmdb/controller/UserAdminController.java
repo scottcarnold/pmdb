@@ -19,7 +19,6 @@ import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.WebServicesException;
-import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.form.useradmin.SearchForm;
 import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.service.UserService;
@@ -144,7 +143,7 @@ public class UserAdminController {
 		try {
 			userService.saveUser(userForm.toUser(), newPassword, true);
 			Alerts.setMessage(model, "User " + userForm.getUsername() + " saved.");
-		} catch (PmdbException e) {
+		} catch (Exception e) {
 			LOGGER.error("Unexpected error when saving new user.", e);
 			Alerts.setErrorMessage(model, "An unexpected error occurred while attempting to save user. User could not be saved.");
 		}
@@ -171,7 +170,7 @@ public class UserAdminController {
 		try {
 			userService.saveUser(userForm.toUser(), newPassword, false);
 			Alerts.setMessage(model, "User " + userForm.getUsername() + " saved.");
-		} catch (PmdbException e) {
+		} catch (Exception e) {
 			LOGGER.error("Unexpected error when updating user.", e);
 			Alerts.setErrorMessage(model, "An unexpected error occurred while attempting to save user. User could not be saved.");
 		}
@@ -212,7 +211,7 @@ public class UserAdminController {
 		try {
 			userService.syncUserFromCloud(username);
 			Alerts.setMessage(model, "User " + username + " synced from cloud. User will need to be edited to enable user and add user details.");
-		} catch (PmdbException | WebServicesException e) {
+		} catch (Exception e) {
 			LOGGER.error("Unable to sync user from cloud.", e);
 			Alerts.setErrorMessage(model, "User " + username + " could not be synced from cloud.");
 		}
@@ -233,7 +232,7 @@ public class UserAdminController {
 		try {
 			userService.deleteUser(username);
 			Alerts.setMessage(model, "User deleted.");
-		} catch (PmdbException e) {
+		} catch (Exception e) {
 			LOGGER.error("User could not be deleted.", e);
 			Alerts.setErrorMessage(model, "User could not be deleted.");
 		}

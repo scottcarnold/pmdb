@@ -20,7 +20,6 @@ import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.dto.PmdbUserCredentials;
 import org.xandercat.pmdb.exception.WebServicesException;
-import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.util.ApplicationProperties;
 import org.xandercat.pmdb.util.format.FormatUtil;
@@ -72,13 +71,13 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void saveMyAccountUser(PmdbUser user, String newPassword, String callingUsername) throws PmdbException {
+	public void saveMyAccountUser(PmdbUser user, String newPassword, String callingUsername) {
 		if (!callingUsername.equals(user.getUsername())) {
-			throw new PmdbException("Username mismatch. Form has username " + user.getUsername() + " while authenticated username is " + callingUsername);
+			throw new IllegalArgumentException("Username mismatch. Form has username " + user.getUsername() + " while authenticated username is " + callingUsername);
 		}
 		Optional<PmdbUser> storedUserOptional = userDao.getUser(callingUsername);
 		if (!storedUserOptional.isPresent()) {
-			throw new PmdbException("User " + callingUsername + " not found.");
+			throw new IllegalArgumentException("User " + callingUsername + " not found.");
 		}
 		PmdbUser storedUser = storedUserOptional.get();
 		storedUser.setGrantedAuthorities(authDao.getAuthorities(storedUser.getUsername()));
@@ -89,25 +88,25 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void saveUser(PmdbUser user, String newPassword, boolean newUser) throws PmdbException {
+	public void saveUser(PmdbUser user, String newPassword, boolean newUser) {
 		if (StringUtils.isEmptyOrWhitespace(user.getUsername())) {
-			throw new PmdbException("No username provided.");
+			throw new IllegalArgumentException("No username provided.");
 		}
 		String username = user.getUsername().trim();
 		newPassword = StringUtils.isEmptyOrWhitespace(newPassword)? null : newPassword.trim();
 		if (newUser) {
 			if (getUser(username).isPresent()) {
-				throw new PmdbException("User " + username + " already exists.");
+				throw new IllegalArgumentException("User " + username + " already exists.");
 			}
 			if (applicationProperties.isAwsEnabled()) {
 				Optional<PmdbUserCredentials> creds = dynamoUserCredentialsRepository.findById(username);
 				if (creds.isPresent()) {
-					throw new PmdbException("Username already exists in the cloud; user must be synced or removed from cloud to add again.");
+					throw new IllegalArgumentException("Username already exists in the cloud; user must be synced or removed from cloud to add again.");
 				}
 			}
 		} else {
 			if (!getUser(username).isPresent()) {
-				throw new PmdbException("User " + username + " not found.");
+				throw new IllegalArgumentException("User " + username + " not found.");
 			}
 		}
 		if (newUser) {
@@ -136,18 +135,18 @@ public class UserServiceImpl implements UserService {
 	}
 	
 	@Override
-	public void registerUser(PmdbUser user, String newPassword) throws PmdbException, ServiceLimitExceededException {
+	public void registerUser(PmdbUser user, String newPassword) throws ServiceLimitExceededException {
 		int count = applicationService.incrementRegistrationsTriggerCount();
 		if (count >= regMax) {
 			throw new ServiceLimitExceededException("Too many registrations in a short period of time.", count, regMax);
 		}
 		if (!FormatUtil.isValidUsername(user.getUsername())) {
 			// defensive double check on username, though validation should have already caught this
-			throw new PmdbException("Invalid username: \"" + user.getUsername() + "\"");
+			throw new IllegalArgumentException("Invalid username: \"" + user.getUsername() + "\"");
 		}
 		if (StringUtils.isEmptyOrWhitespace(newPassword)) {
 			// defensive double check on password, though validation should have already caught this
-			throw new PmdbException("Password cannot be empty.");
+			throw new IllegalArgumentException("Password cannot be empty.");
 		}
 		user.setEnabled(false); // ensure user account is initially disabled
 		user.setGrantedAuthorities(PmdbGrantedAuthority.ROLE_USER); // ensure proper roles
@@ -198,7 +197,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void syncUserFromCloud(String username) throws WebServicesException, PmdbException {
+	public void syncUserFromCloud(String username) throws WebServicesException {
 		if (userDao.getUser(username) != null) {
 			throw new IllegalArgumentException("User named " + username + " already exists in the system.");
 		}
@@ -210,7 +209,7 @@ public class UserServiceImpl implements UserService {
 				try {
 					user.setPassword(new String(creds.getPassword(), "UTF-8"));
 				} catch (UnsupportedEncodingException e) {
-					throw new PmdbException(e);
+					throw new UnsupportedOperationException(e);
 				}
 				userDao.readdUser(user);
 				authDao.grant(user.getUsername(), PmdbGrantedAuthority.ROLE_USER);
@@ -223,13 +222,13 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public void deleteUser(String username) throws PmdbException {
+	public void deleteUser(String username) {
 		Optional<PmdbUser> user = getUser(username);
 		if (!user.isPresent()) {
-			throw new PmdbException("User not found.");
+			throw new IllegalArgumentException("User not found.");
 		}
 		if (user.get().getLastAccessDate() != null) {
-			throw new PmdbException("Only users who have no last access date (indicating they have never logged in) can be deleted.");
+			throw new IllegalArgumentException("Only users who have no last access date (indicating they have never logged in) can be deleted.");
 		}
 		authDao.revoke(username, PmdbGrantedAuthority.values());
 		userDao.delete(username);

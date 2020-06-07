@@ -7,7 +7,6 @@ import java.util.Set;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
-import org.xandercat.pmdb.exception.PmdbException;
 
 /**
  * Service interface for the management of movies.
@@ -128,10 +127,8 @@ public interface MovieService {
 	 * @param sourceIdx   index of the preference to move.
 	 * @param targetIdx   target index (not necessarily the final index of the attribute)
 	 * @param username    user to change preference for
-	 * 
-	 * @throws PmdbException if sourceIdx or targetIdx are out of range
 	 */
-	public void reorderTableColumnPreference(int sourceIdx, int targetIdx, String username) throws PmdbException;
+	public void reorderTableColumnPreference(int sourceIdx, int targetIdx, String username);
 	
 	/**
 	 * Remove attribute name from those that should be included in the movie table on the home page.  Attribute name is referenced

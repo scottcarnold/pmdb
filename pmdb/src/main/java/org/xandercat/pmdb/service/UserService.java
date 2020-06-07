@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.WebServicesException;
-import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 
 public interface UserService {
@@ -35,9 +34,8 @@ public interface UserService {
 	 * @param user             user
 	 * @param newPassword      new password; leave null/empty if password should not be changed
 	 * @param callingUsername  calling username
-	 * @throws PmdbException if any errors occur
 	 */
-	public void saveMyAccountUser(PmdbUser user, String newPassword, String callingUsername) throws PmdbException;
+	public void saveMyAccountUser(PmdbUser user, String newPassword, String callingUsername);
 	
 	/**
 	 * Save user.
@@ -45,19 +43,17 @@ public interface UserService {
 	 * @param user user to save
 	 * @param newPassword new password; leave null/empty if password should not be changed
 	 * @param newUser whether or not this is a new user
-	 * @throws PmdbException if any errors occur
 	 */
-	public void saveUser(PmdbUser user, String newPassword, boolean newUser) throws PmdbException;
+	public void saveUser(PmdbUser user, String newPassword, boolean newUser);
 	
 	/**
 	 * Register user.
 	 * 
 	 * @param user user to register
 	 * @param newPassword new password
-	 * @throws PmdbException if any errors occur
 	 * @throws ServiceLimitExceededException if too many user registrations in short period of time
 	 */
-	public void registerUser(PmdbUser user, String newPassword) throws PmdbException, ServiceLimitExceededException;
+	public void registerUser(PmdbUser user, String newPassword) throws ServiceLimitExceededException;
 	
 		
 	/**
@@ -113,17 +109,15 @@ public interface UserService {
 	 * Created user will not be enabled and will not have any user details set.
 	 * 
 	 * @param username username
-	 * @throws PmdbException if any errors occur
 	 * @throws WebServicesException if there are any web service failures
 	 */
-	public void syncUserFromCloud(String username) throws PmdbException, WebServicesException;
+	public void syncUserFromCloud(String username) throws WebServicesException;
 	
 	/**
 	 * Delete a user from the system.  By design, this should only be called for users who have never logged in.
 	 * If user has logged in before, an exception will be thrown.
 	 * 
 	 * @param username username
-	 * @throws PmdbException if an error occurs
 	 */
-	public void deleteUser(String username) throws PmdbException;
+	public void deleteUser(String username);
 }

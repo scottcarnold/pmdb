@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.xandercat.pmdb.dto.PmdbUser;
-import org.xandercat.pmdb.exception.PmdbException;
 
 /**
  * Interface for user operations.
@@ -18,9 +17,8 @@ public interface UserDao {
 	 * 
 	 * @param user user to add
 	 * @param unencryptedPassword new password for user
-	 * @throws PmdbException if any error occurs
 	 */
-	public void addUser(PmdbUser user, String unencryptedPassword) throws PmdbException;
+	public void addUser(PmdbUser user, String unencryptedPassword);
 	
 	/**
 	 * Re-add a user to the system.  Typically by syncing them in from cloud storage.
@@ -29,9 +27,8 @@ public interface UserDao {
 	 * is set accordingly.
 	 * 
 	 * @param user user to add
-	 * @throws PmdbException if any error occurs
 	 */
-	public void readdUser(PmdbUser user) throws PmdbException;
+	public void readdUser(PmdbUser user);
 	
 	/**
 	 * Save changes to existing user.  Should not be called for new users.

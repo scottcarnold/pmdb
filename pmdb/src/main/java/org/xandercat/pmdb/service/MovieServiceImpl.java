@@ -15,7 +15,6 @@ import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
-import org.xandercat.pmdb.exception.PmdbException;
 import org.xandercat.pmdb.util.ApplicationProperties;
 
 @Component
@@ -162,16 +161,16 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
-	public void reorderTableColumnPreference(int sourceIdx, int targetIdx, String callingUsername) throws PmdbException {
+	public void reorderTableColumnPreference(int sourceIdx, int targetIdx, String callingUsername) {
 		if (sourceIdx == targetIdx) {
 			return;
 		}
 		Optional<Integer> max = movieDao.getMaxTableColumnPreferenceIndex(callingUsername);
 		if (!max.isPresent()) {
-			throw new PmdbException("User has no preferences to reorder.");
+			throw new IllegalArgumentException("User has no preferences to reorder.");
 		}
 		if (sourceIdx < 0 || targetIdx < 0 || sourceIdx > max.get() || targetIdx > max.get()) {
-			throw new PmdbException("source index or target index do not fall in acceptable range of 0 to " + max);
+			throw new IllegalArgumentException("source index or target index do not fall in acceptable range of 0 to " + max);
 		}
 		movieDao.reorderTableColumnPreference(sourceIdx, targetIdx, callingUsername);
 	}
