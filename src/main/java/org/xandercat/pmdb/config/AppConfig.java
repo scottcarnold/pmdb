@@ -6,7 +6,7 @@ import javax.ws.rs.client.ClientBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.SystemPropertyUtils;
 import org.xandercat.pmdb.ws.ClientQueryParamMarshaller;
@@ -26,8 +26,8 @@ public class AppConfig {
 	 */
 	@Bean
 	public Resource propertiesResource() {
-		String propertiesLocation = SystemPropertyUtils.resolvePlaceholders("environment/pmdb_${pmdb.environment}.properties");
-		return new ClassPathResource(propertiesLocation);
+		String propertiesLocation = SystemPropertyUtils.resolvePlaceholders("${pmdb.properties.location}pmdb_${pmdb.environment}.properties");
+		return new FileSystemResource(propertiesLocation);
 	}
 	
 	/**

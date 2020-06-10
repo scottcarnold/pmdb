@@ -35,7 +35,7 @@ public class AuthenticationController {
 
 	private static final Logger LOGGER = LogManager.getLogger(AuthenticationController.class);
 	
-	@Value("${pmdb.environment.name}")
+	@Value("${pmdb.environment}")
 	private String environment;
 
 	@Autowired
