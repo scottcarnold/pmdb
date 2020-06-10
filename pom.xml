@@ -3,7 +3,7 @@
 	<groupId>xandercat</groupId>
 	<artifactId>pmdb</artifactId>
 	<packaging>war</packaging>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<name>PMDB</name>
 	<description>Personal Movie Database</description>
 	<properties>
