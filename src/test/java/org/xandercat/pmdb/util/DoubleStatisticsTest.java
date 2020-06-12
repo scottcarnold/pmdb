@@ -58,14 +58,34 @@ public class DoubleStatisticsTest {
 	@Test
 	public void testIQROutlier() {
 		DoubleStatistics stats = doubleStats(5, 7, 10, 15, 19, 21, 21, 22, 22, 23, 23, 23, 23, 23, 24, 24, 24, 24, 25);
-		assertTrue(stats.isLowOutlier(5));
-		assertTrue(stats.isLowOutlier(10));
-		assertFalse(stats.isLowOutlier(15));
-		assertFalse(stats.isLowOutlier(100));
-		assertTrue(stats.isHighOutlier(32));
-		assertFalse(stats.isHighOutlier(31));
-		assertTrue(stats.isOutlier(32));
-		assertTrue(stats.isOutlier(10));
-		assertFalse(stats.isOutlier(15));
+		assertTrue(stats.isLowOutlier(5d));
+		assertTrue(stats.isLowOutlier(10d));
+		assertFalse(stats.isLowOutlier(15d));
+		assertFalse(stats.isLowOutlier(100d));
+		assertTrue(stats.isHighOutlier(32d));
+		assertFalse(stats.isHighOutlier(31d));
+		assertTrue(stats.isOutlier(32d));
+		assertTrue(stats.isOutlier(10d));
+		assertFalse(stats.isOutlier(15d));
+	}
+	
+	@Test
+	public void testSmallList() {
+		DoubleStatistics stats = doubleStats(5, 5);
+		assertEquals(5, stats.getAverage(), 0.001);
+		assertEquals(5, stats.getMedian(), 0.001);
+		assertEquals(5, stats.getMin(), 0.001);
+		assertEquals(5, stats.getMax(), 0.001);
+		assertEquals(0, stats.getInterquartileRange());
+	}
+	
+	@Test
+	public void testMinimalList() {
+		DoubleStatistics stats = doubleStats(5);
+		assertEquals(5, stats.getAverage(), 0.001);
+		assertEquals(5, stats.getMedian(), 0.001);
+		assertEquals(5, stats.getMin(), 0.001);
+		assertEquals(5, stats.getMax(), 0.001);
+		assertEquals(0, stats.getInterquartileRange());		
 	}
 }

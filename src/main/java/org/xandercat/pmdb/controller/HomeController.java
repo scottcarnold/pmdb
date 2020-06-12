@@ -35,6 +35,7 @@ import org.xandercat.pmdb.service.ImdbSearchService;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.DoubleStatistics;
+import org.xandercat.pmdb.util.LongStatistics;
 import org.xandercat.pmdb.util.ViewUtil;
 import org.xandercat.pmdb.util.format.Transformers;
 
@@ -168,9 +169,13 @@ public class HomeController {
 			model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
 			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.get().getId(), principal.getName());
 			MovieStatistics movieStatistics = new MovieStatistics(movies);
-			Optional<DoubleStatistics> ratingStatistics = movieStatistics.getDoubleStatsitics("Imdb Rating");
+			Optional<DoubleStatistics> ratingStatistics = movieStatistics.getDoubleStatistics("Imdb Rating");
+			Optional<LongStatistics> voteStatistics = movieStatistics.getLenientLongStatistics("Imdb Votes");
 			if (ratingStatistics.isPresent()) {
 				model.addAttribute("ratingStatistics", ratingStatistics.get());
+			}
+			if (voteStatistics.isPresent()) {
+				model.addAttribute("voteStatistics", voteStatistics.get());
 			}
 			Optional<Movie> movie = movieService.getMovie(movieId, principal.getName());
 			if (movie.isPresent()) {

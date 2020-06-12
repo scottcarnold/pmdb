@@ -42,6 +42,31 @@
 					<p><span th:text="${movie.getAttribute('Imdb Rating')}">7.0</span><span th:if="${ratingStatistics.isOutlier(movie.getAttribute('Imdb Rating'))}">&nbsp;(Outlier)</span></p>
 				</div>
 			</div>
+		</div>
+	</div>
+	<div class="panel panel-default">
+		<div class="panel-heading">IMDB Votes</div>
+		<div class="panel-body">
+			<div class="row" th:if="${voteStatistics}">
+				<div class="col-xs-8">
+					<div class="row">
+						<div class="col-xs-6"><p>Minimum</p></div>
+						<div class="col-xs-6"><p th:text="${#numbers.formatDecimal(voteStatistics.min, 1, 'COMMA', 0, 'POINT')}">960</p></div>
+					</div>
+					<div class="row">
+						<div class="col-xs-6"><p>Average</p></div>
+						<div class="col-xs-6"><p th:text="${#numbers.formatDecimal(voteStatistics.average, 1, 'COMMA', 0, 'POINT')}">12,500</p></div>
+					</div>
+					<div class="row">
+						<div class="col-xs-6"><p>Maximum</p></div>
+						<div class="col-xs-6"><p th:text="${#numbers.formatDecimal(voteStatistics.max, 1, 'COMMA', 0, 'POINT')}">162,000</p></div>
+					</div>
+				</div>
+				<div class="col-xs-4">
+					<p><span th:text="${movie.getAttribute('Imdb Votes')}">7.0</span></p>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 <button type="button" class="btn btn-default movieDetailsClose">Close</button>
