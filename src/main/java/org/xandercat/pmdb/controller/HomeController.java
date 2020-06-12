@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.dto.MovieStatistics;
 import org.xandercat.pmdb.dto.FormattedMovie;
 import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
@@ -33,6 +34,7 @@ import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.ImdbSearchService;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.Alerts;
+import org.xandercat.pmdb.util.DoubleStatistics;
 import org.xandercat.pmdb.util.ViewUtil;
 import org.xandercat.pmdb.util.format.Transformers;
 
@@ -157,6 +159,28 @@ public class HomeController {
 			LOGGER.error("Unable to load movie id " + movieId + " for user " + principal.getName(), e);
 		}
 		return "movie/movieDetails";
+	}
+	
+	@RequestMapping("/movies/movieStatistics")
+	public String movieStatistics(Model model, Principal principal, @RequestParam String movieId) {
+		try {
+			Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
+			model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
+			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.get().getId(), principal.getName());
+			MovieStatistics movieStatistics = new MovieStatistics(movies);
+			Optional<DoubleStatistics> ratingStatistics = movieStatistics.getDoubleStatsitics("Imdb Rating");
+			if (ratingStatistics.isPresent()) {
+				model.addAttribute("ratingStatistics", ratingStatistics.get());
+			}
+			Optional<Movie> movie = movieService.getMovie(movieId, principal.getName());
+			if (movie.isPresent()) {
+				model.addAttribute("movie", movie.get());
+				
+			}
+		} catch (CollectionSharingException | WebServicesException e) {
+			LOGGER.error("Unable to load movie id " + movieId + " for user " + principal.getName(), e);
+		}
+		return "movie/movieStatistics";		
 	}
 	
 	/**
