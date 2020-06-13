@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -36,6 +38,7 @@ import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.DoubleStatistics;
 import org.xandercat.pmdb.util.LongStatistics;
 import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.WordStatistics;
 import org.xandercat.pmdb.util.format.FormatUtil;
 import org.xandercat.pmdb.util.format.Transformers;
 
@@ -168,20 +171,32 @@ public class HomeController {
 			Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 			model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
 			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.get().getId(), principal.getName());
+			Optional<Movie> movie = movieService.getMovie(movieId, principal.getName());
+			if (movie.isPresent()) {
+				model.addAttribute("movie", movie.get());
+				
+			}
 			MovieStatistics movieStatistics = new MovieStatistics(movies);
 			Optional<DoubleStatistics> ratingStatistics = movieStatistics.getDoubleStatistics(ImdbAttribute.IMDB_RATING.getKey());
 			Optional<LongStatistics> voteStatistics = movieStatistics.getLenientLongStatistics(ImdbAttribute.IMDB_VOTES.getKey());
+			Optional<WordStatistics> genreStatistics = movieStatistics.getWordStatistics(ImdbAttribute.GENRE.getKey());
 			if (ratingStatistics.isPresent()) {
 				model.addAttribute("ratingStatistics", ratingStatistics.get());
 			}
 			if (voteStatistics.isPresent()) {
 				model.addAttribute("voteStatistics", voteStatistics.get());
 			}
-			Optional<Movie> movie = movieService.getMovie(movieId, principal.getName());
-			if (movie.isPresent()) {
-				model.addAttribute("movie", movie.get());
-				
+			if (genreStatistics.isPresent()) {
+				model.addAttribute("genreStatistics", genreStatistics.get());
+				model.addAttribute("genresMostCommon", genreStatistics.get().getTopWordCounts(3).stream()
+						.map(WordStatistics.WordCount::toString).collect(Collectors.joining(",")));
+				model.addAttribute("genresLeastCommon", genreStatistics.get().getBottomWordCounts(3).stream()
+						.map(WordStatistics.WordCount::toString).collect(Collectors.joining(",")));
+				if (movie.isPresent()) {
+					model.addAttribute("specificGenreCounts", genreStatistics.get().getWordCountsForWords(movie.get().getAttribute(ImdbAttribute.GENRE.getKey())));
+				}
 			}
+
 		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("Unable to load movie id " + movieId + " for user " + principal.getName(), e);
 		}

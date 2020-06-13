@@ -68,6 +68,35 @@
 			</div>
 		</div>
 	</div>
+	<div class="panel panel-default">
+		<div class="panel-heading"><strong>Genre</strong></div>
+		<div class="panel-body">
+			<div class="row" th:if="${genreStatistics}">
+				<div class="col-xs-8">
+					<div class="row">
+						<div class="col-xs-12">
+							<p th:text="'Most common: ' + ${genresMostCommon}">Most common: Action (100)</p>
+						</div>
+					</div>
+					<div th:if="${specificGenreCounts}" th:each="wordCount : ${specificGenreCounts}" class="row">
+						<div class="col-xs-6"><p th:text="${wordCount.word}">Word</p></div>
+						<div class="col-xs-6"><p th:text="${wordCount.count}">25</p></div>						
+					</div>
+					<div class="row">
+						<div class="col-xs-12">
+							<p th:text="'Least common: ' + ${genresLeastCommon}">Least common: Donuts (1)</p>
+						</div>
+					</div>
+				</div>
+				<div class="col-xs-4">
+					<div class="row">&nbsp;</div>
+					<div th:if="${specificGenreCounts}" th:each="wordCount : ${specificGenreCounts}" class="row">
+						<div class="col-xs-12"><p th:text="${wordCount.word}"></p></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </div>
 <button type="button" class="btn btn-default movieDetailsClose">Close</button>
 <div th:if="${defaultMovieCollection.editable}" id="confirmDeleteDialog" title="Confirm Delete">

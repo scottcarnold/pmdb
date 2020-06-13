@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.util.StringUtils;
 import org.xandercat.pmdb.util.DoubleStatistics;
 import org.xandercat.pmdb.util.LongStatistics;
+import org.xandercat.pmdb.util.WordStatistics;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
 /**
@@ -103,5 +104,25 @@ public class MovieStatistics {
 				.filter(value -> value != null)
 				.collect(Collectors.toList());
 		return (longs.size() > 0)? Optional.of(new LongStatistics(longs)) : Optional.empty();
+	}
+	
+	/**
+	 * Returns word statistics for a movie attribute.
+	 * 
+	 * @param attributeKey  key for movie attribute to run statistics on
+	 * 
+	 * @return statistics for the attribute
+	 */
+	public Optional<WordStatistics> getWordStatistics(String attributeKey) {
+		List<String> wordStrings = movies.stream()
+				.map(movie -> movie.getAttribute(attributeKey))
+				.filter(value -> value != null)
+				.collect(Collectors.toList());
+		if (wordStrings.size() == 0) {
+			return Optional.empty();
+		}
+		final WordStatistics wordStatistics = new WordStatistics();
+		wordStrings.forEach(wordStatistics::addWords);
+		return Optional.of(wordStatistics);
 	}
 }
