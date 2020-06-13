@@ -68,9 +68,9 @@ public class DataTransformerSelector {
 	}
 	
 	public Optional<DataTransformer<?>> getDataTransformer() {
-		LOGGER.info("Getting data transformer for attribute: " + attributeName);
+		LOGGER.debug("Getting data transformer for attribute: " + attributeName);
 		for (Map.Entry<DataTransformer<?>, Priority> entry : dataTransformerMap.entrySet()) {
-			LOGGER.info(entry.getKey().getName() + " transformer: parseCount=" + entry.getValue().parseCount + "; priority=" + entry.getValue().priority);
+			LOGGER.debug(entry.getKey().getName() + " transformer: parseCount=" + entry.getValue().parseCount + "; priority=" + entry.getValue().priority);
 		}
 		Optional<Map.Entry<DataTransformer<?>, Priority>> maxEntry = dataTransformerMap.entrySet().stream()
 			.max(Comparator.comparing(Map.Entry::getValue));

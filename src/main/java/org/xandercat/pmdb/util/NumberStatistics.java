@@ -142,12 +142,16 @@ public abstract class NumberStatistics<T extends Number> {
 
 	/**
 	 * Returns whether or not the provided value is an outlier on the high end from the list of numbers using the 1.5xIQR rule.
+	 * If the value is null, it is considered an outlier.
 	 * 
 	 * @param value value to test
 	 * 
 	 * @return whether or not value is an outlier on the high end as compared to the internal list of numbers.
 	 */
 	public boolean isHighOutlier(T value) {
+		if (value == null) {
+			return true;
+		}
 		double iqr = getInterquartileRange();
 		return (value.doubleValue() > (iqrQ3 + IQR_MULTIPLIER * iqr));
 	}
@@ -167,12 +171,16 @@ public abstract class NumberStatistics<T extends Number> {
 	
 	/**
 	 * Returns whether or not the provided value is an outlier on the low end from the list of numbers using the 1.5xIQR rule.
+	 * If the value is null, it is considered an outlier.
 	 * 
 	 * @param value value to test
 	 * 
 	 * @return whether or not value is an outlier on the low end as compared to the internal list of numbers.
 	 */
 	public boolean isLowOutlier(T value) {
+		if (value == null) {
+			return true;
+		}
 		double iqr = getInterquartileRange();
 		return (value.doubleValue() < (iqrQ1 - IQR_MULTIPLIER * iqr));
 	}
