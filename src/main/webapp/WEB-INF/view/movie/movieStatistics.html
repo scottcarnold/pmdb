@@ -54,8 +54,8 @@
 						<div class="col-xs-6"><p th:text="${#numbers.formatDecimal(voteStatistics.min, 1, 'COMMA', 0, 'POINT')}">960</p></div>
 					</div>
 					<div class="row">
-						<div class="col-xs-6"><p>Average</p></div>
-						<div class="col-xs-6"><p th:text="${#numbers.formatDecimal(voteStatistics.average, 1, 'COMMA', 0, 'POINT')}">12,500</p></div>
+						<div class="col-xs-6"><p>Median</p></div>
+						<div class="col-xs-6"><p th:text="${#numbers.formatDecimal(voteStatistics.median, 1, 'COMMA', 0, 'POINT')}">12,500</p></div>
 					</div>
 					<div class="row">
 						<div class="col-xs-6"><p>Maximum</p></div>

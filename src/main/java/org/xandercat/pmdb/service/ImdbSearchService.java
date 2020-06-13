@@ -15,8 +15,6 @@ import org.xandercat.pmdb.exception.WebServicesException;
  */
 public interface ImdbSearchService {
 
-	public static final String IMDB_ID_KEY = "Imdb Id";
-	
 	/**
 	 * Search the IMDB for movies given the provided search request.
 	 * 

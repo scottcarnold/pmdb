@@ -1,43 +1,21 @@
 package org.xandercat.pmdb.util.format;
 
-import java.text.Format;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Pattern;
+/**
+ * Interface for data parsers intended for converting attribute values to native
+ * types to be further formatted within the view.
+ * 
+ * @author Scott Arnold
+ *
+ * @param <T>
+ */
+public interface DataParser<T> {
 
-import org.thymeleaf.util.StringUtils;
-
-public class DataParser<T> {
-
-	private class PatternFormat {
-		private Pattern pattern;
-		private Format format;
-		public PatternFormat(String regexPattern, Format format) {
-			if (regexPattern != null) {
-				this.pattern = Pattern.compile(regexPattern);
-			}
-			this.format = format;
-		}
-	}
-	private List<PatternFormat> patternFormats = new ArrayList<PatternFormat>();
-	
-	public void addPattern(String regexPattern, Format parser) {
-		patternFormats.add(new PatternFormat(regexPattern, parser));
-	}
-
-	public T parse(String s) {
-		if (StringUtils.isEmptyOrWhitespace(s)) {
-			return null;
-		}
-		for (PatternFormat patternFormat : patternFormats) {
-			if (patternFormat.pattern == null || patternFormat.pattern.matcher(s).matches()) {
-				try {
-					return (T) patternFormat.format.parseObject(s);
-				} catch (ParseException e) {
-				}
-			}
-		}
-		return null;
-	}
+	/**
+	 * Return native value for the given string, or null if value cannot be parsed.
+	 * 
+	 * @param s value to be parsed
+	 * 
+	 * @return native value for the String value
+	 */
+	public T parse(String s);
 }

@@ -1,5 +1,7 @@
 package org.xandercat.pmdb.util.format;
 
+import org.springframework.util.StringUtils;
+
 /**
  * Utility class for formatting values and checking value formats.
  * 
@@ -10,6 +12,29 @@ public class FormatUtil {
 	public static final String ALPHA_NUMERIC_PATTERN = "^[a-zA-Z0-9 ]*$";
 	public static final String USERNAME_PATTERN = "^[a-zA-Z0-9@_\\.\\-]*$";
 	
+	/**
+	 * Returns whether or not the given string value is blank, meaning null, being of 0 length, or 
+	 * consisting only of white space.
+	 * 
+	 * @param s  string to test
+	 * 
+	 * @return whether or not string is blank
+	 */
+	public static boolean isBlank(String s) {
+		return !StringUtils.hasText(s);
+	}
+	
+	/**
+	 * Returns whether or not the given string value is NOT blank, meaning it has greater than 0 length
+	 * and contains at least 1 non-white-space character.
+	 * 
+	 * @param s  string to test
+	 * 
+	 * @return whether or not string is NOT blank
+	 */
+	public static boolean isNotBlank(String s) {
+		return StringUtils.hasText(s);
+	}
 	/**
 	 * Returns whether or not a string consists only of alphanumeric letters and spaces.
 	 * 

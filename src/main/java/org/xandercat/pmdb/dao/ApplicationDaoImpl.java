@@ -6,9 +6,9 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.ApplicationAttribute;
 import org.xandercat.pmdb.util.DBUtil;
+import org.xandercat.pmdb.util.format.FormatUtil;
 
 @Component
 public class ApplicationDaoImpl implements ApplicationDao {
@@ -48,7 +48,7 @@ public class ApplicationDaoImpl implements ApplicationDao {
 			applicationAttribute.setDate(date);
 			applicationAttribute.setValue(rs.getString(1));
 		});
-		return StringUtils.isEmptyOrWhitespace(applicationAttribute.getName())? Optional.empty() : Optional.of(applicationAttribute);
+		return FormatUtil.isBlank(applicationAttribute.getName())? Optional.empty() : Optional.of(applicationAttribute);
 	}
 
 }

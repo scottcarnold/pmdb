@@ -207,12 +207,12 @@ public class MovieServiceImpl implements MovieService {
 		assertCloudReady(defaultMovieCollection.get());
 		if (defaultMovieCollection.get().isCloud()) {
 			try {
-				return dynamoMovieRepository.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
+				return dynamoMovieRepository.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbAttribute.IMDB_ID.getKey());
 			} catch (Exception e) {
 				throw new WebServicesException(e);
 			}
 		} else {
-			return movieDao.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
+			return movieDao.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbAttribute.IMDB_ID.getKey());
 		}		
 	}
 
@@ -225,12 +225,12 @@ public class MovieServiceImpl implements MovieService {
 		assertCloudReady(defaultMovieCollection.get());
 		if (defaultMovieCollection.get().isCloud()) {
 			try {
-				return dynamoMovieRepository.getMoviesWithoutAttribute(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
+				return dynamoMovieRepository.getMoviesWithoutAttribute(defaultMovieCollection.get().getId(), ImdbAttribute.IMDB_ID.getKey());
 			} catch (Exception e) {
 				throw new WebServicesException(e);
 			}
 		} else {
-			return movieDao.getMoviesWithoutAttribute(defaultMovieCollection.get().getId(), ImdbSearchService.IMDB_ID_KEY);
+			return movieDao.getMoviesWithoutAttribute(defaultMovieCollection.get().getId(), ImdbAttribute.IMDB_ID.getKey());
 		}
 	}
 }

@@ -1,5 +1,7 @@
 package org.xandercat.pmdb.service;
 
+import java.util.Arrays;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
@@ -10,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.imdb.MovieDetailsRequest;
 import org.xandercat.pmdb.dto.imdb.MovieDetails;
@@ -20,6 +21,7 @@ import org.xandercat.pmdb.dto.imdb.SearchRequest;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
 import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.exception.WebServicesException;
+import org.xandercat.pmdb.util.format.FormatUtil;
 import org.xandercat.pmdb.ws.ClientQueryParamMarshaller;
 
 @Component
@@ -72,7 +74,7 @@ public class ImdbRestService implements ImdbSearchService {
 		} else {
 			applicationService.incrementImdbServiceCallCount();
 		}
-		if (StringUtils.isEmptyOrWhitespace(request.getTitle())) {
+		if (FormatUtil.isBlank(request.getTitle())) {
 			throw new IllegalArgumentException("Title is required.");
 		}
 		request.setResponseType(ResponseType.XML);
@@ -102,62 +104,45 @@ public class ImdbRestService implements ImdbSearchService {
 		return movieDetailsWrapper.getMovieDetails();
 	}
 
-	private void setAttribute(Movie movie, String name, String value) {
-		if (!StringUtils.isEmptyOrWhitespace(value)) {
+	private void setAttribute(Movie movie, ImdbAttribute imdbAttribute, String value) {
+		if (FormatUtil.isNotBlank(value)) {
 			if (value.length() > MAX_ATTRIBUTE_VALUE_LENGTH) {
 				value = value.substring(0, MAX_ATTRIBUTE_VALUE_LENGTH);
 			}
-			movie.addAttribute(name, value);
+			movie.addAttribute(imdbAttribute.getKey(), value);
 		}
 	}
 	
 	@Override
 	public void addImdbAttributes(Movie movie, MovieDetails movieDetails) {
-		if (StringUtils.isEmptyOrWhitespace(movie.getTitle())) {
+		if (FormatUtil.isBlank(movie.getTitle())) {
 			// only add title if it doesn't already have one; this allows custom names for pre-existing movies
 			movie.setTitle(movieDetails.getTitle());
 		}
-		setAttribute(movie, "year", movieDetails.getYear());
-		setAttribute(movie, "genre", movieDetails.getGenre());
-		setAttribute(movie, "rated", movieDetails.getRated());
-		setAttribute(movie, "plot", movieDetails.getPlot());
-		setAttribute(movie, "actors", movieDetails.getActors());
-		setAttribute(movie, "director", movieDetails.getDirector());
-		setAttribute(movie, "awards", movieDetails.getAwards());
-		setAttribute(movie, ImdbSearchService.IMDB_ID_KEY, movieDetails.getImdbId());
-		if (!StringUtils.isEmptyOrWhitespace(movieDetails.getImdbId())) {
-			setAttribute(movie, "imdb url", IMDB_URL_BASE + movieDetails.getImdbId());
+		setAttribute(movie, ImdbAttribute.YEAR, movieDetails.getYear());
+		setAttribute(movie, ImdbAttribute.GENRE, movieDetails.getGenre());
+		setAttribute(movie, ImdbAttribute.RATED, movieDetails.getRated());
+		setAttribute(movie, ImdbAttribute.PLOT, movieDetails.getPlot());
+		setAttribute(movie, ImdbAttribute.ACTORS, movieDetails.getActors());
+		setAttribute(movie, ImdbAttribute.DIRECTOR, movieDetails.getDirector());
+		setAttribute(movie, ImdbAttribute.AWARDS, movieDetails.getAwards());
+		setAttribute(movie, ImdbAttribute.IMDB_ID, movieDetails.getImdbId());
+		if (FormatUtil.isNotBlank(movieDetails.getImdbId())) {
+			setAttribute(movie, ImdbAttribute.IMDB_URL, IMDB_URL_BASE + movieDetails.getImdbId());
 		}
-		setAttribute(movie, "imdb rating", movieDetails.getImdbRating());
-		setAttribute(movie, "imdb votes", movieDetails.getImdbVotes());
-		setAttribute(movie, "language", movieDetails.getLanguage());
-		setAttribute(movie, "metascore", movieDetails.getMetascore());		
-		setAttribute(movie, "poster", movieDetails.getPoster());		
-		setAttribute(movie, "released", movieDetails.getReleased());
-		setAttribute(movie, "runtime", movieDetails.getRuntime());
-		setAttribute(movie, "type", movieDetails.getType());
-		setAttribute(movie, "country", movieDetails.getCountry());
+		setAttribute(movie, ImdbAttribute.IMDB_RATING, movieDetails.getImdbRating());
+		setAttribute(movie, ImdbAttribute.IMDB_VOTES, movieDetails.getImdbVotes());
+		setAttribute(movie, ImdbAttribute.LANGUAGE, movieDetails.getLanguage());
+		setAttribute(movie, ImdbAttribute.METASCORE, movieDetails.getMetascore());		
+		setAttribute(movie, ImdbAttribute.POSTER, movieDetails.getPoster());		
+		setAttribute(movie, ImdbAttribute.RELEASED, movieDetails.getReleased());
+		setAttribute(movie, ImdbAttribute.RUNTIME, movieDetails.getRuntime());
+		setAttribute(movie, ImdbAttribute.TYPE, movieDetails.getType());
+		setAttribute(movie, ImdbAttribute.COUNTRY, movieDetails.getCountry());
 	}
 
 	@Override
 	public void removeImdbAttributes(Movie movie) {
-		movie.removeAttribute("year");
-		movie.removeAttribute("genre");
-		movie.removeAttribute("rated");
-		movie.removeAttribute("plot");
-		movie.removeAttribute("actors");
-		movie.removeAttribute("director");
-		movie.removeAttribute("awards");
-		movie.removeAttribute(ImdbSearchService.IMDB_ID_KEY);
-		movie.removeAttribute("imdb url");
-		movie.removeAttribute("imdb rating");
-		movie.removeAttribute("imdb votes");
-		movie.removeAttribute("language");
-		movie.removeAttribute("metascore");		
-		movie.removeAttribute("poster");		
-		movie.removeAttribute("released");
-		movie.removeAttribute("runtime");
-		movie.removeAttribute("type");
-		movie.removeAttribute("country");	
+		Arrays.stream(ImdbAttribute.values()).forEach(imdbAttribute -> movie.removeAttribute(imdbAttribute.getKey()));	
 	}
 }

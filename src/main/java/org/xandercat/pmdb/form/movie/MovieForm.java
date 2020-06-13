@@ -11,7 +11,6 @@ import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.util.ReflectionUtils;
 import org.springframework.validation.annotation.Validated;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
@@ -211,7 +210,7 @@ public class MovieForm {
 		for (int i=0; i<30; i++) {
 			String key = getAttrKey(i);
 			String value = getAttrValue(i);
-			if (!StringUtils.isEmptyOrWhitespace(key) && !StringUtils.isEmptyOrWhitespace(value)) {
+			if (FormatUtil.isNotBlank(key) && FormatUtil.isNotBlank(value)) {
 				movie.addAttribute(key, value); 
 			}
 		}
@@ -765,6 +764,6 @@ public class MovieForm {
 	}
 	
 	public boolean isAttrPairEmpty(int index) {
-		return StringUtils.isEmptyOrWhitespace(getAttrKey(index)) && StringUtils.isEmptyOrWhitespace(getAttrValue(index));
+		return FormatUtil.isBlank(getAttrKey(index)) && FormatUtil.isBlank(getAttrValue(index));
 	}
 }

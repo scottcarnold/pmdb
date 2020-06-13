@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.util.MovieTitleComparator;
 import org.xandercat.pmdb.util.format.FormatUtil;
@@ -318,7 +317,7 @@ public class MovieDaoImpl implements MovieDao {
 	@Override
 	public List<Movie> getMoviesWithoutAttribute(String collectionId, String attributeKey) {
 		return getMoviesForCollection(collectionId).stream()
-				.filter(movie -> StringUtils.isEmptyOrWhitespace(movie.getAttribute(attributeKey)))
+				.filter(movie -> FormatUtil.isBlank(movie.getAttribute(attributeKey)))
 				.sorted(new MovieTitleComparator())
 				.collect(Collectors.toList());
 	}

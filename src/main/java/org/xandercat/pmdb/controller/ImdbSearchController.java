@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.imdb.MovieDetailsRequest;
@@ -39,6 +38,7 @@ import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
 import org.xandercat.pmdb.util.ajax.JsonResponse;
+import org.xandercat.pmdb.util.format.FormatUtil;
 
 /**
  * Controller for functions involving IMDB search.  This includes IMDB browsing, adding new
@@ -144,7 +144,7 @@ public class ImdbSearchController {
 		try {
 			Optional<Movie> movie = movieService.getMovie(searchForm.getLinkMovieId(), principal.getName());
 			collectionService.assertCollectionEditable(movie.get().getCollectionId(), principal.getName());
-			if (!StringUtils.isEmptyOrWhitespace(searchForm.getLinkImdbId())) {
+			if (FormatUtil.isNotBlank(searchForm.getLinkImdbId())) {
 				// link movie and return to movie list or go to next unlinked movie
 				return Optional.of(handleLinkImdb(model, principal, searchForm, result, session, movie.get()));
 			}
@@ -211,7 +211,7 @@ public class ImdbSearchController {
 		}
 		
 		// handle mode where user is linking movies in their collection to IMDB
-		if (!StringUtils.isEmptyOrWhitespace(searchForm.getLinkMovieId())) {
+		if (FormatUtil.isNotBlank(searchForm.getLinkMovieId())) {
 			Optional<String> returnView = handleLinkMovie(model, principal, searchForm, result, session);
 			if (returnView.isPresent()) {
 				return returnView.get();
@@ -220,7 +220,7 @@ public class ImdbSearchController {
 		
 		// execute search
 		String title = searchForm.getTitle();
-		String year = (StringUtils.isEmptyOrWhitespace(searchForm.getYear()))? null : searchForm.getYear().trim();
+		String year = (FormatUtil.isBlank(searchForm.getYear()))? null : searchForm.getYear().trim();
 		SearchResult searchResult = null;
 		try {
 			Integer previousHash = (Integer) session.getAttribute(SESSION_KEY_LAST_SEARCH);
@@ -246,7 +246,7 @@ public class ImdbSearchController {
 			return "imdbsearch/imdbSearch";
 		}
 		List<Result> searchResults = searchResult.getResults();
-		if (StringUtils.isEmptyOrWhitespace(searchResult.getTotalResults())) {
+		if (FormatUtil.isBlank(searchResult.getTotalResults())) {
 			model.addAttribute("totalResults", Integer.valueOf(0));
 		} else {
 			model.addAttribute("totalResults", Integer.valueOf(searchResult.getTotalResults()));

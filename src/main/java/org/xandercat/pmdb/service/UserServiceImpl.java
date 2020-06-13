@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.config.PmdbGrantedAuthority;
 import org.xandercat.pmdb.dao.AuthDao;
 import org.xandercat.pmdb.dao.UserDao;
@@ -89,11 +88,11 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public void saveUser(PmdbUser user, String newPassword, boolean newUser) {
-		if (StringUtils.isEmptyOrWhitespace(user.getUsername())) {
+		if (FormatUtil.isBlank(user.getUsername())) {
 			throw new IllegalArgumentException("No username provided.");
 		}
 		String username = user.getUsername().trim();
-		newPassword = StringUtils.isEmptyOrWhitespace(newPassword)? null : newPassword.trim();
+		newPassword = FormatUtil.isBlank(newPassword)? null : newPassword.trim();
 		if (newUser) {
 			if (getUser(username).isPresent()) {
 				throw new IllegalArgumentException("User " + username + " already exists.");
@@ -118,7 +117,7 @@ public class UserServiceImpl implements UserService {
 			}
 		} else {
 			userDao.saveUser(user);
-			if (!StringUtils.isEmptyOrWhitespace(newPassword)) {
+			if (FormatUtil.isNotBlank(newPassword)) {
 				String encryptedPassword = userDao.changePassword(username, newPassword);
 				if (applicationProperties.isAwsEnabled()) {
 					PmdbUserCredentials credentials = new PmdbUserCredentials(username, encryptedPassword.getBytes());
@@ -144,7 +143,7 @@ public class UserServiceImpl implements UserService {
 			// defensive double check on username, though validation should have already caught this
 			throw new IllegalArgumentException("Invalid username: \"" + user.getUsername() + "\"");
 		}
-		if (StringUtils.isEmptyOrWhitespace(newPassword)) {
+		if (FormatUtil.isBlank(newPassword)) {
 			// defensive double check on password, though validation should have already caught this
 			throw new IllegalArgumentException("Password cannot be empty.");
 		}

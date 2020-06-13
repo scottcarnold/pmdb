@@ -15,7 +15,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.ServiceLimitExceededException;
 import org.xandercat.pmdb.form.useradmin.UserForm;
@@ -119,7 +118,7 @@ public class AuthenticationController {
 			@ModelAttribute("userForm") @Valid UserForm userForm,
 			BindingResult result) {
 		// password annotation ignores blank passwords, so need to check for that here
-		if (StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())) {
+		if (FormatUtil.isBlank(userForm.getPasswordPair().getFirst())) {
 			result.rejectValue("passwordPair", "{userform.password.required}", "Password cannot be blank.");
 		}
 		if (FormatUtil.isValidUsername(userForm.getUsername()) && userService.getUser(userForm.getUsername()).isPresent()) {

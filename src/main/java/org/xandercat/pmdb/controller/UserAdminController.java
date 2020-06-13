@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.CloudUserSearchResults;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.exception.WebServicesException;
@@ -25,6 +24,7 @@ import org.xandercat.pmdb.service.UserService;
 import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ApplicationProperties;
 import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.format.FormatUtil;
 
 /**
  * Controller for administrators to perform user management functions.
@@ -132,7 +132,7 @@ public class UserAdminController {
 	public String addNewUserSubmit(Model model,
 			@ModelAttribute("userForm") @Valid UserForm userForm,
 			BindingResult result) {
-		String newPassword = StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
+		String newPassword = FormatUtil.isBlank(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
 		if (newPassword == null) {
 			// special case; new user must be setting a new password, so blank value is not acceptable
 			result.rejectValue("password", "{userform.password.required}", "A password must be provided for new users.");
@@ -166,7 +166,7 @@ public class UserAdminController {
 		if (result.hasErrors()) {
 			return "useradmin/edituser";
 		}
-		String newPassword = StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
+		String newPassword = FormatUtil.isBlank(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
 		try {
 			userService.saveUser(userForm.toUser(), newPassword, false);
 			Alerts.setMessage(model, "User " + userForm.getUsername() + " saved.");

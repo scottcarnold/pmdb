@@ -17,7 +17,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.util.format.FormatUtil;
@@ -217,7 +216,7 @@ public class ExcelPorter {
 					int startIdx = c;
 					int titleIdx = 0;
 					List<String> headers = new ArrayList<String>();
-					while (cell != null && !StringUtils.isEmptyOrWhitespace(DATA_FORMATTER.formatCellValue(cell))) {
+					while (cell != null && FormatUtil.isNotBlank(DATA_FORMATTER.formatCellValue(cell))) {
 						String heading = FormatUtil.titleCase(FormatUtil.formatAlphaNumeric(DATA_FORMATTER.formatCellValue(cell).trim()));
 						String origHeading = heading;
 						int dupIdx = 2;
@@ -269,7 +268,7 @@ public class ExcelPorter {
 					if (idx >= 0) {
 						cell = row.getCell(idx);
 					}
-					if (cell != null && !StringUtils.isEmptyOrWhitespace(DATA_FORMATTER.formatCellValue(cell))) {
+					if (cell != null && FormatUtil.isNotBlank(DATA_FORMATTER.formatCellValue(cell))) {
 						String value = DATA_FORMATTER.formatCellValue(cell).trim();
 						if (idx != headerRow.titleIdx) {
 							movie.addAttribute(includedColumn, value);
@@ -277,11 +276,11 @@ public class ExcelPorter {
 					}
 				}
 				Cell cell = row.getCell(headerRow.titleIdx);
-				if (cell != null && !StringUtils.isEmptyOrWhitespace(DATA_FORMATTER.formatCellValue(cell))) {
+				if (cell != null && FormatUtil.isNotBlank(DATA_FORMATTER.formatCellValue(cell))) {
 					movie.setTitle(DATA_FORMATTER.formatCellValue(cell).trim());
 				}
 			}
-			if (StringUtils.isEmptyOrWhitespace(movie.getTitle())) {
+			if (FormatUtil.isBlank(movie.getTitle())) {
 				return movies;
 			} else {
 				movies.add(movie);

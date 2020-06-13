@@ -13,9 +13,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.util.DBUtil;
+import org.xandercat.pmdb.util.format.FormatUtil;
 
 @Component
 public class UserDaoImpl implements UserDao {
@@ -42,10 +42,10 @@ public class UserDaoImpl implements UserDao {
 	
 	private void addUser(PmdbUser user, String unencryptedPassword, boolean readd) {
 		LOGGER.debug("Request to add user: " + user.getUsername());
-		if (StringUtils.isEmptyOrWhitespace(user.getUsername())) {
+		if (FormatUtil.isBlank(user.getUsername())) {
 			throw new IllegalArgumentException("Username cannot be empty.");
 		}
-		if (!readd && StringUtils.isEmptyOrWhitespace(unencryptedPassword)) {
+		if (!readd && FormatUtil.isBlank(unencryptedPassword)) {
 			throw new IllegalArgumentException("Password cannot be empty.");
 		}
 		String encryptedPassword = readd? user.getPassword() : passwordEncoder.encode(unencryptedPassword);

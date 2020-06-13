@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.MovieStatistics;
@@ -31,12 +30,13 @@ import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.form.movie.MovieForm;
 import org.xandercat.pmdb.form.movie.SearchForm;
 import org.xandercat.pmdb.service.CollectionService;
-import org.xandercat.pmdb.service.ImdbSearchService;
+import org.xandercat.pmdb.service.ImdbAttribute;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.DoubleStatistics;
 import org.xandercat.pmdb.util.LongStatistics;
 import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.format.FormatUtil;
 import org.xandercat.pmdb.util.format.Transformers;
 
 /**
@@ -120,9 +120,9 @@ public class HomeController {
 			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.get().getId(), principal.getName());
 			model.addAttribute("totalMoviesInCollection", movies.size());
 			model.addAttribute("unlinkCount", movies.stream()
-					.filter(movie -> StringUtils.isEmptyOrWhitespace(movie.getAttribute(ImdbSearchService.IMDB_ID_KEY)))
+					.filter(movie -> FormatUtil.isBlank(movie.getAttribute(ImdbAttribute.IMDB_ID.getKey())))
 					.count());
-			if (!StringUtils.isEmptyOrWhitespace(searchString)) {
+			if (FormatUtil.isNotBlank(searchString)) {
 				movies = movieService.searchMoviesForCollection(defaultMovieCollection.get().getId(), searchString, principal.getName());
 			}
 			List<String> attrColumns = movieService.getTableColumnPreferences(principal.getName());
@@ -169,8 +169,8 @@ public class HomeController {
 			model.addAttribute("defaultMovieCollection", defaultMovieCollection.get());
 			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.get().getId(), principal.getName());
 			MovieStatistics movieStatistics = new MovieStatistics(movies);
-			Optional<DoubleStatistics> ratingStatistics = movieStatistics.getDoubleStatistics("Imdb Rating");
-			Optional<LongStatistics> voteStatistics = movieStatistics.getLenientLongStatistics("Imdb Votes");
+			Optional<DoubleStatistics> ratingStatistics = movieStatistics.getDoubleStatistics(ImdbAttribute.IMDB_RATING.getKey());
+			Optional<LongStatistics> voteStatistics = movieStatistics.getLenientLongStatistics(ImdbAttribute.IMDB_VOTES.getKey());
 			if (ratingStatistics.isPresent()) {
 				model.addAttribute("ratingStatistics", ratingStatistics.get());
 			}

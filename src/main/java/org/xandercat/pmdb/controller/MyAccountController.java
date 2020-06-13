@@ -12,12 +12,12 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.thymeleaf.util.StringUtils;
 import org.xandercat.pmdb.dto.PmdbUser;
 import org.xandercat.pmdb.form.useradmin.UserForm;
 import org.xandercat.pmdb.service.UserService;
 import org.xandercat.pmdb.util.Alerts;
 import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.format.FormatUtil;
 
 /**
  * Controller for user updating their own account.
@@ -72,7 +72,7 @@ public class MyAccountController {
 			return "myaccount/edituser";
 		}
 		try {
-			String newPassword = StringUtils.isEmptyOrWhitespace(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
+			String newPassword = FormatUtil.isBlank(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();
 			userService.saveMyAccountUser(userForm.toUser(), newPassword, principal.getName());
 			Alerts.setMessage(model, "Account information saved.");
 		} catch (Exception e) {
