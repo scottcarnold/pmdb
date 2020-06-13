@@ -35,28 +35,37 @@ public class MovieDaoImpl implements MovieDao {
 	}
 
 	@Override
+	@Transactional
 	public Set<Movie> getMoviesForCollection(String collectionId) {
-		final String sql = "SELECT id, title FROM movie WHERE collection_id = ? ORDER BY title";
-		final Set<Movie> movies = new HashSet<Movie>();
+		final String sql = "SELECT movie.id, movie.title, attribute_name, attribute_value FROM movie "
+				+ " LEFT JOIN movie_attributes on movie.id = movie_attributes.movie_id"
+				+ " WHERE movie.collection_id = ? ORDER BY movie.id";
+		final Map<String, Movie> movies = new HashMap<String, Movie>();
 		jdbcTemplate.query(sql, ps -> ps.setString(1, collectionId), rs -> {
-			Movie movie = new Movie();
-			movie.setId(rs.getString(1));
-			movie.setTitle(rs.getString(2));
-			movies.add(movie);			
+			Movie movie = movies.get(rs.getString(1));
+			if (movie == null) {
+				movie = new Movie();
+				movie.setId(rs.getString(1));
+				movie.setTitle(rs.getString(2));
+				movies.put(movie.getId(), movie);
+			}
+			if (FormatUtil.isNotBlank(rs.getString(3))) { // for movies with 0 attributes found on left join
+				movie.addAttribute(rs.getString(3), rs.getString(4));
+			}
 		});
-		movies.forEach(movie -> movie.setAttributes(getMovieAttributes(movie)));
-		return movies;
-	}
-
+		return movies.values().stream().collect(Collectors.toSet());
+	}	
+	
 	@Override
+	@Transactional
 	public Set<Movie> searchMoviesForCollection(String collectionId, String searchString) {
 		final String lcSearchString = searchString.trim().toLowerCase();
-		final String sql = "SELECT id, title FROM movie "
+		final String sql = "SELECT movie.id, movie.title, movie.collection_id FROM movie "
 				+ " LEFT JOIN movie_attributes ON movie.id = movie_attributes.movie_id"
 				+ " WHERE collection_id = ? "
 				+ " AND (LOWER(title) like ?"
 				+ " OR LOWER(attribute_value) like ?)"
-				+ " ORDER BY title";
+				+ " ORDER BY movie.id";
 		final Set<Movie> movies = new HashSet<Movie>();
 		jdbcTemplate.query(sql, ps -> {
 			ps.setString(1, collectionId);
@@ -66,9 +75,10 @@ public class MovieDaoImpl implements MovieDao {
 			Movie movie = new Movie();
 			movie.setId(rs.getString(1));
 			movie.setTitle(rs.getString(2));
+			movie.setCollectionId(rs.getString(3));
+			movie.setAttributes(getMovieAttributes(movie.getId()));
 			movies.add(movie);
 		});
-		movies.forEach(movie -> movie.setAttributes(getMovieAttributes(movie.getId())));
 		return movies;
 	}
 
@@ -147,10 +157,6 @@ public class MovieDaoImpl implements MovieDao {
 		// note: relying on cascade delete for movie attributes
 		final String sql = "DELETE FROM movie WHERE id = ?";
 		jdbcTemplate.update(sql, ps -> ps.setString(1, id));
-	}
-	
-	private Map<String, String> getMovieAttributes(Movie movie) {
-		return getMovieAttributes(movie.getId());
 	}
 	
 	private Map<String, String> getMovieAttributes(String id) {
