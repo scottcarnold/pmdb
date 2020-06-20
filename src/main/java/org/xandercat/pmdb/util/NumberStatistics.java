@@ -187,8 +187,9 @@ public abstract class NumberStatistics<T extends Number> {
 	
 	private void calculateStandardDeviation() {
 		double intermediateSum = 0;
+		double average = getAverage();
 		for (Number value : values) {
-			intermediateSum += Math.pow(value.doubleValue() - getAverage(), 2);
+			intermediateSum += Math.pow(value.doubleValue() - average, 2);
 		}
 		this.standardDeviation = Math.sqrt(intermediateSum / (double) values.size());
 	}

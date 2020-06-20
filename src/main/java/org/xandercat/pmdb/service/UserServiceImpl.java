@@ -103,6 +103,9 @@ public class UserServiceImpl implements UserService {
 					throw new IllegalArgumentException("Username already exists in the cloud; user must be synced or removed from cloud to add again.");
 				}
 			}
+			if (newPassword == null) {
+				throw new IllegalArgumentException("New users must have password specified.");
+			}
 		} else {
 			if (!getUser(username).isPresent()) {
 				throw new IllegalArgumentException("User " + username + " not found.");
@@ -197,7 +200,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public void syncUserFromCloud(String username) throws WebServicesException {
-		if (userDao.getUser(username) != null) {
+		if (userDao.getUser(username).isPresent()) {
 			throw new IllegalArgumentException("User named " + username + " already exists in the system.");
 		}
 		if (applicationProperties.isAwsEnabled()) {

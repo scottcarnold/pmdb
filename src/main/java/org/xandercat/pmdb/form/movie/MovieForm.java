@@ -206,6 +206,8 @@ public class MovieForm {
 
 	public Movie toMovie() {
 		Movie movie = new Movie();
+		movie.setId(id);
+		movie.setCollectionId(collectionId);
 		movie.setTitle(title);
 		for (int i=0; i<30; i++) {
 			String key = getAttrKey(i);
