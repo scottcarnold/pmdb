@@ -244,8 +244,6 @@ public class ExcelPorter {
 	 * Extract movies from the given sheet, setting attributes for the given columns. Movie title will always be
 	 * pulled regardless of whether or not it is in the included columns list.
 	 * 
-	 * This method will only return results if in import mode with a valid sheet name.
-	 * 
 	 * @param sheetName          sheet name
 	 * @param includedColumns    columns to include
 	 * @return movies for sheet
@@ -253,6 +251,9 @@ public class ExcelPorter {
 	public List<Movie> getMoviesForSheet(String sheetName, List<String> includedColumns) {
 		List<Movie> movies = new ArrayList<Movie>();
 		Sheet sheet = workbook.getSheet(sheetName);
+		if (headerRows == null) {
+			this.headerRows = scanForHeaderRows();
+		}
 		HeaderRow headerRow = headerRows.get(sheetName);
 		if (headerRow == null) {
 			return movies;

@@ -160,14 +160,15 @@ public class ViewUtil {
 		dataFormatters.setGenericFormatter(stringFormatter());
 		dataFormatters.addAttributeFormatter(ImdbAttribute.IMDB_VOTES.getKey(), longFormatter());
 		dataFormatters.addAttributeFormatter(ImdbAttribute.IMDB_RATING.getKey(), doubleFormatter(1));
-		dataFormatters.addAttributeFormatter(ImdbAttribute.RELEASED.getKey(), dateFormatter(
-				"dd MMM yyyy", "MM/dd/yyyy", "yyyy/MM/dd", "MM-dd-yyyy", "yyyy-MM-dd", "M/d/yyyyy"));
+		dataFormatters.addAttributeFormatter(ImdbAttribute.RELEASED.getKey(), dateFormatter("dd MMM yyyy"));
 		dataFormatters.addAttributeFormatter(ImdbAttribute.YEAR.getKey(), stringFormatter()); // will prevent long formatter from trying to long format the year
 		
 		// create general data formatters for remaining attributes
 		List<DataFormatter> generalDataFormatters = new ArrayList<DataFormatter>();
 		generalDataFormatters.add(longFormatter());
 		generalDataFormatters.add(doubleFormatter(3));
+		generalDataFormatters.add(dateFormatter(
+				"MM/dd/yyyy", "yyyy/MM/dd", "MM-dd-yyyy", "yyyy-MM-dd", "M/d/yyyyy", "dd MMM yyyy"));
 		
 		// use selectors to select data formatters for remaining attributes
 		Set<String> remainingAttributeNames = new HashSet<String>();

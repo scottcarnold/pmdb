@@ -3,8 +3,8 @@ package org.xandercat.pmdb.util.format;
 import java.text.ParseException;
 
 /**
- * Data formatter for String values.  This formatter acts as a placeholder
- * that does not modify the values for display or sort.
+ * Data formatter for String values.  This formatter leaves display of
+ * String as is but uses lower case of string for sorting.
  * 
  * @author Scott Arnold
  */
@@ -22,6 +22,6 @@ public class StringFormatter extends AbstractDataFormatter<String> {
 
 	@Override
 	protected String getSortValue(String value) {
-		return value;
+		return value.toLowerCase();
 	}
 }

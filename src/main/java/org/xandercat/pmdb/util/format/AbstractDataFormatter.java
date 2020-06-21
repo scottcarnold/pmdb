@@ -15,10 +15,37 @@ public abstract class AbstractDataFormatter<T> implements DataFormatter {
 	private String defaultSortValue;
 	private boolean displayFormattedValue = true;
 
+	/**
+	 * Parse the provided string value to the native data type.  If the value
+	 * cannot be parsed, a ParseException should be thrown.  This method does
+	 * not need to concern itself with blank values; it will only be called
+	 * for non-blank values.
+	 * 
+	 * @param value value to parse
+	 * 
+	 * @return parsed value
+	 * @throws ParseException if value cannot be parsed
+	 */
 	protected abstract T parse(String value) throws ParseException;
 	
+	/**
+	 * Returns value suitable for display to a user.  This method does not
+	 * need to concern itself with blank values; it will only be called for 
+	 * non-blank values.
+	 * 
+	 * @param value value in native type
+	 * 
+	 * @return value formatted for display to user
+	 */
 	protected abstract String getDisplayValue(T value);
 	
+	/**
+	 * Returns value suitable for natural String sorting.
+	 * 
+	 * @param value value in native type
+	 * 
+	 * @return value formatted for string sorting
+	 */
 	protected abstract String getSortValue(T value);
 	
 	@Override
