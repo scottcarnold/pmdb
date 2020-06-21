@@ -161,4 +161,5 @@ public interface MovieService {
 	 * @throws WebServicesException if a web service failure occurs
 	 */
 	public Set<String> getImdbIdsInDefaultCollection(String callingUsername) throws WebServicesException;
+	
 }

@@ -1,10 +1,15 @@
 package org.xandercat.pmdb.util;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpSession;
@@ -13,8 +18,18 @@ import org.springframework.data.util.ReflectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.MapBindingResult;
 import org.springframework.web.multipart.MultipartFile;
+import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.form.Option;
 import org.xandercat.pmdb.service.CollectionService;
+import org.xandercat.pmdb.service.ImdbAttribute;
+import org.xandercat.pmdb.util.format.AbstractDataFormatter;
+import org.xandercat.pmdb.util.format.DataFormatter;
+import org.xandercat.pmdb.util.format.DataFormatterSelector;
+import org.xandercat.pmdb.util.format.DataFormatters;
+import org.xandercat.pmdb.util.format.DateFormatter;
+import org.xandercat.pmdb.util.format.DoubleFormatter;
+import org.xandercat.pmdb.util.format.LongFormatter;
+import org.xandercat.pmdb.util.format.StringFormatter;
 
 public class ViewUtil {
 
@@ -121,7 +136,74 @@ public class ViewUtil {
 		return strings.stream().map(ViewUtil::getOption).collect(Collectors.toList());
 	}
 	
+	/**
+	 * Returns an empty binding result.
+	 * 
+	 * @param objectName object name
+	 * 
+	 * @return empty binding result
+	 */
 	public static BindingResult emptyBindingResult(String objectName) {
 		return new MapBindingResult(new HashMap<String, String>(), objectName);
+	}
+	
+	/**
+	 * Returns DataFormatters for the given collection of movies that is suitable for use with
+	 * Thymeleaf and Datatables.net sortable table.
+	 * 
+	 * @param movies  collection of movies
+	 * 
+	 * @return DataFormatters for collection of movies
+	 */
+	public static DataFormatters getDataFormatters(Collection<Movie> movies, Collection<String> attributeNames) {
+		DataFormatters dataFormatters = new DataFormatters();
+		dataFormatters.setGenericFormatter(stringFormatter());
+		dataFormatters.addAttributeFormatter(ImdbAttribute.IMDB_VOTES.getKey(), longFormatter());
+		dataFormatters.addAttributeFormatter(ImdbAttribute.IMDB_RATING.getKey(), doubleFormatter(1));
+		dataFormatters.addAttributeFormatter(ImdbAttribute.RELEASED.getKey(), dateFormatter(
+				"dd MMM yyyy", "MM/dd/yyyy", "yyyy/MM/dd", "MM-dd-yyyy", "yyyy-MM-dd", "M/d/yyyyy"));
+		dataFormatters.addAttributeFormatter(ImdbAttribute.YEAR.getKey(), stringFormatter()); // will prevent long formatter from trying to long format the year
+		
+		// create general data formatters for remaining attributes
+		List<DataFormatter> generalDataFormatters = new ArrayList<DataFormatter>();
+		generalDataFormatters.add(longFormatter());
+		generalDataFormatters.add(doubleFormatter(3));
+		
+		// use selectors to select data formatters for remaining attributes
+		Set<String> remainingAttributeNames = new HashSet<String>();
+		remainingAttributeNames.addAll(attributeNames);
+		remainingAttributeNames.removeAll(dataFormatters.getAttributeFormatters().keySet());
+		List<DataFormatterSelector> selectors = remainingAttributeNames.stream()
+				.map(attrName -> new DataFormatterSelector(attrName, generalDataFormatters))
+				.collect(Collectors.toList());
+		selectors.stream().forEach(selector -> {
+			movies.stream().forEach(movie -> selector.test(movie.getAttribute(selector.getAttributeName())));
+			Optional<DataFormatter> dataFormatter = selector.getDataFormatter();
+			if (dataFormatter.isPresent()) {
+				dataFormatters.addAttributeFormatter(selector.getAttributeName(), dataFormatter.get());
+			}
+		});
+		
+		return dataFormatters;
+	}
+	
+	private static AbstractDataFormatter<String> stringFormatter() {
+		// to ensure datatables works with Thymeleaf, need to have blank space for default sort value
+		return new StringFormatter()
+				.defaultDisplayValue("").defaultSortValue(" ");
+	}
+	
+	private static AbstractDataFormatter<Long> longFormatter() {
+		return new LongFormatter()
+				.defaultDisplayValue("").defaultSortValue("0");
+	}
+	
+	private static AbstractDataFormatter<Double> doubleFormatter(int maximumFractionDigits) {
+		return new DoubleFormatter(maximumFractionDigits)
+				.defaultDisplayValue("").defaultSortValue("0.0").displayFormattedValue(false);
+	}
+	
+	private static AbstractDataFormatter<Date> dateFormatter(String... parseFormats) {
+		return new DateFormatter().parseFormats(parseFormats).defaultDisplayValue("").defaultSortValue(" ");
 	}
 }

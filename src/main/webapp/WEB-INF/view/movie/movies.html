@@ -37,8 +37,7 @@
 					<tbody>
 					<tr th:each="movie : ${movies}">
 						<td th:attr="data-order=${movie.title}"><a href="#" th:href="@{/movies/movieDetails(movieId=${movie.id})}" class="movieTitleLink"><span th:text="${movie.title}">Movie Title</span></a><a href="#" th:href="@{/imdbsearch/link(movieId=${movie.id},linkAll=false)}" th:if="${defaultMovieCollection.editable} and ${#strings.isEmpty(movie.getAttribute('Imdb Id'))}"><span style="padding-left: 10px" class="glyphicon glyphicon-link" aria-hidden="true"></span></a></td>
-						<!--/* System wide, attribute names are not allowed to have special characters, so it's safe to preprocess the column names */-->
-						<td th:each="columnName : ${attrColumns}" th:text="${movie.getAttributeDisplayValue('__${columnName}__')}" th:attr="data-order=${movie.getAttributeSortValue('__${columnName}__')}"></td>
+						<td th:each="columnName : ${attrColumns}" th:text="${attrFormatters.displayValue(movie, columnName)}" th:attr="data-order=${attrFormatters.sortValue(movie, columnName)}"></td>
 					</tr>
 					</tbody>
 				</table>

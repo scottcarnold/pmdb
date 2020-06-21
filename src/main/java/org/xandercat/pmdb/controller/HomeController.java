@@ -12,7 +12,6 @@ import javax.validation.Valid;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,7 +25,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
 import org.xandercat.pmdb.dto.MovieStatistics;
-import org.xandercat.pmdb.dto.FormattedMovie;
 import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.form.movie.MovieForm;
@@ -40,7 +38,6 @@ import org.xandercat.pmdb.util.LongStatistics;
 import org.xandercat.pmdb.util.ViewUtil;
 import org.xandercat.pmdb.util.WordStatistics;
 import org.xandercat.pmdb.util.format.FormatUtil;
-import org.xandercat.pmdb.util.format.Transformers;
 
 /**
  * Controller for movie functions on the user's active movie collection.  Primarily includes
@@ -129,8 +126,8 @@ public class HomeController {
 				movies = movieService.searchMoviesForCollection(defaultMovieCollection.get().getId(), searchString, principal.getName());
 			}
 			List<String> attrColumns = movieService.getTableColumnPreferences(principal.getName());
-			Set<FormattedMovie> formattedMovies = Transformers.getFormattedMovies(movies, attrColumns);
-			model.addAttribute("movies", formattedMovies); 
+			model.addAttribute("movies", movies);
+			model.addAttribute("attrFormatters", ViewUtil.getDataFormatters(movies, attrColumns));
 			model.addAttribute("attrColumns", attrColumns);
 			
 		} catch (CollectionSharingException | WebServicesException e) {
