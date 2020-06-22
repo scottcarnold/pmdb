@@ -3,9 +3,14 @@
 	<groupId>xandercat</groupId>
 	<artifactId>pmdb</artifactId>
 	<packaging>war</packaging>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.1</version>
 	<name>PMDB</name>
-	<description>Personal Movie Database</description>
+	<description>
+		Personal Movie Database (PMDB) provides a means to catalog personal collections of movies utilizing the
+		Internet Movie Database (IMDB) as a key source for movie attributes.  While the IMDB is provided as a means
+		to set up a base set of attributes for each movie, movies in each movie collection along with their attributes 
+		are fully customizable by the user. 
+	</description>
 	<properties>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -271,24 +276,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>com.github.github</groupId>
-				<artifactId>site-maven-plugin</artifactId>
-				<version>0.12</version>
-				<configuration>
-					<message>Creating site for ${project.version}</message>
-					<repositoryName>pmdb</repositoryName>
-					<repositoryOwner>scottcarnold</repositoryOwner>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>site</goal>
-						</goals>
-						<phase>site</phase>
-					</execution>
-				</executions>
-			</plugin>
 		</plugins>
 		<extensions>
 			<extension>
@@ -313,6 +300,18 @@
 					<show>public</show>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.5</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>report</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
 		</plugins>
 	</reporting>
 	<distributionManagement>
@@ -324,5 +323,9 @@
 			<id>packagecloud-scottcarnold</id>
 			<url>packagecloud+https://packagecloud.io/scottcarnold/pmdb</url>
 		</snapshotRepository>
+		<site>
+			<id>PMDB</id>
+			<url>https://scottcarnold.github.io/pmdb/</url>
+		</site>
 	</distributionManagement>
 </project>
