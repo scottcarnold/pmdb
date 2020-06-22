@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserAdminController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.controller</a> &gt; <span class="el_source">UserAdminController.java</span></div><h1>UserAdminController.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.controller;
+
+import java.util.List;
+
+import javax.validation.Valid;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.xandercat.pmdb.dto.CloudUserSearchResults;
+import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.exception.WebServicesException;
+import org.xandercat.pmdb.form.useradmin.SearchForm;
+import org.xandercat.pmdb.form.useradmin.UserForm;
+import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.Alerts;
+import org.xandercat.pmdb.util.ApplicationProperties;
+import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+/**
+ * Controller for administrators to perform user management functions.
+ * 
+ * @author Scott Arnold
+ */
+@Controller
+<span class="nc" id="L35">public class UserAdminController {</span>
+
+<span class="nc" id="L37">	private static final Logger LOGGER = LogManager.getLogger(UserAdminController.class);</span>
+	
+	@Autowired
+	private UserService userService;
+	
+	@Autowired
+	private ApplicationProperties applicationProperties;
+	
+	@ModelAttribute(&quot;viewTab&quot;)
+	public String getViewTab() {
+<span class="nc" id="L47">		return ViewUtil.TAB_USER_ADMIN;</span>
+	}
+	
+	/**
+	 * Page for user administration.
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page for user administration
+	 */
+	@GetMapping(&quot;/useradmin&quot;)
+	public String userAdmin(Model model) {
+<span class="nc" id="L59">		SearchForm searchForm = new SearchForm();</span>
+<span class="nc" id="L60">		model.addAttribute(&quot;searchForm&quot;, searchForm);</span>
+<span class="nc" id="L61">		return &quot;useradmin/useradmin&quot;;</span>
+	}
+
+	/**
+	 * Search users.
+	 * 
+	 * @param model       model
+	 * @param searchForm  user search form
+	 * @param result      binding result
+	 * 
+	 * @return page for user administration
+	 */
+	@RequestMapping(&quot;/useradmin/search&quot;)
+	public String userAdminSearch(Model model,
+			@ModelAttribute(&quot;searchForm&quot;) @Valid SearchForm searchForm,
+			BindingResult result) {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (result.hasErrors()) {</span>
+			// anything to do here?
+		} else {
+<span class="nc" id="L80">			List&lt;PmdbUser&gt; results = userService.searchUsers(searchForm.getSearchString());</span>
+<span class="nc" id="L81">			model.addAttribute(&quot;results&quot;, results);</span>
+<span class="nc" id="L82">			model.addAttribute(&quot;awsEnabled&quot;, applicationProperties.isAwsEnabled());</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">			if (applicationProperties.isAwsEnabled() &amp;&amp; searchForm.isSyncCloud()) {</span>
+<span class="nc" id="L84">				CloudUserSearchResults cloudSearchResults = userService.syncCloudUsers(results, searchForm.getSearchString());</span>
+<span class="nc" id="L85">				model.addAttribute(&quot;usernamesNotInCloud&quot;, cloudSearchResults.getUsernamesNotInCloud());</span>
+<span class="nc" id="L86">				model.addAttribute(&quot;usernamesOnlyInCloud&quot;, cloudSearchResults.getUsernamesOnlyInCloud());</span>
+			}
+		}
+<span class="nc" id="L89">		return &quot;useradmin/useradmin&quot;;</span>
+	}
+	
+	/**
+	 * Page for adding a new user.
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page for adding a new user
+	 */
+	@RequestMapping(&quot;/useradmin/addNewUser&quot;)
+	public String addNewUser(Model model) {
+<span class="nc" id="L101">		model.addAttribute(&quot;userForm&quot;, new UserForm());</span>
+<span class="nc" id="L102">		return &quot;useradmin/adduser&quot;;</span>
+	}
+
+	/**
+	 * Page for editing an existing user.
+	 * 
+	 * @param model     model
+	 * @param username  username of user to edit
+	 * 
+	 * @return page for editing an existing user
+	 */
+	@RequestMapping(&quot;/useradmin/editUser&quot;)
+	public String editUser(Model model, @RequestParam String username) {
+<span class="nc" id="L115">		PmdbUser user = userService.getUser(username).get();</span>
+<span class="nc" id="L116">		boolean administrator = userService.isAdministrator(username);</span>
+<span class="nc" id="L117">		UserForm userForm = new UserForm(user, administrator);</span>
+<span class="nc" id="L118">		model.addAttribute(&quot;userForm&quot;, userForm);</span>
+<span class="nc" id="L119">		return &quot;useradmin/edituser&quot;;</span>
+	}
+	
+	/**
+	 * Processing adding a new user.
+	 * 
+	 * @param model     model
+	 * @param userForm  user form
+	 * @param result    binding result
+	 * 
+	 * @return page for user administration
+	 */
+	@RequestMapping(&quot;/useradmin/addNewUserSubmit&quot;)
+	public String addNewUserSubmit(Model model,
+			@ModelAttribute(&quot;userForm&quot;) @Valid UserForm userForm,
+			BindingResult result) {
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		String newPassword = FormatUtil.isBlank(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (newPassword == null) {</span>
+			// special case; new user must be setting a new password, so blank value is not acceptable
+<span class="nc" id="L138">			result.rejectValue(&quot;password&quot;, &quot;{userform.password.required}&quot;, &quot;A password must be provided for new users.&quot;);</span>
+		}
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		if (result.hasErrors()) {</span>
+<span class="nc" id="L141">			return &quot;useradmin/adduser&quot;;</span>
+		}
+		try {
+<span class="nc" id="L144">			userService.saveUser(userForm.toUser(), newPassword, true);</span>
+<span class="nc" id="L145">			Alerts.setMessage(model, &quot;User &quot; + userForm.getUsername() + &quot; saved.&quot;);</span>
+<span class="nc" id="L146">		} catch (Exception e) {</span>
+<span class="nc" id="L147">			LOGGER.error(&quot;Unexpected error when saving new user.&quot;, e);</span>
+<span class="nc" id="L148">			Alerts.setErrorMessage(model, &quot;An unexpected error occurred while attempting to save user. User could not be saved.&quot;);</span>
+<span class="nc" id="L149">		}</span>
+<span class="nc" id="L150">		return userAdmin(model);</span>
+	}
+	
+	/**
+	 * Process editing user details for a user.
+	 * 
+	 * @param model     model
+	 * @param userForm  user form
+	 * @param result    binding result
+	 * 
+	 * @return page for user administration
+	 */
+	@RequestMapping(&quot;/useradmin/editUserSubmit&quot;)
+	public String editUserSubmit(Model model,
+			@ModelAttribute(&quot;userForm&quot;) @Valid UserForm userForm,
+			BindingResult result) {
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (result.hasErrors()) {</span>
+<span class="nc" id="L167">			return &quot;useradmin/edituser&quot;;</span>
+		}
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		String newPassword = FormatUtil.isBlank(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();</span>
+		try {
+<span class="nc" id="L171">			userService.saveUser(userForm.toUser(), newPassword, false);</span>
+<span class="nc" id="L172">			Alerts.setMessage(model, &quot;User &quot; + userForm.getUsername() + &quot; saved.&quot;);</span>
+<span class="nc" id="L173">		} catch (Exception e) {</span>
+<span class="nc" id="L174">			LOGGER.error(&quot;Unexpected error when updating user.&quot;, e);</span>
+<span class="nc" id="L175">			Alerts.setErrorMessage(model, &quot;An unexpected error occurred while attempting to save user. User could not be saved.&quot;);</span>
+<span class="nc" id="L176">		}</span>
+<span class="nc" id="L177">		return userAdmin(model);</span>
+	}
+
+	/**
+	 * Process of copying user credentials from local database to the cloud.
+	 * 
+	 * @param model     model
+	 * @param username  username to sync
+	 * 
+	 * @return page for user administration
+	 */
+	@RequestMapping(&quot;/useradmin/syncUserToCloud&quot;)
+	public String syncUserToCloud(Model model, @RequestParam String username) {
+		try {
+<span class="nc" id="L191">			userService.syncUserToCloud(username);</span>
+<span class="nc" id="L192">			Alerts.setMessage(model, &quot;User &quot; + username + &quot; synced to cloud.&quot;);</span>
+<span class="nc" id="L193">		} catch (WebServicesException e) {</span>
+<span class="nc" id="L194">			LOGGER.error(&quot;Unable to sync user to cloud.&quot;, e);</span>
+<span class="nc" id="L195">			Alerts.setErrorMessage(model, &quot;User &quot; + username + &quot; could not be synced to cloud.&quot;);</span>
+<span class="nc" id="L196">		}</span>
+<span class="nc" id="L197">		return userAdmin(model);</span>
+	}
+	
+	/**
+	 * Process of copying user credentials from cloud to local database.  User will be in a disabled state
+	 * after copy down and will need to have details re-added to their account.
+	 * 
+	 * @param model     model
+	 * @param username  user to sync
+	 * 
+	 * @return page for user administration
+	 */
+	@RequestMapping(&quot;/useradmin/syncUserFromCloud&quot;)
+	public String syncUserFromCloud(Model model, @RequestParam String username) {
+		try {
+<span class="nc" id="L212">			userService.syncUserFromCloud(username);</span>
+<span class="nc" id="L213">			Alerts.setMessage(model, &quot;User &quot; + username + &quot; synced from cloud. User will need to be edited to enable user and add user details.&quot;);</span>
+<span class="nc" id="L214">		} catch (Exception e) {</span>
+<span class="nc" id="L215">			LOGGER.error(&quot;Unable to sync user from cloud.&quot;, e);</span>
+<span class="nc" id="L216">			Alerts.setErrorMessage(model, &quot;User &quot; + username + &quot; could not be synced from cloud.&quot;);</span>
+<span class="nc" id="L217">		}</span>
+<span class="nc" id="L218">		return userAdmin(model);</span>
+	}
+	
+	/**
+	 * Delete a user.  User can only be deleted if they have never logged in before.  If administrator needs to remove access for a user
+	 * that has previously logged in, the user account should just be disabled.
+	 * 
+	 * @param model     model
+	 * @param username  username of user to delete
+	 * 
+	 * @return page for user administration
+	 */
+	@RequestMapping(value=&quot;/useradmin/deleteUser&quot;, method=RequestMethod.POST)
+	public String deleteUser(Model model, @RequestParam String username) {
+		try {
+<span class="nc" id="L233">			userService.deleteUser(username);</span>
+<span class="nc" id="L234">			Alerts.setMessage(model, &quot;User deleted.&quot;);</span>
+<span class="nc" id="L235">		} catch (Exception e) {</span>
+<span class="nc" id="L236">			LOGGER.error(&quot;User could not be deleted.&quot;, e);</span>
+<span class="nc" id="L237">			Alerts.setErrorMessage(model, &quot;User could not be deleted.&quot;);</span>
+<span class="nc" id="L238">		}</span>
+<span class="nc" id="L239">		return userAdmin(model);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

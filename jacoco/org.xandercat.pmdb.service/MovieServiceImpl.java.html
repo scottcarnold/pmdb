@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MovieServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.service</a> &gt; <span class="el_source">MovieServiceImpl.java</span></div><h1>MovieServiceImpl.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.service;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.xandercat.pmdb.dao.KeyGenerator;
+import org.xandercat.pmdb.dao.MovieDao;
+import org.xandercat.pmdb.dao.repository.DynamoMovieRepository;
+import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.exception.WebServicesException;
+import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.util.ApplicationProperties;
+
+@Component
+<span class="fc" id="L21">public class MovieServiceImpl implements MovieService {</span>
+
+	@Autowired
+	private MovieDao movieDao;
+
+	@Autowired
+	private DynamoMovieRepository dynamoMovieRepository;
+	
+	@Autowired
+	private CollectionService collectionService;
+	
+	@Autowired
+	private KeyGenerator keyGenerator;
+	
+	@Autowired
+	private ApplicationProperties applicationProperties;
+	
+	private void assertCloudReady(MovieCollection movieCollection) throws WebServicesException {
+<span class="pc bpc" id="L39" title="3 of 4 branches missed.">		if (!applicationProperties.isAwsEnabled() &amp;&amp; movieCollection.isCloud()) {</span>
+<span class="nc" id="L40">			throw new WebServicesException(&quot;Cloud services are disabled.&quot;);</span>
+		}
+<span class="fc" id="L42">		return;</span>
+	}
+	
+	@Override
+	public Set&lt;Movie&gt; getMoviesForCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException {
+<span class="fc" id="L47">		MovieCollection movieCollection = collectionService.assertCollectionViewable(collectionId, callingUsername);</span>
+<span class="fc" id="L48">		assertCloudReady(movieCollection);</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">		if (movieCollection.isCloud()) {</span>
+			try {
+<span class="nc" id="L51">				return dynamoMovieRepository.findByCollectionId(collectionId).stream().collect(Collectors.toSet());</span>
+<span class="nc" id="L52">			} catch (Exception e) {</span>
+<span class="nc" id="L53">				throw new WebServicesException(e);</span>
+			}
+		} else {
+<span class="fc" id="L56">			return movieDao.getMoviesForCollection(collectionId);</span>
+		}
+	}
+
+	@Override
+	public Set&lt;Movie&gt; searchMoviesForCollection(String collectionId, String searchString, String callingUsername) throws CollectionSharingException, WebServicesException {
+<span class="fc" id="L62">		MovieCollection movieCollection = collectionService.assertCollectionViewable(collectionId, callingUsername);</span>
+<span class="fc" id="L63">		assertCloudReady(movieCollection);</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">		if (movieCollection.isCloud()) {</span>
+			try {
+<span class="nc" id="L66">				return dynamoMovieRepository.searchMoviesForCollection(collectionId, searchString);</span>
+<span class="nc" id="L67">			} catch (Exception e) {</span>
+<span class="nc" id="L68">				throw new WebServicesException(e);</span>
+			}
+		} else {
+<span class="fc" id="L71">			return movieDao.searchMoviesForCollection(collectionId, searchString);</span>
+		}		
+	}
+
+	@Override
+	public Optional&lt;Movie&gt; getMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException {
+		// doing a blind retrieve here; if not in local db, then try AWS
+<span class="fc" id="L78">		Optional&lt;Movie&gt; movie = movieDao.getMovie(id);</span>
+<span class="pc bpc" id="L79" title="1 of 4 branches missed.">		if (!movie.isPresent() &amp;&amp; applicationProperties.isAwsEnabled()) {</span>
+			try {
+<span class="fc" id="L81">				Optional&lt;Movie&gt; optional = dynamoMovieRepository.findById(id);</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">				if (optional.isPresent()) {</span>
+<span class="fc" id="L83">					movie = optional;</span>
+				}
+<span class="nc" id="L85">			} catch (Exception e) {</span>
+<span class="nc" id="L86">				throw new WebServicesException(e);</span>
+<span class="fc" id="L87">			}</span>
+		}
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">		if (movie.isPresent()) {</span>
+<span class="fc" id="L90">			collectionService.assertCollectionViewable(movie.get().getCollectionId(), callingUsername);</span>
+		}
+<span class="fc" id="L92">		return movie;</span>
+	}
+
+	@Override
+	public void addMovie(Movie movie, String callingUsername) throws CollectionSharingException, WebServicesException {
+<span class="fc" id="L97">		MovieCollection movieCollection = collectionService.assertCollectionEditable(movie.getCollectionId(), callingUsername);</span>
+<span class="fc" id="L98">		assertCloudReady(movieCollection);</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">		if (movieCollection.isCloud()) {</span>
+			try {
+<span class="fc" id="L101">				movie.setId(keyGenerator.getKey());</span>
+<span class="fc" id="L102">				dynamoMovieRepository.save(movie);</span>
+<span class="nc" id="L103">			} catch (Exception e) {</span>
+<span class="nc" id="L104">				throw new WebServicesException(e);</span>
+<span class="fc" id="L105">			}</span>
+		} else {
+<span class="nc" id="L107">			movieDao.addMovie(movie);</span>
+		}
+<span class="fc" id="L109">	}</span>
+
+	@Override
+	public void updateMovie(Movie movie, String callingUsername) throws CollectionSharingException, WebServicesException {
+<span class="fc" id="L113">		MovieCollection movieCollection = collectionService.assertCollectionEditable(movie.getCollectionId(), callingUsername);</span>
+<span class="fc" id="L114">		assertCloudReady(movieCollection);</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">		if (movieCollection.isCloud()) {</span>
+			try {
+<span class="fc" id="L117">				dynamoMovieRepository.save(movie);</span>
+<span class="nc" id="L118">			} catch (Exception e) {</span>
+<span class="nc" id="L119">				throw new WebServicesException(e);</span>
+<span class="fc" id="L120">			}</span>
+		} else {
+<span class="nc" id="L122">			movieDao.updateMovie(movie);</span>
+		}
+<span class="fc" id="L124">	}</span>
+
+	@Override
+	public void deleteMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException {
+		// doing a blind retrieve here; if not in local db, then try AWS
+<span class="fc" id="L129">		Optional&lt;Movie&gt; movie = movieDao.getMovie(id);</span>
+<span class="pc bpc" id="L130" title="2 of 4 branches missed.">		if ((!movie.isPresent()) &amp;&amp; applicationProperties.isAwsEnabled()) {</span>
+			try {
+<span class="fc" id="L132">				Optional&lt;Movie&gt; optional = dynamoMovieRepository.findById(id);</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">				if (optional.isPresent()) {</span>
+<span class="fc" id="L134">					movie = optional;</span>
+				}
+<span class="nc" id="L136">			} catch (Exception e) {</span>
+<span class="nc" id="L137">				throw new WebServicesException(e);</span>
+<span class="fc" id="L138">			}</span>
+		}		
+<span class="fc" id="L140">		MovieCollection movieCollection = collectionService.assertCollectionEditable(movie.get().getCollectionId(), callingUsername);</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">		if (movieCollection.isCloud()) {</span>
+			try {
+<span class="fc" id="L143">				dynamoMovieRepository.delete(movie.get());</span>
+<span class="nc" id="L144">			} catch (Exception e) {</span>
+<span class="nc" id="L145">				throw new WebServicesException(e);</span>
+<span class="fc" id="L146">			}</span>
+		} else {
+<span class="nc" id="L148">			movieDao.deleteMovie(id);</span>
+		}
+<span class="fc" id="L150">	}</span>
+
+	@Override
+	public List&lt;String&gt; getTableColumnPreferences(String callingUsername) {
+<span class="nc" id="L154">		return movieDao.getTableColumnPreferences(callingUsername);</span>
+	}
+
+	@Override
+	public void addTableColumnPreference(String attributeName, String callingUsername) {
+<span class="nc" id="L159">		movieDao.addTableColumnPreference(attributeName, callingUsername);</span>
+		
+<span class="nc" id="L161">	}</span>
+
+	@Override
+	public void reorderTableColumnPreference(int sourceIdx, int targetIdx, String callingUsername) {
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">		if (sourceIdx == targetIdx) {</span>
+<span class="nc" id="L166">			return;</span>
+		}
+<span class="fc" id="L168">		Optional&lt;Integer&gt; max = movieDao.getMaxTableColumnPreferenceIndex(callingUsername);</span>
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">		if (!max.isPresent()) {</span>
+<span class="nc" id="L170">			throw new IllegalArgumentException(&quot;User has no preferences to reorder.&quot;);</span>
+		}
+<span class="pc bpc" id="L172" title="3 of 8 branches missed.">		if (sourceIdx &lt; 0 || targetIdx &lt; 0 || sourceIdx &gt; max.get() || targetIdx &gt; max.get()) {</span>
+<span class="fc" id="L173">			throw new IllegalArgumentException(&quot;source index or target index do not fall in acceptable range of 0 to &quot; + max);</span>
+		}
+<span class="fc" id="L175">		movieDao.reorderTableColumnPreference(sourceIdx, targetIdx, callingUsername);</span>
+<span class="fc" id="L176">	}</span>
+
+	@Override
+	public void deleteTableColumnPreference(int sourceIdx, String callingUsername) {
+<span class="nc" id="L180">		movieDao.deleteTableColumnPreference(sourceIdx, callingUsername);</span>
+<span class="nc" id="L181">	}</span>
+
+	@Override
+	public List&lt;String&gt; getAttributeKeysForCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException {
+<span class="fc" id="L185">		MovieCollection movieCollection = collectionService.assertCollectionViewable(collectionId, callingUsername);</span>
+<span class="fc" id="L186">		List&lt;String&gt; attributeKeys = null;</span>
+<span class="fc" id="L187">		assertCloudReady(movieCollection);</span>
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">		if (movieCollection.isCloud()) {</span>
+			try {
+<span class="nc" id="L190">				attributeKeys = dynamoMovieRepository.getAttributeKeysForCollection(collectionId);</span>
+<span class="nc" id="L191">			} catch (Exception e) {</span>
+<span class="nc" id="L192">				throw new WebServicesException(e);</span>
+<span class="nc" id="L193">			}</span>
+		} else {
+<span class="fc" id="L195">			attributeKeys = movieDao.getAttributeKeysForCollection(collectionId);</span>
+		}
+<span class="fc" id="L197">		Collections.sort(attributeKeys);</span>
+<span class="fc" id="L198">		return attributeKeys;</span>
+	}
+
+	@Override
+	public Set&lt;String&gt; getImdbIdsInDefaultCollection(String callingUsername) throws WebServicesException {
+<span class="fc" id="L203">		Optional&lt;MovieCollection&gt; defaultMovieCollection = collectionService.getDefaultMovieCollection(callingUsername);</span>
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">		if (!defaultMovieCollection.isPresent()) {</span>
+<span class="nc" id="L205">			return Collections.emptySet();</span>
+		}
+<span class="fc" id="L207">		assertCloudReady(defaultMovieCollection.get());</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">		if (defaultMovieCollection.get().isCloud()) {</span>
+			try {
+<span class="nc" id="L210">				return dynamoMovieRepository.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbAttribute.IMDB_ID.getKey());</span>
+<span class="nc" id="L211">			} catch (Exception e) {</span>
+<span class="nc" id="L212">				throw new WebServicesException(e);</span>
+			}
+		} else {
+<span class="fc" id="L215">			return movieDao.getAttributeValuesForCollection(defaultMovieCollection.get().getId(), ImdbAttribute.IMDB_ID.getKey());</span>
+		}		
+	}
+
+	@Override
+	public List&lt;Movie&gt; getUnlinkedMoviesForDefaultCollection(String callingUsername) throws WebServicesException {
+<span class="fc" id="L221">		Optional&lt;MovieCollection&gt; defaultMovieCollection = collectionService.getDefaultMovieCollection(callingUsername);</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">		if (!defaultMovieCollection.isPresent()) {</span>
+<span class="nc" id="L223">			return Collections.emptyList();</span>
+		}
+<span class="fc" id="L225">		assertCloudReady(defaultMovieCollection.get());</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">		if (defaultMovieCollection.get().isCloud()) {</span>
+			try {
+<span class="nc" id="L228">				return dynamoMovieRepository.getMoviesWithoutAttribute(defaultMovieCollection.get().getId(), ImdbAttribute.IMDB_ID.getKey());</span>
+<span class="nc" id="L229">			} catch (Exception e) {</span>
+<span class="nc" id="L230">				throw new WebServicesException(e);</span>
+			}
+		} else {
+<span class="fc" id="L233">			return movieDao.getMoviesWithoutAttribute(defaultMovieCollection.get().getId(), ImdbAttribute.IMDB_ID.getKey());</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApplicationDaoImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.dao</a> &gt; <span class="el_source">ApplicationDaoImpl.java</span></div><h1>ApplicationDaoImpl.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.dao;
+
+import java.time.LocalDate;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.xandercat.pmdb.dto.ApplicationAttribute;
+import org.xandercat.pmdb.util.DBUtil;
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+@Component
+<span class="nc" id="L14">public class ApplicationDaoImpl implements ApplicationDao {</span>
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+	
+	@Override
+	public void addApplicationAttribute(ApplicationAttribute applicationAttribute) {
+<span class="nc" id="L21">		final String sql = &quot;INSERT INTO application_attributes(attribute_name, attribute_value, attribute_date) VALUES (?, ?, ?)&quot;;</span>
+<span class="nc" id="L22">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L23">			ps.setString(1, applicationAttribute.getName());</span>
+<span class="nc" id="L24">			ps.setString(2, applicationAttribute.getValue());</span>
+<span class="nc" id="L25">			DBUtil.setLocalDate(ps, 3, applicationAttribute.getDate());			</span>
+<span class="nc" id="L26">		});	</span>
+<span class="nc" id="L27">	}</span>
+
+	@Override
+	public void updateApplicationAttribute(ApplicationAttribute applicationAttribute) {
+<span class="nc" id="L31">		final String sql = &quot;UPDATE application_attributes SET attribute_value = ? WHERE attribute_name = ? AND attribute_date = ?&quot;;</span>
+<span class="nc" id="L32">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L33">			ps.setString(1, applicationAttribute.getValue());</span>
+<span class="nc" id="L34">			ps.setString(2, applicationAttribute.getName());</span>
+<span class="nc" id="L35">			DBUtil.setLocalDate(ps, 3, applicationAttribute.getDate());</span>
+<span class="nc" id="L36">		});</span>
+<span class="nc" id="L37">	}</span>
+
+	@Override
+	public Optional&lt;ApplicationAttribute&gt; getApplicationAttribute(String name, LocalDate date) {
+<span class="nc" id="L41">		final String sql = &quot;SELECT attribute_value FROM application_attributes WHERE attribute_name = ? AND attribute_date = ?&quot;;</span>
+<span class="nc" id="L42">		final ApplicationAttribute applicationAttribute = new ApplicationAttribute();</span>
+<span class="nc" id="L43">		jdbcTemplate.query(sql, ps -&gt; {</span>
+<span class="nc" id="L44">			ps.setString(1, name);</span>
+<span class="nc" id="L45">			DBUtil.setLocalDate(ps, 2, date);</span>
+<span class="nc" id="L46">		}, rs -&gt; {</span>
+<span class="nc" id="L47">			applicationAttribute.setName(name);</span>
+<span class="nc" id="L48">			applicationAttribute.setDate(date);</span>
+<span class="nc" id="L49">			applicationAttribute.setValue(rs.getString(1));</span>
+<span class="nc" id="L50">		});</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		return FormatUtil.isBlank(applicationAttribute.getName())? Optional.empty() : Optional.of(applicationAttribute);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

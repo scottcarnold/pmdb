@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataFormatterSelector.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.util.format</a> &gt; <span class="el_source">DataFormatterSelector.java</span></div><h1>DataFormatterSelector.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.util.format;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Data formatter selector to be used to select the best data formatter for a group of tested values.
+ * 
+ * @author Scott Arnold
+ */
+public class DataFormatterSelector {
+
+	private class FormatterCount {
+		private DataFormatter dataFormatter;
+		private int count;
+<span class="fc" id="L18">		public FormatterCount(DataFormatter dataFormatter) {</span>
+<span class="fc" id="L19">			this.dataFormatter = dataFormatter;</span>
+<span class="fc" id="L20">		}</span>
+		public int getCount() {
+<span class="fc" id="L22">			return count;</span>
+		}
+	}
+	
+<span class="fc" id="L26">	private int maxSampleSize = 20;</span>
+	private int sampleSize;
+	private String attributeName;
+<span class="fc" id="L29">	private List&lt;FormatterCount&gt; formatterCounts = new ArrayList&lt;FormatterCount&gt;();</span>
+	
+<span class="fc" id="L31">	public DataFormatterSelector(String attributeName, List&lt;DataFormatter&gt; dataFormatters) {</span>
+<span class="fc" id="L32">		this.attributeName = attributeName;</span>
+<span class="fc" id="L33">		dataFormatters.forEach(dataFormatter -&gt; formatterCounts.add(new FormatterCount(dataFormatter)));</span>
+<span class="fc" id="L34">	}</span>
+	
+	/**
+	 * Sets how many values should be tested in order to make selection on best formatter to use.
+	 * 
+	 * @param sampleSize sample size
+	 */
+	public void setSampleSize(int sampleSize) {
+<span class="nc" id="L42">		this.sampleSize = sampleSize;</span>
+<span class="nc" id="L43">	}</span>
+	
+	/**
+	 * Returns the name of the attribute this selector is for.
+	 * 
+	 * @return name of the attribute
+	 */
+	public String getAttributeName() {
+<span class="fc" id="L51">		return attributeName;</span>
+	}
+	
+	/**
+	 * Tests a value against the collection of data formatters.  Value should be a value for the attribute this selector represents.
+	 * 
+	 * @param value value to be tested
+	 */
+	public void test(String value) {
+<span class="pc bpc" id="L60" title="2 of 4 branches missed.">		if (sampleSize &gt;= maxSampleSize || FormatUtil.isBlank(value)) {</span>
+<span class="nc" id="L61">			return; // only test non-blank values, and stop testing after reaching max sample size</span>
+		}
+<span class="fc" id="L63">		formatterCounts.stream()</span>
+<span class="fc" id="L64">				.filter(formatterCount -&gt; formatterCount.dataFormatter.isAcceptable(value))</span>
+<span class="fc" id="L65">				.forEach(formatterCount -&gt; formatterCount.count++);</span>
+<span class="fc" id="L66">		sampleSize++;</span>
+<span class="fc" id="L67">	}</span>
+	
+	/**
+	 * Returns the data formatter selected for the attribute.  For a data formatter to be selected, it must
+	 * be able to accept more than half the tested values.  If two or more data formatters are tied for best,
+	 * the data formatter selected from that group is indeterminate.
+	 * 
+	 * @return data formatter (empty if no data formatter is appropriate)
+	 */
+	public Optional&lt;DataFormatter&gt; getDataFormatter() {
+<span class="fc" id="L77">		Optional&lt;FormatterCount&gt; maxFormatterCount = formatterCounts.stream()</span>
+<span class="fc" id="L78">				.max(Comparator.comparing(FormatterCount::getCount));</span>
+<span class="pc bpc" id="L79" title="2 of 4 branches missed.">		if (maxFormatterCount.isPresent() &amp;&amp; maxFormatterCount.get().count * 2 &gt; sampleSize) {</span>
+			// only use data formatter if it could accept more than half the tested values
+<span class="fc" id="L81">			return Optional.of(maxFormatterCount.get().dataFormatter);</span>
+		}
+<span class="nc" id="L83">		return Optional.empty();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HomeController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.controller</a> &gt; <span class="el_source">HomeController.java</span></div><h1>HomeController.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.controller;
+
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.dto.MovieStatistics;
+import org.xandercat.pmdb.exception.WebServicesException;
+import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.form.movie.MovieForm;
+import org.xandercat.pmdb.form.movie.SearchForm;
+import org.xandercat.pmdb.service.CollectionService;
+import org.xandercat.pmdb.service.ImdbAttribute;
+import org.xandercat.pmdb.service.MovieService;
+import org.xandercat.pmdb.util.Alerts;
+import org.xandercat.pmdb.util.DoubleStatistics;
+import org.xandercat.pmdb.util.LongStatistics;
+import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.WordStatistics;
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+/**
+ * Controller for movie functions on the user's active movie collection.  Primarily includes
+ * searching, adding, editing, and deleting movies.
+ * 
+ * @author Scott Arnold
+ */
+@Controller
+<span class="fc" id="L49">public class HomeController {</span>
+
+<span class="fc" id="L51">	private static final Logger LOGGER = LogManager.getLogger(HomeController.class);</span>
+	
+	@Autowired
+	private CollectionService collectionService;
+	
+	@Autowired
+	private MovieService movieService;
+	
+	@ModelAttribute(&quot;viewTab&quot;)
+	public String getViewTab() {
+<span class="fc" id="L61">		return ViewUtil.TAB_HOME;</span>
+	}
+	
+	@ModelAttribute(&quot;attributeNames&quot;)
+	public List&lt;String&gt; getAttributeNames(Principal principal) {
+<span class="fc" id="L66">		Optional&lt;MovieCollection&gt; defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">		if (defaultMovieCollection.isPresent()) {</span>
+			try {
+<span class="fc" id="L69">				return movieService.getAttributeKeysForCollection(defaultMovieCollection.get().getId(), principal.getName());</span>
+<span class="nc" id="L70">			} catch (Exception e) {</span>
+<span class="nc" id="L71">				LOGGER.error(&quot;Unable to add collection attribute names to model.&quot;, e);</span>
+			}			
+		}
+<span class="nc" id="L74">		return new ArrayList&lt;String&gt;();</span>
+	}
+	
+	/**
+	 * Page for listing movies within user's default/active movie collection.  This is considered the main &quot;home&quot; page 
+	 * of the application, where users can search and update their movie collection.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param session    session
+	 * 
+	 * @return home page
+	 */
+	@GetMapping(&quot;/&quot;)
+	public String home(Model model, Principal principal, HttpSession session) {
+<span class="fc" id="L89">		model.addAttribute(&quot;searchForm&quot;, new SearchForm());</span>
+<span class="fc" id="L90">		return prepareHome(model, principal, null, session);</span>
+	}
+	
+	/**
+	 * Search user's default/active movie collection.  This filters the list of movies in the user's default/active movie
+	 * collection to those that match their search.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param session     session
+	 * @param searchForm  search form
+	 * @param result      binding result
+	 * 
+	 * @return home page, filtered to only movies matching their search
+	 */
+	@RequestMapping(&quot;/movies/search&quot;)
+	public String search(Model model, Principal principal, HttpSession session,
+			@ModelAttribute(&quot;searchForm&quot;) @Valid SearchForm searchForm,
+			BindingResult result) {
+<span class="nc" id="L109">		return prepareHome(model, principal, searchForm.getSearchString(), session);</span>
+	}
+	
+	private String prepareHome(Model model, Principal principal, String searchString, HttpSession session) {
+<span class="fc" id="L113">		Optional&lt;MovieCollection&gt; defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">		if (!defaultMovieCollection.isPresent()) {</span>
+			// send them to collections so they can set a default movie collection
+<span class="fc" id="L116">			return &quot;redirect:/collections&quot;;</span>
+		}
+<span class="fc" id="L118">		model.addAttribute(&quot;defaultMovieCollection&quot;, defaultMovieCollection.get());</span>
+		try {
+<span class="fc" id="L120">			Set&lt;Movie&gt; movies = movieService.getMoviesForCollection(defaultMovieCollection.get().getId(), principal.getName());</span>
+<span class="fc" id="L121">			model.addAttribute(&quot;totalMoviesInCollection&quot;, movies.size());</span>
+<span class="fc" id="L122">			model.addAttribute(&quot;unlinkCount&quot;, movies.stream()</span>
+<span class="pc" id="L123">					.filter(movie -&gt; FormatUtil.isBlank(movie.getAttribute(ImdbAttribute.IMDB_ID.getKey())))</span>
+<span class="fc" id="L124">					.count());</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">			if (FormatUtil.isNotBlank(searchString)) {</span>
+<span class="nc" id="L126">				movies = movieService.searchMoviesForCollection(defaultMovieCollection.get().getId(), searchString, principal.getName());</span>
+			}
+<span class="fc" id="L128">			List&lt;String&gt; attrColumns = movieService.getTableColumnPreferences(principal.getName());</span>
+<span class="fc" id="L129">			model.addAttribute(&quot;movies&quot;, movies);</span>
+<span class="fc" id="L130">			model.addAttribute(&quot;attrFormatters&quot;, ViewUtil.getDataFormatters(movies, attrColumns));</span>
+<span class="fc" id="L131">			model.addAttribute(&quot;attrColumns&quot;, attrColumns);</span>
+			
+<span class="nc" id="L133">		} catch (CollectionSharingException | WebServicesException e) {</span>
+<span class="nc" id="L134">			LOGGER.error(&quot;Unable to retrieve movies for default movie collection.&quot;, e);</span>
+<span class="nc" id="L135">			Alerts.setErrorMessage(model, &quot;Unable to get movies for the collection.&quot;);</span>
+<span class="fc" id="L136">		}</span>
+<span class="fc" id="L137">		return &quot;movie/movies&quot;;		</span>
+	}
+	
+	/**
+	 * AJAX method for returning the full details of a single movie in the user's movie collection.  Returned result is 
+	 * an HTML fragment that can be loaded into a dialog.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param movieId    id of movie to get details for
+	 * 
+	 * @return page fragment for movie details
+	 */
+	@RequestMapping(&quot;/movies/movieDetails&quot;)
+	public String movieDetails(Model model, Principal principal, @RequestParam String movieId) {
+		try {
+<span class="nc" id="L153">			Optional&lt;MovieCollection&gt; defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());</span>
+<span class="nc" id="L154">			model.addAttribute(&quot;defaultMovieCollection&quot;, defaultMovieCollection.get());</span>
+<span class="nc" id="L155">			Optional&lt;Movie&gt; movie = movieService.getMovie(movieId, principal.getName());</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			if (movie.isPresent()) {</span>
+<span class="nc" id="L157">				model.addAttribute(&quot;movie&quot;, movie.get());</span>
+			}
+<span class="nc" id="L159">		} catch (CollectionSharingException | WebServicesException e) {</span>
+<span class="nc" id="L160">			LOGGER.error(&quot;Unable to load movie id &quot; + movieId + &quot; for user &quot; + principal.getName(), e);</span>
+<span class="nc" id="L161">		}</span>
+<span class="nc" id="L162">		return &quot;movie/movieDetails&quot;;</span>
+	}
+	
+	@RequestMapping(&quot;/movies/movieStatistics&quot;)
+	public String movieStatistics(Model model, Principal principal, @RequestParam String movieId) {
+		try {
+<span class="fc" id="L168">			Optional&lt;MovieCollection&gt; defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());</span>
+<span class="fc" id="L169">			model.addAttribute(&quot;defaultMovieCollection&quot;, defaultMovieCollection.get());</span>
+<span class="fc" id="L170">			Set&lt;Movie&gt; movies = movieService.getMoviesForCollection(defaultMovieCollection.get().getId(), principal.getName());</span>
+<span class="fc" id="L171">			Optional&lt;Movie&gt; movie = movieService.getMovie(movieId, principal.getName());</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">			if (movie.isPresent()) {</span>
+<span class="fc" id="L173">				model.addAttribute(&quot;movie&quot;, movie.get());</span>
+				
+			}
+<span class="fc" id="L176">			MovieStatistics movieStatistics = new MovieStatistics(movies);</span>
+<span class="fc" id="L177">			Optional&lt;DoubleStatistics&gt; ratingStatistics = movieStatistics.getDoubleStatistics(ImdbAttribute.IMDB_RATING.getKey());</span>
+<span class="fc" id="L178">			Optional&lt;LongStatistics&gt; voteStatistics = movieStatistics.getLenientLongStatistics(ImdbAttribute.IMDB_VOTES.getKey());</span>
+<span class="fc" id="L179">			Optional&lt;WordStatistics&gt; genreStatistics = movieStatistics.getWordStatistics(ImdbAttribute.GENRE.getKey());</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">			if (ratingStatistics.isPresent()) {</span>
+<span class="nc" id="L181">				model.addAttribute(&quot;ratingStatistics&quot;, ratingStatistics.get());</span>
+			}
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">			if (voteStatistics.isPresent()) {</span>
+<span class="fc" id="L184">				model.addAttribute(&quot;voteStatistics&quot;, voteStatistics.get());</span>
+			}
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">			if (genreStatistics.isPresent()) {</span>
+<span class="fc" id="L187">				model.addAttribute(&quot;genreStatistics&quot;, genreStatistics.get());</span>
+<span class="fc" id="L188">				model.addAttribute(&quot;genresMostCommon&quot;, genreStatistics.get().getTopWordCounts(3).stream()</span>
+<span class="fc" id="L189">						.map(WordStatistics.WordCount::toString).collect(Collectors.joining(&quot;,&quot;)));</span>
+<span class="fc" id="L190">				model.addAttribute(&quot;genresLeastCommon&quot;, genreStatistics.get().getBottomWordCounts(3).stream()</span>
+<span class="fc" id="L191">						.map(WordStatistics.WordCount::toString).collect(Collectors.joining(&quot;,&quot;)));</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">				if (movie.isPresent()) {</span>
+<span class="fc" id="L193">					model.addAttribute(&quot;specificGenreCounts&quot;, genreStatistics.get().getWordCountsForWords(movie.get().getAttribute(ImdbAttribute.GENRE.getKey())));</span>
+				}
+			}
+
+<span class="nc" id="L197">		} catch (CollectionSharingException | WebServicesException e) {</span>
+<span class="nc" id="L198">			LOGGER.error(&quot;Unable to load movie id &quot; + movieId + &quot; for user &quot; + principal.getName(), e);</span>
+<span class="fc" id="L199">		}</span>
+<span class="fc" id="L200">		return &quot;movie/movieStatistics&quot;;		</span>
+	}
+	
+	/**
+	 * Page to add a new movie to the movie collection (manual entry).
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page to add a new movie to the movie collection
+	 */
+	@RequestMapping(&quot;/movies/addMovie&quot;)
+	public String addMovie(Model model) {
+<span class="nc" id="L212">		model.addAttribute(&quot;movieForm&quot;, new MovieForm());</span>
+<span class="nc" id="L213">		return &quot;movie/addMovie&quot;;</span>
+	}
+	
+	/**
+	 * Page to edit a movie in the movie collection.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param movieId    id of movie to edit
+	 * @param session    session
+	 * 
+	 * @return page to edit movie
+	 */
+	@RequestMapping(&quot;/movies/editMovie&quot;)
+	public String editMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
+		try {
+<span class="nc" id="L229">			Optional&lt;Movie&gt; movie = movieService.getMovie(movieId, principal.getName());</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			if (!movie.isPresent()) {</span>
+<span class="nc" id="L231">				throw new IllegalArgumentException(&quot;Movie ID &quot; + movieId + &quot; could not be retrieved.&quot;);</span>
+			}
+<span class="nc" id="L233">			model.addAttribute(&quot;movieForm&quot;, new MovieForm(movie.get()));</span>
+<span class="nc" id="L234">		} catch (Exception e) {</span>
+<span class="nc" id="L235">			LOGGER.error(&quot;Unable to edit movie for ID: &quot; + movieId, e);</span>
+<span class="nc" id="L236">			Alerts.setErrorMessage(model, &quot;This movie cannot be edited.&quot;);</span>
+<span class="nc" id="L237">			return home(model, principal, session);</span>
+<span class="nc" id="L238">		}</span>
+<span class="nc" id="L239">		return &quot;movie/editMovie&quot;;</span>
+	}
+	
+	/**
+	 * Add a new movie to the movie collection (manual entry). 
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param session    session
+	 * @param movieForm  movie form
+	 * @param result     binding result
+	 * 
+	 * @return home page
+	 */
+	@RequestMapping(&quot;/movies/addMovieSubmit&quot;)
+	public String addMovieSubmit(Model model, Principal principal, HttpSession session,
+			@ModelAttribute(&quot;movieForm&quot;) @Valid MovieForm movieForm,
+			BindingResult result) {
+<span class="nc bnc" id="L257" title="All 2 branches missed.">		if (result.hasErrors()) {</span>
+<span class="nc" id="L258">			return &quot;movie/addMovie&quot;;</span>
+		}
+<span class="nc" id="L260">		Optional&lt;MovieCollection&gt; movieCollection = collectionService.getDefaultMovieCollection(principal.getName());</span>
+<span class="nc" id="L261">		Movie movie = movieForm.toMovie();</span>
+<span class="nc" id="L262">		movie.setCollectionId(movieCollection.get().getId());</span>
+		try {
+<span class="nc" id="L264">			movieService.addMovie(movie, principal.getName());</span>
+<span class="nc" id="L265">		} catch (CollectionSharingException | WebServicesException e) {</span>
+<span class="nc" id="L266">			LOGGER.error(&quot;Unable to add movie.&quot;, e);</span>
+<span class="nc" id="L267">			Alerts.setErrorMessage(model, &quot;This movie cannot be added.&quot;);</span>
+<span class="nc" id="L268">			return home(model, principal, session);</span>
+<span class="nc" id="L269">		}</span>
+<span class="nc" id="L270">		Alerts.setMessage(model, &quot;Movie added to the collection.&quot;);</span>
+<span class="nc" id="L271">		return home(model, principal, session);</span>
+	}
+	
+	/**
+	 * Update a movie in the movie collection.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param session    session
+	 * @param movieForm  movie form
+	 * @param result     binding result
+	 * 
+	 * @return home page
+	 */
+	@RequestMapping(&quot;/movies/editMovieSubmit&quot;)
+	public String editMovieSubmit(Model model, Principal principal, HttpSession session,
+			@ModelAttribute(&quot;movieForm&quot;) @Valid MovieForm movieForm,
+			BindingResult result) {
+<span class="nc bnc" id="L289" title="All 2 branches missed.">		if (result.hasErrors()) {</span>
+<span class="nc" id="L290">			return &quot;movie/editMovie&quot;;</span>
+		}
+		try {
+<span class="nc" id="L293">			Movie movieBefore = movieService.getMovie(movieForm.getId(), principal.getName()).get();</span>
+<span class="nc" id="L294">			Movie movie = movieForm.toMovie();</span>
+<span class="nc" id="L295">			movie.setId(movieBefore.getId());</span>
+<span class="nc" id="L296">			movie.setCollectionId(movieBefore.getCollectionId());</span>
+<span class="nc" id="L297">			movieService.updateMovie(movie, principal.getName());</span>
+<span class="nc" id="L298">		} catch (CollectionSharingException | WebServicesException e) {</span>
+<span class="nc" id="L299">			LOGGER.error(&quot;Unable to update movie.&quot;, e);</span>
+<span class="nc" id="L300">			Alerts.setErrorMessage(model, &quot;This movie cannot be updated.&quot;);</span>
+<span class="nc" id="L301">			return home(model, principal, session);</span>
+<span class="nc" id="L302">		}</span>
+<span class="nc" id="L303">		Alerts.setMessage(model, &quot;Movie updated.&quot;);</span>
+<span class="nc" id="L304">		return home(model, principal, session);</span>
+	}
+	
+	/**
+	 * Delete movie from the movie collection.  Confirmation should be handled on client side.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param movieId    id of movie to delete
+	 * @param session    session
+	 * 
+	 * @return home page
+	 */
+	@RequestMapping(value=&quot;/movies/deleteMovie&quot;, method=RequestMethod.POST)
+	public String deleteMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
+<span class="nc" id="L319">		Optional&lt;MovieCollection&gt; movieCollection = collectionService.getDefaultMovieCollection(principal.getName());</span>
+		try {
+<span class="nc" id="L321">			Movie movie = movieService.getMovie(movieId, principal.getName()).get();</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">			if (!movie.getCollectionId().equals(movieCollection.get().getId())) {</span>
+<span class="nc" id="L323">				Alerts.setErrorMessage(model, &quot;Movies can only be deleted from your currently active collection.&quot;);</span>
+<span class="nc" id="L324">				return home(model, principal, session);</span>
+			}
+<span class="nc" id="L326">			movieService.deleteMovie(movieId, principal.getName());</span>
+<span class="nc" id="L327">		} catch (CollectionSharingException | WebServicesException e) {</span>
+<span class="nc" id="L328">			LOGGER.error(&quot;Unable to delete movie.&quot;, e);</span>
+<span class="nc" id="L329">			Alerts.setErrorMessage(model, &quot;Movie cannot be deleted.&quot;);</span>
+<span class="nc" id="L330">			return home(model, principal, session);</span>
+<span class="nc" id="L331">		}</span>
+<span class="nc" id="L332">		Alerts.setMessage(model, &quot;Movie deleted.&quot;);</span>
+<span class="nc" id="L333">		return home(model, principal, session);</span>
+	}
+	
+	/**
+	 * Page for configuring what columns of data are included in the table of movies listed on the home page.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param session    session
+	 * 
+	 * @return page for configuring movie table columns
+	 */
+	@RequestMapping(&quot;/movies/configureColumns&quot;)
+	public String configureColumns(Model model, Principal principal, HttpSession session) {
+<span class="fc" id="L347">		Optional&lt;MovieCollection&gt; movieCollection = collectionService.getDefaultMovieCollection(principal.getName());</span>
+<span class="fc" id="L348">		List&lt;String&gt; tableColumnOptions = null;</span>
+		try {
+<span class="fc" id="L350">			tableColumnOptions = movieService.getAttributeKeysForCollection(movieCollection.get().getId(), principal.getName());</span>
+<span class="nc" id="L351">		} catch (CollectionSharingException | WebServicesException e) {</span>
+<span class="nc" id="L352">			LOGGER.error(&quot;User &quot; + principal.getName() + &quot; cannot configure columns for collection &quot; + movieCollection.get().getId(), e);</span>
+<span class="nc" id="L353">			Alerts.setErrorMessage(model, &quot;Columns cannot be configured.&quot;);</span>
+<span class="nc" id="L354">			return home(model, principal, session);</span>
+<span class="fc" id="L355">		}</span>
+<span class="fc" id="L356">		List&lt;String&gt; tableColumnPreferences = movieService.getTableColumnPreferences(principal.getName());</span>
+<span class="fc" id="L357">		tableColumnOptions.removeAll(tableColumnPreferences); // remove ones already in preference list</span>
+<span class="fc" id="L358">		model.addAttribute(&quot;tableColumnPreferences&quot;, tableColumnPreferences);</span>
+<span class="fc" id="L359">		model.addAttribute(&quot;tableColumnOptions&quot;, tableColumnOptions);</span>
+<span class="fc" id="L360">		return &quot;movie/configureColumns&quot;;</span>
+	}
+	
+	/**
+	 * Reorder columns shown on the home page table of movies using drag and drop indicies for columns.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param dragIndex  index of column being moved
+	 * @param dropIndex  index of column where target column is being moved to
+	 * @param session    session
+	 * 
+	 * @return page for configuring movie table columns
+	 */
+	@RequestMapping(&quot;/movies/reorderColumns&quot;)
+	public String reorderColumns(Model model, Principal principal, @RequestParam int dragIndex, @RequestParam int dropIndex, HttpSession session) {
+<span class="nc" id="L376">		LOGGER.debug(&quot;Requested drag from &quot; + dragIndex + &quot; to &quot; + dropIndex);</span>
+		try {
+<span class="nc" id="L378">			movieService.reorderTableColumnPreference(dragIndex, dropIndex, principal.getName());</span>
+			// not going to set success messages here as it would reduce usability of the interface and be of little value
+<span class="nc" id="L380">		} catch (Exception e) {</span>
+<span class="nc" id="L381">			LOGGER.error(&quot;Unable to reorder columns.&quot;, e);</span>
+<span class="nc" id="L382">			Alerts.setErrorMessage(model, &quot;Table columns could not be reordered.&quot;);</span>
+<span class="nc" id="L383">		}</span>
+<span class="nc" id="L384">		return configureColumns(model, principal, session);</span>
+	}
+	
+	/**
+	 * Add a new attribute as a column in the table of movies shown on the home page.
+	 * 
+	 * @param model          model
+	 * @param principal      principal
+	 * @param attributeName  name of attribute to add as a column in the table
+	 * @param session        session
+	 * 
+	 * @return page for configuring movie table columns
+	 */
+	@RequestMapping(&quot;/movies/addColumnPreference&quot;)
+	public String addColumnPreference(Model model, Principal principal, @RequestParam String attributeName, HttpSession session) {
+<span class="nc" id="L399">		movieService.addTableColumnPreference(attributeName, principal.getName());</span>
+		// not going to set success messages here as it would reduce usability of the interface and be of little value
+<span class="nc" id="L401">		return configureColumns(model, principal, session);</span>
+	}
+	
+	/**
+	 * Remove a column from the table of movies shown on the home page.
+	 * 
+	 * @param model        model
+	 * @param principal    principal
+	 * @param deleteIndex  index of column to be removed
+	 * @param session      session
+	 * 
+	 * @return page for configuring movie table columns
+	 */
+	@RequestMapping(&quot;/movies/deleteColumnPreference&quot;)
+	public String deleteColumnPreference(Model model, Principal principal, @RequestParam int deleteIndex, HttpSession session) {
+<span class="nc" id="L416">		movieService.deleteTableColumnPreference(deleteIndex, principal.getName());</span>
+		// not going to set success messages here as it would reduce usability of the interface and be of little value
+<span class="nc" id="L418">		return configureColumns(model, principal, session);		</span>
+	}
+	
+	/**
+	 * AJAX generic request to dismiss a &quot;session alert&quot;.  Once a session alert is dismissed, it will remain dismissed for the
+	 * duration of the user's session.  Provides no response.
+	 * 
+	 * @param session  session
+	 * @param key      key for alert
+	 */
+	@RequestMapping(&quot;/dismissSessionAlert&quot;)
+	public @ResponseBody void dismissSessionAlert(HttpSession session, @RequestParam String key) {
+<span class="nc" id="L430">		Alerts.dismissSessionAlert(session, key);</span>
+<span class="nc" id="L431">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

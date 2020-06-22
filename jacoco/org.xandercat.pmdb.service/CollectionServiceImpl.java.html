@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CollectionServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.service</a> &gt; <span class="el_source">CollectionServiceImpl.java</span></div><h1>CollectionServiceImpl.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.service;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+import org.xandercat.pmdb.dao.CollectionDao;
+import org.xandercat.pmdb.dao.KeyGenerator;
+import org.xandercat.pmdb.dao.MovieDao;
+import org.xandercat.pmdb.dao.repository.DynamoCollectionRepository;
+import org.xandercat.pmdb.dao.repository.DynamoMovieRepository;
+import org.xandercat.pmdb.dto.CollectionPermission;
+import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.exception.WebServicesException;
+import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.util.ApplicationProperties;
+import org.xandercat.pmdb.util.ExcelPorter;
+
+@Component
+<span class="fc" id="L27">public class CollectionServiceImpl implements CollectionService {</span>
+
+<span class="fc" id="L29">	private static final Logger LOGGER = LogManager.getLogger(CollectionServiceImpl.class);</span>
+	
+	@Autowired
+	private CollectionDao collectionDao;
+
+	@Autowired
+	private DynamoCollectionRepository dynamoCollectionRepository;
+	
+	@Autowired
+	private MovieDao movieDao;
+	
+	@Autowired
+	private DynamoMovieRepository dynamoMovieRepository;
+	
+	@Autowired
+	private KeyGenerator keyGenerator;
+	
+	@Autowired
+	private ApplicationProperties applicationProperties;
+	
+	private void assertCloudReady(MovieCollection movieCollection) throws WebServicesException {
+<span class="pc bpc" id="L50" title="3 of 4 branches missed.">		if (!applicationProperties.isAwsEnabled() &amp;&amp; movieCollection.isCloud()) {</span>
+<span class="nc" id="L51">			throw new WebServicesException(&quot;Cloud services are disabled.&quot;);</span>
+		}
+<span class="fc" id="L53">		return;</span>
+	}
+	
+	@Override
+	public Optional&lt;MovieCollection&gt; getDefaultMovieCollection(String username) {
+<span class="fc" id="L58">		Optional&lt;String&gt; collectionId = collectionDao.getDefaultCollectionId(username);</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">		return collectionId.isPresent()? collectionDao.getViewableMovieCollection(collectionId.get(), username) : Optional.empty();</span>
+	}
+
+	@Override
+	public void setDefaultMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException {
+<span class="nc" id="L64">		assertCollectionViewable(collectionId, callingUsername);		</span>
+<span class="nc" id="L65">		collectionDao.setDefaultCollection(callingUsername, collectionId);</span>
+		
+<span class="nc" id="L67">	}</span>
+
+	@Override
+	public List&lt;MovieCollection&gt; getViewableMovieCollections(String username) {
+<span class="nc" id="L71">		return collectionDao.getViewableMovieCollections(username);</span>
+	}
+
+	@Override
+	public List&lt;MovieCollection&gt; getShareOfferMovieCollections(String username) {
+<span class="nc" id="L76">		return collectionDao.getShareOfferMovieCollections(username);</span>
+	}
+
+	@Override
+	public MovieCollection getViewableMovieCollection(String collectionId, String callingUsername)	throws CollectionSharingException {
+<span class="fc" id="L81">		Optional&lt;MovieCollection&gt; movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">		if (!movieCollection.isPresent()) {</span>
+<span class="nc" id="L83">			throw new CollectionSharingException(&quot;User does not have permission to view collection.&quot;);</span>
+		}
+<span class="fc" id="L85">		return movieCollection.get();</span>
+	}
+
+	@Override
+	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) throws WebServicesException {
+<span class="fc" id="L90">		movieCollection.setOwnerAndOwned(callingUsername, callingUsername); // enforce that movie collection owner is the calling username</span>
+<span class="fc" id="L91">		assertCloudReady(movieCollection);</span>
+		//TODO: Need to consider error control, especially considering the mirroring of movie collections (check other methods too)
+<span class="fc" id="L93">		collectionDao.addMovieCollection(movieCollection);</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">		if (movieCollection.isCloud()) {</span>
+			try {
+<span class="nc" id="L96">				dynamoCollectionRepository.save(movieCollection);</span>
+<span class="nc" id="L97">			} catch (Exception e) {</span>
+<span class="nc" id="L98">				throw new WebServicesException(e);</span>
+<span class="nc" id="L99">			}</span>
+		}
+<span class="fc" id="L101">	}</span>
+
+	@Override
+	public void updateMovieCollection(MovieCollection movieCollection, String callingUsername) throws CollectionSharingException, WebServicesException {
+<span class="fc" id="L105">		Optional&lt;MovieCollection&gt; viewableMovieCollectionOptional = collectionDao.getViewableMovieCollection(movieCollection.getId(), callingUsername);</span>
+<span class="pc bpc" id="L106" title="2 of 4 branches missed.">		if (!viewableMovieCollectionOptional.isPresent() || !viewableMovieCollectionOptional.get().isEditable()) { // collection must be editable</span>
+<span class="nc" id="L107">			throw new CollectionSharingException(&quot;User does not have required permission to update collection.&quot;);</span>
+		}
+<span class="fc" id="L109">		MovieCollection editableMovieCollection = viewableMovieCollectionOptional.get();</span>
+<span class="fc" id="L110">		assertCloudReady(editableMovieCollection);</span>
+<span class="fc" id="L111">		editableMovieCollection.setName(movieCollection.getName());</span>
+<span class="fc" id="L112">		collectionDao.updateMovieCollection(editableMovieCollection);</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">		if (editableMovieCollection.isCloud()) {</span>
+			try {
+<span class="nc" id="L115">				dynamoCollectionRepository.save(editableMovieCollection);</span>
+<span class="nc" id="L116">			} catch (Exception e) {</span>
+<span class="nc" id="L117">				throw new WebServicesException(e);</span>
+<span class="nc" id="L118">			}</span>
+		}
+<span class="fc" id="L120">	}</span>
+
+	@Override
+	public void deleteMovieCollection(String collectionId, String callingUsername) throws CollectionSharingException, WebServicesException {
+<span class="fc" id="L124">		Optional&lt;MovieCollection&gt; movieCollectionOptional = collectionDao.getViewableMovieCollection(collectionId, callingUsername);</span>
+<span class="pc bpc" id="L125" title="1 of 4 branches missed.">		if (!movieCollectionOptional.isPresent() || !movieCollectionOptional.get().getOwner().equals(callingUsername)) { // only owner can delete collection</span>
+<span class="fc" id="L126">			throw new CollectionSharingException(&quot;User does not have required permission to delete collection.&quot;);</span>
+		}
+<span class="fc" id="L128">		MovieCollection movieCollection = movieCollectionOptional.get();</span>
+<span class="fc" id="L129">		assertCloudReady(movieCollection);</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">		if (movieCollection.isCloud()) {</span>
+			try {
+<span class="nc" id="L132">				dynamoMovieRepository.deleteByCollectionId(collectionId);</span>
+<span class="nc" id="L133">				dynamoCollectionRepository.deleteById(collectionId);</span>
+<span class="nc" id="L134">			} catch (Exception e) {</span>
+<span class="nc" id="L135">				throw new WebServicesException(e);</span>
+<span class="nc" id="L136">			}</span>
+		} else {
+<span class="fc" id="L138">			movieDao.deleteMoviesForCollection(collectionId);</span>
+		}
+<span class="fc" id="L140">		collectionDao.deleteMovieCollection(collectionId);</span>
+<span class="fc" id="L141">	}</span>
+
+	@Override
+	public void shareMovieCollection(String collectionId, String shareWithUsername, boolean editable, String callingUsername) throws CollectionSharingException {
+<span class="nc" id="L145">		assertCollectionEditable(collectionId, callingUsername);</span>
+<span class="nc" id="L146">		collectionDao.shareCollection(collectionId, shareWithUsername, editable);</span>
+<span class="nc" id="L147">	}</span>
+
+	@Override
+	public void unshareMovieCollection(String collectionId, String unshareWithUsername, String callingUsername) throws CollectionSharingException {
+<span class="fc" id="L151">		MovieCollection movieCollection = null;</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">		if (callingUsername.equals(unshareWithUsername)) {</span>
+<span class="fc" id="L153">			movieCollection = assertCollectionViewable(collectionId, callingUsername);</span>
+		} else {
+<span class="fc" id="L155">			movieCollection = assertCollectionEditable(collectionId, callingUsername);</span>
+		}
+<span class="fc bfc" id="L157" title="All 2 branches covered.">		if (movieCollection.getOwner().equals(unshareWithUsername)) {</span>
+<span class="fc" id="L158">			throw new CollectionSharingException(&quot;Collection owner permissions cannot be revoked.&quot;);</span>
+		}
+<span class="fc" id="L160">		collectionDao.unshareCollection(collectionId, unshareWithUsername);</span>
+<span class="fc" id="L161">	}</span>
+
+	@Override
+	public void updateEditable(String collectionId, String updateUsername, boolean editable, String callingUsername) throws CollectionSharingException {
+<span class="nc" id="L165">		MovieCollection movieCollection = assertCollectionEditable(collectionId, callingUsername);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (movieCollection.getOwner().equals(updateUsername)) {</span>
+<span class="nc" id="L167">			throw new CollectionSharingException(&quot;Collection owner permissions cannot be changed.&quot;);</span>
+		}
+<span class="nc" id="L169">		collectionDao.updateEditable(collectionId, updateUsername, editable);</span>
+		
+<span class="nc" id="L171">	}</span>
+
+	@Override
+	public void acceptShareOffer(String collectionId, String callingUsername) throws CollectionSharingException {
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if (!collectionDao.acceptShareOffer(collectionId, callingUsername)) {</span>
+<span class="nc" id="L176">			throw new CollectionSharingException(&quot;Unable to accept share offer for collection &quot; + collectionId + &quot; user &quot; + callingUsername);</span>
+		}
+<span class="nc" id="L178">	}</span>
+
+	@Override
+	public void declineShareOffer(String collectionId, String callingUsername) throws CollectionSharingException {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if (!collectionDao.unshareCollection(collectionId, callingUsername)) {</span>
+<span class="nc" id="L183">			throw new CollectionSharingException(&quot;Unable to decline share offer for collection &quot; + collectionId + &quot; user &quot; + callingUsername);</span>
+		}
+<span class="nc" id="L185">	}</span>
+	
+	@Override
+	public MovieCollection assertCollectionViewable(String collectionId, String callingUsername) throws CollectionSharingException {
+<span class="fc" id="L189">		Optional&lt;MovieCollection&gt; movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">		if (!movieCollection.isPresent()) { // collection must be viewable</span>
+<span class="fc" id="L191">			throw new CollectionSharingException(&quot;User does not have required permission to update share permission.&quot;);</span>
+		}
+<span class="fc" id="L193">		return movieCollection.get();</span>
+	}
+
+	@Override
+	public MovieCollection assertCollectionEditable(String collectionId, String callingUsername) throws CollectionSharingException {
+<span class="fc" id="L198">		Optional&lt;MovieCollection&gt; movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);</span>
+<span class="pc bpc" id="L199" title="1 of 4 branches missed.">		if (!movieCollection.isPresent() || !movieCollection.get().isEditable()) { // collection must be editable</span>
+<span class="fc" id="L200">			throw new CollectionSharingException(&quot;User does not have required permission to update share permission.&quot;);</span>
+		}
+<span class="fc" id="L202">		return movieCollection.get();</span>
+	}
+
+	@Override
+	public List&lt;CollectionPermission&gt; getCollectionPermissions(String collectionId, String callingUsername) throws CollectionSharingException {
+<span class="nc" id="L207">		Optional&lt;MovieCollection&gt; movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);</span>
+<span class="nc bnc" id="L208" title="All 4 branches missed.">		if (!movieCollection.isPresent() || !callingUsername.equals(movieCollection.get().getOwner())) {</span>
+<span class="nc" id="L209">			throw new CollectionSharingException(&quot;User can only view sharing permissions of collections they are the owner of.&quot;);</span>
+		}
+<span class="nc" id="L211">		return collectionDao.getCollectionPermissions(collectionId);</span>
+	}
+
+	@Override
+	public Optional&lt;CollectionPermission&gt; getCollectionPermission(String collectionId, String username, String callingUsername) throws CollectionSharingException {
+<span class="nc" id="L216">		Optional&lt;MovieCollection&gt; movieCollection = collectionDao.getViewableMovieCollection(collectionId, callingUsername);</span>
+<span class="nc bnc" id="L217" title="All 4 branches missed.">		if (!movieCollection.isPresent() || !callingUsername.equals(movieCollection.get().getOwner())) {</span>
+<span class="nc" id="L218">			throw new CollectionSharingException(&quot;User can only view sharing permissions of collections they are the owner of.&quot;);</span>
+		}
+<span class="nc" id="L220">		return collectionDao.getCollectionPermission(collectionId, username);</span>
+	}
+
+	@Override
+	public void importCollection(MultipartFile mFile, String collectionName, boolean cloud, List&lt;String&gt; sheetNames, List&lt;String&gt; columnNames, String callingUsername) throws IOException {
+<span class="nc" id="L225">		long startTime = System.currentTimeMillis();</span>
+<span class="nc" id="L226">		ExcelPorter excelImporter = new ExcelPorter(mFile.getInputStream(), mFile.getOriginalFilename());</span>
+<span class="nc" id="L227">		List&lt;Movie&gt; movies = new ArrayList&lt;Movie&gt;();</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		for (String sheetName : sheetNames) {</span>
+<span class="nc" id="L229">			movies.addAll(excelImporter.getMoviesForSheet(sheetName, columnNames));</span>
+<span class="nc" id="L230">		}</span>
+<span class="nc" id="L231">		long parseTime = System.currentTimeMillis();</span>
+<span class="nc" id="L232">		MovieCollection movieCollection = new MovieCollection();</span>
+<span class="nc" id="L233">		movieCollection.setName(collectionName);</span>
+<span class="nc" id="L234">		movieCollection.setOwnerAndOwned(callingUsername, callingUsername);</span>
+<span class="nc" id="L235">		movieCollection.setEditable(true);</span>
+<span class="nc" id="L236">		movieCollection.setCloud(cloud);</span>
+<span class="nc" id="L237">		collectionDao.addMovieCollection(movieCollection);</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		if (cloud) {</span>
+<span class="nc" id="L239">			dynamoCollectionRepository.save(movieCollection); // key will have already been set by mirrored movie collection save</span>
+		}
+<span class="nc" id="L241">		movies.forEach(movie -&gt; movie.setCollectionId(movieCollection.getId()));</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		if (cloud) {</span>
+<span class="nc" id="L243">			movies.forEach(movie -&gt; movie.setId(keyGenerator.getKey())); // TODO: Could redefine the DynamoDB table to have auto-generated keys</span>
+<span class="nc" id="L244">			dynamoMovieRepository.saveAll(movies);</span>
+		} else {
+<span class="nc" id="L246">			movieDao.addMovies(movies);</span>
+		}
+<span class="nc" id="L248">		long storeTime = System.currentTimeMillis();</span>
+<span class="nc" id="L249">		LOGGER.info(&quot;Time to parse: &quot; + String.valueOf(parseTime - startTime) + &quot;ms; Time to store: &quot; + String.valueOf(storeTime - parseTime) + &quot; ms&quot;);</span>
+<span class="nc" id="L250">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

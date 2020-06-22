@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.service</a> &gt; <span class="el_source">UserServiceImpl.java</span></div><h1>UserServiceImpl.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.service;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.xandercat.pmdb.config.PmdbGrantedAuthority;
+import org.xandercat.pmdb.dao.AuthDao;
+import org.xandercat.pmdb.dao.UserDao;
+import org.xandercat.pmdb.dao.repository.DynamoUserCredentialsRepository;
+import org.xandercat.pmdb.dto.CloudUserSearchResults;
+import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.dto.PmdbUserCredentials;
+import org.xandercat.pmdb.exception.WebServicesException;
+import org.xandercat.pmdb.exception.ServiceLimitExceededException;
+import org.xandercat.pmdb.util.ApplicationProperties;
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+@Component
+<span class="fc" id="L27">public class UserServiceImpl implements UserService {</span>
+	
+	@Value(&quot;${registrations.interval.max}&quot;)
+	private int regMax;
+	
+	@Autowired
+	private UserDao userDao;
+	
+	@Autowired
+	private AuthDao authDao;
+	
+	@Autowired
+	private DynamoUserCredentialsRepository dynamoUserCredentialsRepository;
+	
+	@Autowired
+	private ApplicationProperties applicationProperties;
+	
+	@Autowired
+	private ApplicationService applicationService;
+	
+	@Override
+	public Optional&lt;PmdbUser&gt; getUser(String username) {
+<span class="fc" id="L49">		return userDao.getUser(username);</span>
+	}
+
+	@Override
+	public Optional&lt;PmdbUser&gt; getUserByEmail(String email) {
+<span class="nc" id="L54">		return userDao.getUserByEmail(email);</span>
+	}
+
+	@Override
+	public void updateLastAccess(String username) {
+<span class="nc" id="L59">		userDao.updateLastAccess(username);</span>
+<span class="nc" id="L60">	}</span>
+	
+	@Override
+	public int getUserCount() {
+<span class="nc" id="L64">		return userDao.getUserCount();</span>
+	}
+
+	@Override
+	public List&lt;PmdbUser&gt; searchUsers(String searchString) {
+<span class="nc" id="L69">		return userDao.searchUsers(searchString);</span>
+	}
+
+	@Override
+	public void saveMyAccountUser(PmdbUser user, String newPassword, String callingUsername) {
+<span class="fc bfc" id="L74" title="All 2 branches covered.">		if (!callingUsername.equals(user.getUsername())) {</span>
+<span class="fc" id="L75">			throw new IllegalArgumentException(&quot;Username mismatch. Form has username &quot; + user.getUsername() + &quot; while authenticated username is &quot; + callingUsername);</span>
+		}
+<span class="fc" id="L77">		Optional&lt;PmdbUser&gt; storedUserOptional = userDao.getUser(callingUsername);</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">		if (!storedUserOptional.isPresent()) {</span>
+<span class="nc" id="L79">			throw new IllegalArgumentException(&quot;User &quot; + callingUsername + &quot; not found.&quot;);</span>
+		}
+<span class="fc" id="L81">		PmdbUser storedUser = storedUserOptional.get();</span>
+<span class="fc" id="L82">		storedUser.setGrantedAuthorities(authDao.getAuthorities(storedUser.getUsername()));</span>
+<span class="fc" id="L83">		storedUser.setEmail(user.getEmail());</span>
+<span class="fc" id="L84">		storedUser.setFirstName(user.getFirstName());</span>
+<span class="fc" id="L85">		storedUser.setLastName(user.getLastName());</span>
+<span class="fc" id="L86">		saveUser(storedUser, newPassword, false);</span>
+<span class="fc" id="L87">	}</span>
+
+	@Override
+	public void saveUser(PmdbUser user, String newPassword, boolean newUser) {
+<span class="fc bfc" id="L91" title="All 2 branches covered.">		if (FormatUtil.isBlank(user.getUsername())) {</span>
+<span class="fc" id="L92">			throw new IllegalArgumentException(&quot;No username provided.&quot;);</span>
+		}
+<span class="fc" id="L94">		String username = user.getUsername().trim();</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">		newPassword = FormatUtil.isBlank(newPassword)? null : newPassword.trim();</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">		if (newUser) {</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">			if (getUser(username).isPresent()) {</span>
+<span class="fc" id="L98">				throw new IllegalArgumentException(&quot;User &quot; + username + &quot; already exists.&quot;);</span>
+			}
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">			if (applicationProperties.isAwsEnabled()) {</span>
+<span class="fc" id="L101">				Optional&lt;PmdbUserCredentials&gt; creds = dynamoUserCredentialsRepository.findById(username);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">				if (creds.isPresent()) {</span>
+<span class="fc" id="L103">					throw new IllegalArgumentException(&quot;Username already exists in the cloud; user must be synced or removed from cloud to add again.&quot;);</span>
+				}
+			}
+<span class="fc bfc" id="L106" title="All 2 branches covered.">			if (newPassword == null) {</span>
+<span class="fc" id="L107">				throw new IllegalArgumentException(&quot;New users must have password specified.&quot;);</span>
+			}
+		} else {
+<span class="fc bfc" id="L110" title="All 2 branches covered.">			if (!getUser(username).isPresent()) {</span>
+<span class="fc" id="L111">				throw new IllegalArgumentException(&quot;User &quot; + username + &quot; not found.&quot;);</span>
+			}
+		}
+<span class="fc bfc" id="L114" title="All 2 branches covered.">		if (newUser) {</span>
+<span class="fc" id="L115">			userDao.addUser(user, newPassword);</span>
+<span class="fc" id="L116">			authDao.grant(user.getUsername(), user.getGrantedAuthorities());</span>
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">			if (applicationProperties.isAwsEnabled()) {</span>
+<span class="fc" id="L118">				PmdbUserCredentials credentials = new PmdbUserCredentials(user.getUsername(), user.getPassword().getBytes());</span>
+<span class="fc" id="L119">				dynamoUserCredentialsRepository.save(credentials);</span>
+<span class="fc" id="L120">			}</span>
+		} else {
+<span class="fc" id="L122">			userDao.saveUser(user);</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">			if (FormatUtil.isNotBlank(newPassword)) {</span>
+<span class="nc" id="L124">				String encryptedPassword = userDao.changePassword(username, newPassword);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">				if (applicationProperties.isAwsEnabled()) {</span>
+<span class="nc" id="L126">					PmdbUserCredentials credentials = new PmdbUserCredentials(username, encryptedPassword.getBytes());</span>
+<span class="nc" id="L127">					dynamoUserCredentialsRepository.save(credentials);			</span>
+				}
+			}
+<span class="fc" id="L130">			boolean isAdmin = isAdministrator(username);</span>
+<span class="pc bpc" id="L131" title="1 of 4 branches missed.">			if (user.getGrantedAuthorities().contains(PmdbGrantedAuthority.ROLE_ADMIN) &amp;&amp; !isAdmin) {</span>
+<span class="fc" id="L132">				authDao.grant(username, PmdbGrantedAuthority.ROLE_ADMIN);</span>
+<span class="pc bpc" id="L133" title="2 of 4 branches missed.">			} else if (!user.getGrantedAuthorities().contains(PmdbGrantedAuthority.ROLE_ADMIN) &amp;&amp; isAdmin) {</span>
+<span class="nc" id="L134">				authDao.revoke(username, PmdbGrantedAuthority.ROLE_ADMIN);</span>
+			}
+		}
+<span class="fc" id="L137">	}</span>
+	
+	@Override
+	public void registerUser(PmdbUser user, String newPassword) throws ServiceLimitExceededException {
+<span class="fc" id="L141">		int count = applicationService.incrementRegistrationsTriggerCount();</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">		if (count &gt;= regMax) {</span>
+<span class="fc" id="L143">			throw new ServiceLimitExceededException(&quot;Too many registrations in a short period of time.&quot;, count, regMax);</span>
+		}
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">		if (!FormatUtil.isValidUsername(user.getUsername())) {</span>
+			// defensive double check on username, though validation should have already caught this
+<span class="nc" id="L147">			throw new IllegalArgumentException(&quot;Invalid username: \&quot;&quot; + user.getUsername() + &quot;\&quot;&quot;);</span>
+		}
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">		if (FormatUtil.isBlank(newPassword)) {</span>
+			// defensive double check on password, though validation should have already caught this
+<span class="nc" id="L151">			throw new IllegalArgumentException(&quot;Password cannot be empty.&quot;);</span>
+		}
+<span class="fc" id="L153">		user.setEnabled(false); // ensure user account is initially disabled</span>
+<span class="fc" id="L154">		user.setGrantedAuthorities(PmdbGrantedAuthority.ROLE_USER); // ensure proper roles</span>
+<span class="fc" id="L155">		saveUser(user, newPassword, true);</span>
+		//TODO: If we had email working, we could send an account activation email to the user here
+<span class="fc" id="L157">	}</span>
+
+	@Override
+	public boolean isAdministrator(String username) {
+<span class="fc" id="L161">		Collection&lt;PmdbGrantedAuthority&gt; authorities = authDao.getAuthorities(username);</span>
+<span class="fc" id="L162">		return authorities.contains(PmdbGrantedAuthority.ROLE_ADMIN);</span>
+	}
+
+	@Override
+	public CloudUserSearchResults syncCloudUsers(List&lt;PmdbUser&gt; regularSearchResults, String searchString) {
+<span class="fc" id="L167">		CloudUserSearchResults results = new CloudUserSearchResults();</span>
+<span class="fc" id="L168">		Iterable&lt;PmdbUserCredentials&gt; credentials = dynamoUserCredentialsRepository.findAll();</span>
+<span class="fc" id="L169">		Set&lt;String&gt; cloudUsernames = new HashSet&lt;String&gt;();</span>
+<span class="fc" id="L170">		credentials.forEach(credential -&gt; cloudUsernames.add(credential.getUsername()));</span>
+<span class="fc" id="L171">		Set&lt;String&gt; localUsernames = regularSearchResults.stream()</span>
+<span class="fc" id="L172">				.map(user -&gt; user.getUsername())</span>
+<span class="fc" id="L173">				.collect(Collectors.toSet());</span>
+<span class="fc" id="L174">		Set&lt;String&gt; usersNotInCloud = localUsernames.stream()</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">				.filter(localUsername -&gt; !cloudUsernames.contains(localUsername))</span>
+<span class="fc" id="L176">				.collect(Collectors.toSet());</span>
+<span class="fc" id="L177">		Set&lt;String&gt; onlyInCloudUsernames = cloudUsernames.stream()</span>
+<span class="fc" id="L178">				.filter(cloudUsername -&gt; cloudUsername.contains(searchString))</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">				.filter(cloudUsername -&gt; !localUsernames.contains(cloudUsername))</span>
+<span class="fc" id="L180">				.collect(Collectors.toSet());</span>
+<span class="fc" id="L181">		results.setUsernamesNotInCloud(usersNotInCloud);</span>
+<span class="fc" id="L182">		results.setUsernamesOnlyInCloud(onlyInCloudUsernames);</span>
+<span class="fc" id="L183">		return results;</span>
+	}
+
+	@Override
+	public void syncUserToCloud(String username) throws WebServicesException {
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">		if (applicationProperties.isAwsEnabled()) {</span>
+<span class="fc" id="L189">			PmdbUser user = userDao.getUser(username).get();</span>
+<span class="fc" id="L190">			PmdbUserCredentials credentials = new PmdbUserCredentials(user.getUsername(), user.getPassword().getBytes());</span>
+			try {
+<span class="fc" id="L192">				dynamoUserCredentialsRepository.save(credentials);</span>
+<span class="nc" id="L193">			} catch (Exception e) {</span>
+<span class="nc" id="L194">				throw new WebServicesException(e);</span>
+<span class="fc" id="L195">			}</span>
+<span class="fc" id="L196">		} else {</span>
+<span class="nc" id="L197">			throw new WebServicesException(&quot;Cloud services are disabled.&quot;);</span>
+		}
+<span class="fc" id="L199">	}</span>
+
+	@Override
+	public void syncUserFromCloud(String username) throws WebServicesException {
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">		if (userDao.getUser(username).isPresent()) {</span>
+<span class="nc" id="L204">			throw new IllegalArgumentException(&quot;User named &quot; + username + &quot; already exists in the system.&quot;);</span>
+		}
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">		if (applicationProperties.isAwsEnabled()) {</span>
+<span class="fc" id="L207">			Optional&lt;PmdbUserCredentials&gt; optional = dynamoUserCredentialsRepository.findById(username);</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">			if (optional.isPresent()) {</span>
+<span class="fc" id="L209">				PmdbUserCredentials creds = optional.get();</span>
+<span class="fc" id="L210">				PmdbUser user = new PmdbUser(creds.getUsername());</span>
+				try {
+<span class="fc" id="L212">					user.setPassword(new String(creds.getPassword(), &quot;UTF-8&quot;));</span>
+<span class="nc" id="L213">				} catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L214">					throw new UnsupportedOperationException(e);</span>
+<span class="fc" id="L215">				}</span>
+<span class="fc" id="L216">				userDao.readdUser(user);</span>
+<span class="fc" id="L217">				authDao.grant(user.getUsername(), PmdbGrantedAuthority.ROLE_USER);</span>
+<span class="fc" id="L218">			} else {</span>
+<span class="nc" id="L219">				throw new WebServicesException(&quot;Unable to find user &quot; + username + &quot; in the cloud.&quot;);</span>
+			}
+<span class="fc" id="L221">		} else {</span>
+<span class="nc" id="L222">			throw new WebServicesException(&quot;Cloud services are disabled.&quot;);</span>
+		}		
+<span class="fc" id="L224">	}</span>
+
+	@Override
+	public void deleteUser(String username) {
+<span class="nc" id="L228">		Optional&lt;PmdbUser&gt; user = getUser(username);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		if (!user.isPresent()) {</span>
+<span class="nc" id="L230">			throw new IllegalArgumentException(&quot;User not found.&quot;);</span>
+		}
+<span class="nc bnc" id="L232" title="All 2 branches missed.">		if (user.get().getLastAccessDate() != null) {</span>
+<span class="nc" id="L233">			throw new IllegalArgumentException(&quot;Only users who have no last access date (indicating they have never logged in) can be deleted.&quot;);</span>
+		}
+<span class="nc" id="L235">		authDao.revoke(username, PmdbGrantedAuthority.values());</span>
+<span class="nc" id="L236">		userDao.delete(username);</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		if (applicationProperties.isAwsEnabled()) {</span>
+<span class="nc" id="L238">			PmdbUserCredentials userCredentials = new PmdbUserCredentials(user.get().getUsername(), user.get().getPassword().getBytes());</span>
+<span class="nc" id="L239">			dynamoUserCredentialsRepository.delete(userCredentials);</span>
+		}
+<span class="nc" id="L241">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

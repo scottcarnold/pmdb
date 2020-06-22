@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WordStatistics.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.util</a> &gt; <span class="el_source">WordStatistics.java</span></div><h1>WordStatistics.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.util;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+/**
+ * Class for word statistics.
+ * 
+ * @author Scott Arnold
+ */
+public class WordStatistics {
+
+	public static class WordCount implements Comparable&lt;WordCount&gt; {
+		private String wordLc;
+		private int count;
+<span class="fc" id="L22">		public WordCount(String word) {</span>
+<span class="fc" id="L23">			this.wordLc = word.trim().toLowerCase();</span>
+<span class="fc" id="L24">		}</span>
+		protected void incrementCount() {
+<span class="fc" id="L26">			this.count++;</span>
+<span class="fc" id="L27">		}</span>
+		public int getCount() {
+<span class="fc" id="L29">			return count;</span>
+		}
+		public String getWord() {
+<span class="fc" id="L32">			return FormatUtil.titleCase(wordLc);</span>
+		}
+		@Override
+		public int compareTo(WordCount o) {
+<span class="fc" id="L36">			return o.count - count;</span>
+		}
+		public String toString() {
+<span class="fc" id="L39">			return getWord() + &quot; (&quot; + count + &quot;)&quot;;</span>
+		}
+	}
+
+<span class="fc" id="L43">	private Map&lt;String, WordCount&gt; wordCounts = new HashMap&lt;String, WordCount&gt;();</span>
+	
+<span class="fc" id="L45">	public WordStatistics() {</span>
+<span class="fc" id="L46">	}</span>
+	
+	/**
+	 * Add words contained with provided string to the collected statistics.  Individual words within the 
+	 * provided string can be separated by white space or commas.
+	 * 
+	 * @param words  string containing words to collect statistics on
+	 */
+	public void addWords(String words) {
+<span class="fc" id="L55">		String[] wordsArray = words.split(&quot;\\s+&quot;);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">		for (int i=0; i&lt;wordsArray.length; i++) {</span>
+<span class="fc" id="L57">			String[] commaSplitWords = wordsArray[i].split(&quot;,&quot;);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">			for (String word : commaSplitWords) {</span>
+<span class="fc" id="L59">				addWord(word);</span>
+			}
+		}
+<span class="fc" id="L62">	}</span>
+	
+	private void addWord(String word) {
+<span class="fc" id="L65">		word = word.trim().toLowerCase();</span>
+<span class="fc" id="L66">		WordCount wordCount = wordCounts.get(word);</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">		if (wordCount == null) {</span>
+<span class="fc" id="L68">			wordCount = new WordCount(word);</span>
+<span class="fc" id="L69">			wordCounts.put(word, wordCount);</span>
+		}
+<span class="fc" id="L71">		wordCount.incrementCount();</span>
+<span class="fc" id="L72">	}</span>
+	
+	/**
+	 * Returns list of all word counts in sorted order from most frequent to least frequent.
+	 * 
+	 * @return list of all word counts from most frequent to least frequent
+	 */
+	public List&lt;WordCount&gt; getWordCounts() {
+<span class="fc" id="L80">		return wordCounts.values().stream().sorted().collect(Collectors.toList());</span>
+	}
+
+	/**
+	 * Returns list of top word counts in sorted order.
+	 * 
+	 * @param top number of results to include
+	 * 
+	 * @return list of top word counts
+	 */
+	public List&lt;WordCount&gt; getTopWordCounts(int top) {
+<span class="fc bfc" id="L91" title="All 2 branches covered.">		if (wordCounts.size() == 0) {</span>
+<span class="fc" id="L92">			return Collections.emptyList();</span>
+		}
+<span class="fc" id="L94">		return getWordCounts().subList(0, Math.min(top, wordCounts.size()));</span>
+	}
+	
+	/**
+	 * Returns list of bottom word counts in sorted order.
+	 * 
+	 * @param bottom number of results to include
+	 * 
+	 * @return list of bottom word counts
+	 */
+	public List&lt;WordCount&gt; getBottomWordCounts(int bottom) {
+<span class="fc bfc" id="L105" title="All 2 branches covered.">		if (wordCounts.size() == 0) {</span>
+<span class="fc" id="L106">			return Collections.emptyList();</span>
+		}
+<span class="fc" id="L108">		return getWordCounts().subList(Math.max(0, wordCounts.size()-bottom), wordCounts.size());</span>
+	}
+	
+	/**
+	 * Returns list of word counts within collected statistics for words contained within the provided string of words.
+	 * Provided string of words can have words separated by white space or commas.
+	 * 
+	 * @param words  words to get word counts for from the collected statistics
+	 * 
+	 * @return list of word counts for words within the provided words string
+	 */
+	public List&lt;WordCount&gt; getWordCountsForWords(String words) {
+<span class="fc" id="L120">		List&lt;WordCount&gt; specificWordCounts = new ArrayList&lt;WordCount&gt;();</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">		if (FormatUtil.isNotBlank(words)) {</span>
+<span class="fc" id="L122">			String[] wordsArray = words.split(&quot;\\s+&quot;);</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">			for (int i=0; i&lt;wordsArray.length; i++) {</span>
+<span class="fc" id="L124">				String[] commaSplitWords = wordsArray[i].split(&quot;,&quot;);</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">				for (String word : commaSplitWords) {</span>
+<span class="fc" id="L126">					WordCount wordCount = wordCounts.get(word.toLowerCase());</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">					if (wordCount != null) {</span>
+<span class="fc" id="L128">						specificWordCounts.add(wordCount);</span>
+					}
+				}
+			}
+<span class="fc" id="L132">			Collections.sort(specificWordCounts);</span>
+		}
+<span class="fc" id="L134">		return specificWordCounts;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

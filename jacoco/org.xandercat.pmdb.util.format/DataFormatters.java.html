@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DataFormatters.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.util.format</a> &gt; <span class="el_source">DataFormatters.java</span></div><h1>DataFormatters.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.util.format;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.xandercat.pmdb.dto.Movie;
+
+/**
+ * Formatting class for formatting display and sort values for movie attributes.
+ * 
+ * @author Scott Arnold
+ */
+<span class="fc" id="L13">public class DataFormatters {</span>
+
+<span class="fc" id="L15">	private Map&lt;String, DataFormatter&gt; attributeFormatters = new HashMap&lt;String, DataFormatter&gt;();</span>
+	private DataFormatter genericFormatter;
+
+	/**
+	 * Sets the generic formatter that will be used to format values when no explicit formatter for an attribute has been set.
+	 * 
+	 * @param genericFormatter generic formatter
+	 */
+	public void setGenericFormatter(DataFormatter genericFormatter) {
+<span class="fc" id="L24">		this.genericFormatter = genericFormatter;</span>
+<span class="fc" id="L25">	}</span>
+	
+	/**
+	 * Sets the formatters to be used for movie attributes.
+	 * 
+	 * @param attributeFormatters formatters for movie attributes (key is attribute name, value is formatter)
+	 */
+	public void setAttributeFormatters(Map&lt;String, DataFormatter&gt; attributeFormatters) {
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">		if (attributeFormatters != null) {</span>
+<span class="fc" id="L34">			this.attributeFormatters = attributeFormatters;</span>
+		} else {
+<span class="nc" id="L36">			this.attributeFormatters.clear();</span>
+		}
+<span class="fc" id="L38">	}</span>
+	
+	/**
+	 * Returns the attribute formatters for movie attributes.
+	 * 
+	 * @return attribute formatters for movie attributes
+	 */
+	public Map&lt;String, DataFormatter&gt; getAttributeFormatters() {
+<span class="fc" id="L46">		return attributeFormatters;</span>
+	}
+	
+	/**
+	 * Adds an attribute formatter for the given attribute name.
+	 * 
+	 * @param attributeName        name of attribute
+	 * @param attributeFormatter   formatter for attribute
+	 */
+	public void addAttributeFormatter(String attributeName, DataFormatter attributeFormatter) {
+<span class="fc" id="L56">		attributeFormatters.put(attributeName, attributeFormatter);</span>
+<span class="fc" id="L57">	}</span>
+	
+	/**
+	 * Returns the display value for the attribute of given name on the given movie.
+	 * 
+	 * @param movie          movie to get display value from
+	 * @param attributeName  attribute name to get display value for
+	 * 
+	 * @return display value for attribute
+	 */
+	public String displayValue(Movie movie, String attributeName) {
+<span class="fc" id="L68">		String attributeValue = movie.getAttribute(attributeName);</span>
+<span class="fc" id="L69">		DataFormatter attributeFormatter = attributeFormatters.get(attributeName);</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">		if (attributeFormatter == null) {</span>
+<span class="nc" id="L71">			attributeFormatter = genericFormatter;</span>
+		}
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">		if (attributeFormatter == null) {</span>
+<span class="nc" id="L74">			return attributeValue;</span>
+		} else {
+<span class="fc" id="L76">			return attributeFormatter.displayValue(attributeValue);</span>
+		}
+	}
+	
+	/**
+	 * Returns the sort value for the attribute of given name on the given movie.
+	 * 
+	 * @param movie          movie to get sort value from
+	 * @param attributeName  attribute name to get sort value for
+	 * 
+	 * @return sort value for attribute
+	 */
+	public String sortValue(Movie movie, String attributeName) {
+<span class="fc" id="L89">		String attributeValue = movie.getAttribute(attributeName);</span>
+<span class="fc" id="L90">		DataFormatter attributeFormatter = attributeFormatters.get(attributeName);</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">		if (attributeFormatter == null) {</span>
+<span class="nc" id="L92">			attributeFormatter = genericFormatter;</span>
+		}
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">		if (attributeFormatter == null) {</span>
+<span class="nc" id="L95">			return attributeValue;</span>
+		} else {
+<span class="fc" id="L97">			return attributeFormatter.sortValue(attributeValue);</span>
+		}		
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

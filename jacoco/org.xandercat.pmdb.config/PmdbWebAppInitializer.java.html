@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PmdbWebAppInitializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.config</a> &gt; <span class="el_source">PmdbWebAppInitializer.java</span></div><h1>PmdbWebAppInitializer.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.config;
+
+import java.io.File;
+
+import javax.servlet.Filter;
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletRegistration.Dynamic;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.web.filter.DelegatingFilterProxy;
+import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+
+/**
+ * Application initialization.
+ * 
+ * @author Scott Arnold
+ */
+<span class="nc" id="L19">public class PmdbWebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {</span>
+
+<span class="nc" id="L21">	private static final Logger LOGGER = LogManager.getLogger(PmdbWebAppInitializer.class);</span>
+	
+<span class="nc" id="L23">	private File uploadFolder = new File(System.getProperty(&quot;java.io.tmpdir&quot;));</span>
+	
+	@Override
+	protected Filter[] getServletFilters() {
+<span class="nc" id="L27">		return new Filter[] { new DelegatingFilterProxy(&quot;springSecurityFilterChain&quot;) };</span>
+	}
+
+	@Override
+	protected Class&lt;?&gt;[] getRootConfigClasses() {
+<span class="nc" id="L32">		LOGGER.debug(&quot;Returning root config classes to framework.&quot;);</span>
+<span class="nc" id="L33">		return new Class[] { WebConfig.class, SecurityConfig.class };</span>
+	}
+
+	@Override
+	protected Class&lt;?&gt;[] getServletConfigClasses() {
+<span class="nc" id="L38">		return null;</span>
+	}
+
+	@Override
+	protected String[] getServletMappings() {
+<span class="nc" id="L43">		return new String[] { &quot;/&quot; };</span>
+	}
+
+	@Override
+	protected void customizeRegistration(Dynamic registration) {
+<span class="nc" id="L48">		MultipartConfigElement multipartConfig = new MultipartConfigElement(</span>
+<span class="nc" id="L49">				uploadFolder.getAbsolutePath(), 1024*1024*10, 1024*1024*12, 1024*1024*5);</span>
+<span class="nc" id="L50">		registration.setMultipartConfig(multipartConfig);</span>
+<span class="nc" id="L51">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

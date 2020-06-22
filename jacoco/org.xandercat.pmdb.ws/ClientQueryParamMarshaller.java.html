@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ClientQueryParamMarshaller.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.ws</a> &gt; <span class="el_source">ClientQueryParamMarshaller.java</span></div><h1>ClientQueryParamMarshaller.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.ws;
+
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.WebTarget;
+
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
+
+/**
+ * Jersey and the ws.rs.Client api do not appear to have any means to utilize an annotated class to populate query parameters for a
+ * Client GET request.  This class provides that capability by reusing the QueryParam annotation as a means to set request parameters
+ * for a request.  For a query parameter to be set, the field must be annotated with QueryParam and the value must be non-blank.
+ * 
+ * @author Scott Arnold
+ */
+<span class="fc" id="L23">public class ClientQueryParamMarshaller {</span>
+	
+	/**
+	 * Return a query param map from a QueryParam annotated class object.
+	 * 
+	 * @param object object to produce a query param map from
+	 * 
+	 * @return query param map for the object
+	 */
+	public Map&lt;String, String&gt; queryParamMap(Object object) {
+<span class="fc" id="L33">		Field[] fields = object.getClass().getDeclaredFields();</span>
+<span class="fc" id="L34">		List&lt;Field&gt; paramFields = Arrays.stream(fields)</span>
+<span class="fc" id="L35">				.filter(field -&gt; StringUtils.hasText((String) AnnotationUtils.getValue(field.getDeclaredAnnotation(QueryParam.class))))</span>
+<span class="fc" id="L36">				.collect(Collectors.toList());</span>
+<span class="fc" id="L37">		paramFields.forEach(field -&gt; ReflectionUtils.makeAccessible(field));</span>
+<span class="fc" id="L38">		return paramFields.stream()</span>
+<span class="fc" id="L39">				.collect(Collectors.toMap(field -&gt; field, field -&gt; (String) AnnotationUtils.getValue(field.getDeclaredAnnotation(QueryParam.class))))</span>
+<span class="fc" id="L40">				.entrySet().stream()</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">				.filter(entry -&gt; ReflectionUtils.getField(entry.getKey(), object) != null)</span>
+<span class="fc" id="L42">				.filter(entry -&gt; StringUtils.hasText(ReflectionUtils.getField(entry.getKey(), object).toString()))</span>
+<span class="fc" id="L43">				.collect(Collectors.toMap(Map.Entry::getValue, entry -&gt; ReflectionUtils.getField(entry.getKey(), object).toString()));		</span>
+	}
+	
+	/**
+	 * Configure a WebTarget with query parameters from the provided QueryParam annotated class object.
+	 * 
+	 * @param webTarget WebTarget to configure with query parameters
+	 * @param object QueryParam annotated class object to pull query parameters from
+	 * 
+	 * @return WebTarget configured with query parameters from provided QueryParam annotated class object
+	 */
+	public WebTarget queryParams(WebTarget webTarget, Object object) {
+<span class="fc" id="L55">		Map&lt;String, String&gt; queryParams = queryParamMap(object);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">		for (Map.Entry&lt;String, String&gt; entry : queryParams.entrySet()) {</span>
+<span class="fc" id="L57">			webTarget = webTarget.queryParam(entry.getKey(), entry.getValue());</span>
+<span class="fc" id="L58">		}</span>
+<span class="fc" id="L59">		return webTarget;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MyAccountController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.controller</a> &gt; <span class="el_source">MyAccountController.java</span></div><h1>MyAccountController.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.controller;
+
+import java.security.Principal;
+
+import javax.validation.Valid;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.form.useradmin.UserForm;
+import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.Alerts;
+import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+/**
+ * Controller for user updating their own account.
+ * 
+ * @author Scott Arnold
+ */
+@Controller
+<span class="fc" id="L28">public class MyAccountController {</span>
+
+<span class="fc" id="L30">	private static final Logger LOGGER = LogManager.getLogger(MyAccountController.class);</span>
+	
+	@Autowired
+	UserService userService;
+	
+	@ModelAttribute(&quot;viewTab&quot;)
+	public String getViewTab() {
+<span class="fc" id="L37">		return ViewUtil.TAB_MY_ACCOUNT;</span>
+	}
+	
+	/**
+	 * Page for editing user details.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * 
+	 * @return page for editing user details
+	 */
+	@RequestMapping(&quot;/myaccount&quot;)
+	public String editUser(Model model, Principal principal) {
+<span class="fc" id="L50">		PmdbUser user = userService.getUser(principal.getName()).get();</span>
+<span class="fc" id="L51">		boolean administrator = userService.isAdministrator(principal.getName());</span>
+<span class="fc" id="L52">		UserForm userForm = new UserForm(user, administrator);</span>
+<span class="fc" id="L53">		model.addAttribute(&quot;userForm&quot;, userForm);</span>
+<span class="fc" id="L54">		return &quot;myaccount/edituser&quot;;</span>
+	}
+	
+	/**
+	 * Processing editing of user details.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param userForm   form for user details
+	 * @param result     binding result
+	 * 
+	 * @return page for editing user details
+	 */
+	@RequestMapping(&quot;/myaccount/editUserSubmit&quot;)
+	public String editUserSubmit(Model model, Principal principal,
+			@ModelAttribute(&quot;userForm&quot;) @Valid UserForm userForm,
+			BindingResult result) {
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">		if (result.hasErrors()) {</span>
+<span class="nc" id="L72">			return &quot;myaccount/edituser&quot;;</span>
+		}
+		try {
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">			String newPassword = FormatUtil.isBlank(userForm.getPasswordPair().getFirst())? null : userForm.getPasswordPair().getFirst().trim();</span>
+<span class="fc" id="L76">			userService.saveMyAccountUser(userForm.toUser(), newPassword, principal.getName());</span>
+<span class="fc" id="L77">			Alerts.setMessage(model, &quot;Account information saved.&quot;);</span>
+<span class="nc" id="L78">		} catch (Exception e) {</span>
+<span class="nc" id="L79">			LOGGER.error(&quot;Unexpected error when updating user.&quot;, e);</span>
+<span class="nc" id="L80">			Alerts.setErrorMessage(model, &quot;An unexpected error occurred while attempting to save account information.&quot;);</span>
+<span class="fc" id="L81">		}</span>
+<span class="fc" id="L82">		return editUser(model, principal);		</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

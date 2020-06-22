@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Alerts.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.util</a> &gt; <span class="el_source">Alerts.java</span></div><h1>Alerts.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.util;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+/**
+ * Utility class for managing application alert messages to users. Should be paired with a layout template
+ * to present and layout the alerts in the view.
+ * 
+ * @author Scott Arnold
+ */
+<span class="nc" id="L19">public class Alerts {</span>
+	
+	public static final String KEY_MESSAGE = &quot;alertMessage&quot;;
+	public static final String KEY_ERROR_MESSAGE = &quot;alertErrorMessage&quot;;
+	public static final String KEY_OTHER_MESSAGES = &quot;alertOtherMessages&quot;;
+	public static final String KEY_DISMISSED_KEYS = &quot;alertOtherMessagesDismissed&quot;;
+
+	public static class Alert {
+		private String message;     // a basic string message
+		private boolean messageKey; // if true, indicates message is a resource message key
+		private String sessionKey;  // key for session tracking
+		private AlertType type;
+<span class="fc" id="L31">		public Alert(String sessionKey, AlertType type, String message, boolean messageKey) {</span>
+<span class="fc" id="L32">			this.sessionKey = sessionKey;</span>
+<span class="fc" id="L33">			this.type = type;</span>
+<span class="fc" id="L34">			this.message = message;</span>
+<span class="fc" id="L35">			this.messageKey = messageKey;</span>
+<span class="fc" id="L36">		}</span>
+		public String getMessage() {
+<span class="nc" id="L38">			return message;</span>
+		}
+		public String getSessionKey() {
+<span class="fc" id="L41">			return sessionKey;</span>
+		}
+		public AlertType getType() {
+<span class="nc" id="L44">			return type;</span>
+		}
+		public boolean isMessageKey() {
+<span class="nc" id="L47">			return messageKey;</span>
+		}
+	}
+	
+<span class="fc" id="L51">	public static enum AlertType {</span>
+<span class="fc" id="L52">		SUCCESS(&quot;alert-success&quot;), INFO(&quot;alert-info&quot;), WARNING(&quot;alert-warning&quot;), DANGER(&quot;alert-danger&quot;);</span>
+		private String classname;
+<span class="fc" id="L54">		private AlertType(String classname) {</span>
+<span class="fc" id="L55">			this.classname = classname;</span>
+<span class="fc" id="L56">		}</span>
+		public String getClassname() {
+<span class="nc" id="L58">			return classname;</span>
+		}
+	}
+	
+	public static void setMessage(Model model, String message) {
+<span class="fc" id="L63">		setMessage(model, message, false);</span>
+<span class="fc" id="L64">	}</span>
+	
+	public static void setMessageWithKey(Model model, String messageKey) {
+<span class="nc" id="L67">		setMessage(model, messageKey, true);</span>
+<span class="nc" id="L68">	}</span>
+	
+	public static void setMessage(Model model, String message, boolean messageKey) {
+<span class="fc" id="L71">		model.addAttribute(KEY_MESSAGE, new Alert(KEY_MESSAGE, AlertType.SUCCESS, message, messageKey));</span>
+<span class="fc" id="L72">	}</span>
+	
+	public static void setErrorMessage(Model model, String errorMessage) {
+<span class="fc" id="L75">		setErrorMessage(model, errorMessage, false);</span>
+<span class="fc" id="L76">	}</span>
+	
+	public static void setErrorMessageWithKey(Model model, String errorMessageKey) {
+<span class="nc" id="L79">		setErrorMessage(model, errorMessageKey, true);</span>
+<span class="nc" id="L80">	}</span>
+	
+	public static void setErrorMessage(Model model, String errorMessage, boolean messageKey) {
+<span class="fc" id="L83">		model.addAttribute(KEY_ERROR_MESSAGE, new Alert(KEY_ERROR_MESSAGE, AlertType.DANGER, errorMessage, messageKey));</span>
+<span class="fc" id="L84">	}</span>
+	
+	public static void setErrorMessage(RedirectAttributes redirectAttributes, String errorMessage, boolean messageKey) {
+<span class="nc" id="L87">		redirectAttributes.addFlashAttribute(KEY_ERROR_MESSAGE, new Alert(KEY_ERROR_MESSAGE, AlertType.DANGER, errorMessage, messageKey));</span>
+<span class="nc" id="L88">	}</span>
+
+	public static void setSessionAlertWithKey(Model model, HttpSession session, String sessionKey, AlertType type, String messageKey) {
+<span class="fc" id="L91">		setSessionAlert(model, session, sessionKey, type, messageKey, true);</span>
+<span class="fc" id="L92">	}</span>
+	
+	public static void setSessionAlert(Model model, HttpSession session, String sessionKey, AlertType type, String message) {
+<span class="nc" id="L95">		setSessionAlert(model, session, sessionKey, type, message, false);</span>
+<span class="nc" id="L96">	}</span>
+	
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static void setSessionAlert(Model model, HttpSession session, String key, AlertType type, String message, boolean messageKey) {
+<span class="fc" id="L100">		Set&lt;String&gt; dismissedKeys = (Set&lt;String&gt;) session.getAttribute(KEY_DISMISSED_KEYS);</span>
+<span class="pc bpc" id="L101" title="3 of 4 branches missed.">		if (dismissedKeys != null &amp;&amp; dismissedKeys.contains(key)) {</span>
+<span class="nc" id="L102">			return;</span>
+		}
+<span class="fc" id="L104">		List&lt;Alert&gt; alerts = (List&lt;Alert&gt;) model.getAttribute(KEY_OTHER_MESSAGES);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">		if (alerts == null) {</span>
+<span class="fc" id="L106">			alerts = new ArrayList&lt;Alert&gt;();</span>
+<span class="fc" id="L107">			model.addAttribute(KEY_OTHER_MESSAGES, alerts);</span>
+		}
+<span class="fc bfc" id="L109" title="All 2 branches covered.">		if (!alerts.stream().anyMatch(alert -&gt; key.equals(alert.getSessionKey()))) {</span>
+<span class="fc" id="L110">			alerts.add(new Alert(key, type, message, messageKey));</span>
+		}
+<span class="fc" id="L112">	}</span>
+	
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public static void dismissSessionAlert(HttpSession session, String key) {
+<span class="nc" id="L116">		Set&lt;String&gt; dismissedKeys = (Set&lt;String&gt;) session.getAttribute(KEY_DISMISSED_KEYS);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (dismissedKeys == null) {</span>
+<span class="nc" id="L118">			dismissedKeys = new HashSet&lt;String&gt;();</span>
+<span class="nc" id="L119">			session.setAttribute(KEY_DISMISSED_KEYS, dismissedKeys);</span>
+		}
+<span class="nc" id="L121">		dismissedKeys.add(key);</span>
+<span class="nc" id="L122">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

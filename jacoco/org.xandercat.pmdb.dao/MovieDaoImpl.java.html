@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MovieDaoImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.dao</a> &gt; <span class="el_source">MovieDaoImpl.java</span></div><h1>MovieDaoImpl.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.dao;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.util.MovieTitleComparator;
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+@Component
+<span class="nc" id="L22">public class MovieDaoImpl implements MovieDao {</span>
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+	
+	@Autowired
+	private KeyGenerator keyGenerator;
+	
+	@Override
+	public void deleteMoviesForCollection(String collectionId) {
+		// note: relying on cascade delete for movie attributes
+<span class="nc" id="L33">		final String sql = &quot;DELETE FROM movie WHERE collection_id = ?&quot;;</span>
+<span class="nc" id="L34">		jdbcTemplate.update(sql, ps -&gt; ps.setString(1, collectionId)); </span>
+<span class="nc" id="L35">	}</span>
+
+	@Override
+	@Transactional
+	public Set&lt;Movie&gt; getMoviesForCollection(String collectionId) {
+<span class="nc" id="L40">		final String sql = &quot;SELECT movie.id, movie.title, attribute_name, attribute_value FROM movie &quot;</span>
+				+ &quot; LEFT JOIN movie_attributes on movie.id = movie_attributes.movie_id&quot;
+				+ &quot; WHERE movie.collection_id = ? ORDER BY movie.id&quot;;
+<span class="nc" id="L43">		final Map&lt;String, Movie&gt; movies = new HashMap&lt;String, Movie&gt;();</span>
+<span class="nc" id="L44">		jdbcTemplate.query(sql, ps -&gt; ps.setString(1, collectionId), rs -&gt; {</span>
+<span class="nc" id="L45">			Movie movie = movies.get(rs.getString(1));</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">			if (movie == null) {</span>
+<span class="nc" id="L47">				movie = new Movie();</span>
+<span class="nc" id="L48">				movie.setId(rs.getString(1));</span>
+<span class="nc" id="L49">				movie.setTitle(rs.getString(2));</span>
+<span class="nc" id="L50">				movies.put(movie.getId(), movie);</span>
+			}
+<span class="nc bnc" id="L52" title="All 2 branches missed.">			if (FormatUtil.isNotBlank(rs.getString(3))) { // for movies with 0 attributes found on left join</span>
+<span class="nc" id="L53">				movie.addAttribute(rs.getString(3), rs.getString(4));</span>
+			}
+<span class="nc" id="L55">		});</span>
+<span class="nc" id="L56">		return movies.values().stream().collect(Collectors.toSet());</span>
+	}	
+	
+	@Override
+	@Transactional
+	public Set&lt;Movie&gt; searchMoviesForCollection(String collectionId, String searchString) {
+<span class="nc" id="L62">		final String lcSearchString = searchString.trim().toLowerCase();</span>
+<span class="nc" id="L63">		final String sql = &quot;SELECT movie.id, movie.title, movie.collection_id FROM movie &quot;</span>
+				+ &quot; LEFT JOIN movie_attributes ON movie.id = movie_attributes.movie_id&quot;
+				+ &quot; WHERE collection_id = ? &quot;
+				+ &quot; AND (LOWER(title) like ?&quot;
+				+ &quot; OR LOWER(attribute_value) like ?)&quot;
+				+ &quot; ORDER BY movie.id&quot;;
+<span class="nc" id="L69">		final Set&lt;Movie&gt; movies = new HashSet&lt;Movie&gt;();</span>
+<span class="nc" id="L70">		jdbcTemplate.query(sql, ps -&gt; {</span>
+<span class="nc" id="L71">			ps.setString(1, collectionId);</span>
+<span class="nc" id="L72">			ps.setString(2, &quot;%&quot; + lcSearchString + &quot;%&quot;);</span>
+<span class="nc" id="L73">			ps.setString(3, &quot;%&quot; + lcSearchString + &quot;%&quot;);</span>
+<span class="nc" id="L74">		}, rs -&gt; {</span>
+<span class="nc" id="L75">			Movie movie = new Movie();</span>
+<span class="nc" id="L76">			movie.setId(rs.getString(1));</span>
+<span class="nc" id="L77">			movie.setTitle(rs.getString(2));</span>
+<span class="nc" id="L78">			movie.setCollectionId(rs.getString(3));</span>
+<span class="nc" id="L79">			movie.setAttributes(getMovieAttributes(movie.getId()));</span>
+<span class="nc" id="L80">			movies.add(movie);</span>
+<span class="nc" id="L81">		});</span>
+<span class="nc" id="L82">		return movies;</span>
+	}
+
+	@Override
+	public Optional&lt;Movie&gt; getMovie(String id) {
+<span class="nc" id="L87">		final String sql = &quot;SELECT id, title, collection_id FROM movie WHERE id = ?&quot;;</span>
+<span class="nc" id="L88">		final List&lt;Movie&gt; movies = new ArrayList&lt;Movie&gt;();</span>
+<span class="nc" id="L89">		jdbcTemplate.query(sql, ps -&gt; ps.setString(1, id), rs -&gt; {</span>
+<span class="nc" id="L90">			Movie movie = new Movie();</span>
+<span class="nc" id="L91">			movie.setId(rs.getString(1));</span>
+<span class="nc" id="L92">			movie.setTitle(rs.getString(2));</span>
+<span class="nc" id="L93">			movie.setCollectionId(rs.getString(3));</span>
+<span class="nc" id="L94">			movie.setAttributes(getMovieAttributes(movie.getId()));</span>
+<span class="nc" id="L95">			movies.add(movie);</span>
+<span class="nc" id="L96">		});</span>
+<span class="nc" id="L97">		return movies.stream().findAny();</span>
+	}
+
+	@Override
+	@Transactional
+	public void addMovie(Movie movie) {
+<span class="nc" id="L103">		addMovieInternal(movie);</span>
+<span class="nc" id="L104">	}</span>
+	
+	@Override
+	@Transactional
+	public void addMovies(Collection&lt;Movie&gt; movies) {
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		for (Movie movie : movies) {</span>
+<span class="nc" id="L110">			addMovieInternal(movie);</span>
+<span class="nc" id="L111">		}</span>
+<span class="nc" id="L112">	}</span>
+	
+	private void addMovieInternal(Movie movie) {
+<span class="nc" id="L115">		final String sql = &quot;INSERT INTO movie(id, title, collection_id) VALUES (?, ?, ?)&quot;;</span>
+<span class="nc" id="L116">		movie.setId(keyGenerator.getKey());</span>
+<span class="nc" id="L117">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L118">			ps.setString(1, movie.getId());</span>
+<span class="nc" id="L119">			ps.setString(2, movie.getTitle());</span>
+<span class="nc" id="L120">			ps.setString(3, movie.getCollectionId());			</span>
+<span class="nc" id="L121">		});</span>
+<span class="nc" id="L122">		movie.getAttributes().forEach( (attrKey, value) -&gt; addMovieAttribute(movie.getId(), attrKey, value));</span>
+<span class="nc" id="L123">	}</span>
+	
+	@Override
+	@Transactional
+	public void updateMovie(Movie movie) {
+<span class="nc" id="L128">		final String sql = &quot;UPDATE movie SET title = ? WHERE id = ?&quot;;</span>
+<span class="nc" id="L129">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L130">			ps.setString(1, movie.getTitle());</span>
+<span class="nc" id="L131">			ps.setString(2, movie.getId());			</span>
+<span class="nc" id="L132">		});</span>
+		
+		// do some set logic to figure out attributes
+<span class="nc" id="L135">		Set&lt;String&gt; oldKeys = getMovieAttributes(movie.getId()).keySet();</span>
+<span class="nc" id="L136">		Set&lt;String&gt; newKeys = movie.getAttributes().keySet();</span>
+		
+<span class="nc" id="L138">		Set&lt;String&gt; deleteKeys = oldKeys.stream()</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">				.filter(oldKey -&gt; !newKeys.contains(oldKey))</span>
+<span class="nc" id="L140">				.collect(Collectors.toSet());</span>
+		
+<span class="nc" id="L142">		Set&lt;String&gt; addKeys = newKeys.stream()</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">				.filter(newKey -&gt; !oldKeys.contains(newKey))</span>
+<span class="nc" id="L144">				.collect(Collectors.toSet());</span>
+		
+<span class="nc" id="L146">		Set&lt;String&gt; updateKeys = oldKeys.stream()</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">				.filter(oldKey -&gt; !deleteKeys.contains(oldKey))</span>
+<span class="nc" id="L148">				.collect(Collectors.toSet());</span>
+		
+<span class="nc" id="L150">		deleteKeys.forEach(key -&gt; deleteMovieAttribute(movie.getId(), key));</span>
+<span class="nc" id="L151">		addKeys.forEach(key -&gt; addMovieAttribute(movie.getId(), key, movie.getAttribute(key)));	</span>
+<span class="nc" id="L152">		updateKeys.forEach(key -&gt; updateMovieAttribute(movie.getId(), key, movie.getAttribute(key)));</span>
+<span class="nc" id="L153">	}</span>
+
+	@Override
+	public void deleteMovie(String id) {
+		// note: relying on cascade delete for movie attributes
+<span class="nc" id="L158">		final String sql = &quot;DELETE FROM movie WHERE id = ?&quot;;</span>
+<span class="nc" id="L159">		jdbcTemplate.update(sql, ps -&gt; ps.setString(1, id));</span>
+<span class="nc" id="L160">	}</span>
+	
+	private Map&lt;String, String&gt; getMovieAttributes(String id) {
+<span class="nc" id="L163">		final String sql = &quot;SELECT attribute_name, attribute_value FROM movie_attributes WHERE movie_id = ?&quot;;</span>
+<span class="nc" id="L164">		final Map&lt;String, String&gt; movieAttributes = new HashMap&lt;String, String&gt;();</span>
+<span class="nc" id="L165">		jdbcTemplate.query(sql, ps -&gt; ps.setString(1, id), rs -&gt; { movieAttributes.put(rs.getString(1), rs.getString(2)); });</span>
+<span class="nc" id="L166">		return movieAttributes;</span>
+	}
+	
+	private void addMovieAttribute(String id, String key, String value) {
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if (!FormatUtil.isAlphaNumeric(key, false)) {</span>
+			// due to need to pass keys around in templates and elsewhere, make life easier by enforcing no special characters in attribute keys
+<span class="nc" id="L172">			throw new IllegalArgumentException(&quot;Attribute keys must be alphanumeric, containing only letters, numbers, and spaces.&quot;);</span>
+		}
+<span class="nc" id="L174">		final String sql = &quot;INSERT INTO movie_attributes (movie_id, attribute_name, attribute_value) VALUES (?, ?, ?)&quot;;</span>
+<span class="nc" id="L175">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L176">			ps.setString(1, id);</span>
+<span class="nc" id="L177">			ps.setString(2, key);</span>
+<span class="nc" id="L178">			ps.setString(3, value);</span>
+<span class="nc" id="L179">		});</span>
+<span class="nc" id="L180">	}</span>
+	
+	private void deleteMovieAttribute(String id, String key) {
+<span class="nc" id="L183">		final String sql = &quot;DELETE FROM movie_attributes WHERE movie_id = ? AND LOWER(attribute_name) = ?&quot;;</span>
+<span class="nc" id="L184">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L185">			ps.setString(1, id);</span>
+<span class="nc" id="L186">			ps.setString(2, key.toLowerCase());</span>
+<span class="nc" id="L187">		});		</span>
+<span class="nc" id="L188">	}</span>
+	
+	public void updateMovieAttribute(String id, String key, String value) {
+<span class="nc" id="L191">		final String sql = &quot;UPDATE movie_attributes SET attribute_value = ? WHERE movie_id = ? AND LOWER(attribute_name) = ?&quot;;</span>
+<span class="nc" id="L192">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L193">			ps.setString(1, value);</span>
+<span class="nc" id="L194">			ps.setString(2, id);</span>
+<span class="nc" id="L195">			ps.setString(3, key.toLowerCase());		</span>
+<span class="nc" id="L196">		});</span>
+<span class="nc" id="L197">	}</span>
+
+	@Override
+	public List&lt;String&gt; getTableColumnPreferences(String username) {
+<span class="nc" id="L201">		return getTableColumnPreferences(username, null, null);</span>
+	}
+
+	private List&lt;String&gt; getTableColumnPreferences(String username, Integer fromIdx, Integer toIdx) {
+<span class="nc" id="L205">		final StringBuilder sql = new StringBuilder(&quot;SELECT attribute_name FROM movie_attributes_table_columns WHERE username = ?&quot;);</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		if (fromIdx != null) {</span>
+<span class="nc" id="L207">			sql.append(&quot; AND idx &gt;= ?&quot;);</span>
+		}
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		if (toIdx != null) {</span>
+<span class="nc" id="L210">			sql.append(&quot; AND idx &lt;= ?&quot;);</span>
+		}
+<span class="nc" id="L212">		sql.append(&quot; ORDER BY idx&quot;);</span>
+<span class="nc" id="L213">		final List&lt;String&gt; tableColumnPreferences = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L214">		jdbcTemplate.query(sql.toString(), ps -&gt; {</span>
+<span class="nc" id="L215">			int i=0;</span>
+<span class="nc" id="L216">			ps.setString(++i, username);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (fromIdx != null) {</span>
+<span class="nc" id="L218">				ps.setInt(++i, fromIdx.intValue());</span>
+			}
+<span class="nc bnc" id="L220" title="All 2 branches missed.">			if (toIdx != null) {</span>
+<span class="nc" id="L221">				ps.setInt(++i, toIdx.intValue());</span>
+			}			
+<span class="nc" id="L223">		}, rs -&gt; {</span>
+<span class="nc" id="L224">			tableColumnPreferences.add(rs.getString(1));</span>
+<span class="nc" id="L225">		});</span>
+<span class="nc" id="L226">		return tableColumnPreferences;</span>
+	}
+	
+	@Override
+	public Optional&lt;Integer&gt; getMaxTableColumnPreferenceIndex(String username) {
+<span class="nc" id="L231">		final String maxSql = &quot;SELECT MAX(idx) FROM movie_attributes_table_columns WHERE username = ?&quot;;</span>
+<span class="nc" id="L232">		final List&lt;Integer&gt; max = new ArrayList&lt;Integer&gt;();</span>
+<span class="nc" id="L233">		jdbcTemplate.query(maxSql, ps -&gt; ps.setString(1, username), rs -&gt; {</span>
+<span class="nc" id="L234">			int maxIdx = rs.getInt(1);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">			if (!rs.wasNull()) {</span>
+<span class="nc" id="L236">				max.add(Integer.valueOf(maxIdx));</span>
+			}
+<span class="nc" id="L238">		});</span>
+<span class="nc" id="L239">		return max.stream().findAny();</span>
+	}
+
+	@Override
+	@Transactional
+	public void addTableColumnPreference(String attributeName, String username) {
+<span class="nc" id="L245">		final String insertSql = &quot;INSERT INTO movie_attributes_table_columns(username, idx, attribute_name) VALUES (?, ?, ?)&quot;;</span>
+<span class="nc" id="L246">		Optional&lt;Integer&gt; max = getMaxTableColumnPreferenceIndex(username);</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">		final int nextIdx = max.isPresent()? max.get().intValue() + 1 : 0;</span>
+<span class="nc" id="L248">		jdbcTemplate.update(insertSql, ps -&gt; {</span>
+<span class="nc" id="L249">			ps.setString(1, username);</span>
+<span class="nc" id="L250">			ps.setInt(2, nextIdx);</span>
+<span class="nc" id="L251">			ps.setString(3, attributeName);</span>
+<span class="nc" id="L252">		});</span>
+<span class="nc" id="L253">	}</span>
+
+	@Override
+	@Transactional
+	public void reorderTableColumnPreference(int sourceIdx, int targetIdx, String username) {
+<span class="nc bnc" id="L258" title="All 2 branches missed.">		if (sourceIdx == targetIdx) {</span>
+<span class="nc" id="L259">			return;</span>
+		}
+<span class="nc" id="L261">		updateTableColumnPreferenceIndex(sourceIdx, -1, username); // temporary holding index</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">		if (sourceIdx &lt; targetIdx) {</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">			for (int i=sourceIdx+1; i&lt;=targetIdx; i++) {</span>
+<span class="nc" id="L264">				updateTableColumnPreferenceIndex(i, i-1, username);</span>
+			}
+		} else {
+<span class="nc bnc" id="L267" title="All 2 branches missed.">			for (int i=sourceIdx-1; i&gt;=targetIdx; i--) {</span>
+<span class="nc" id="L268">				updateTableColumnPreferenceIndex(i, i+1, username);</span>
+			}
+		}
+<span class="nc" id="L271">		updateTableColumnPreferenceIndex(-1, targetIdx, username);</span>
+<span class="nc" id="L272">	}</span>
+
+	private void updateTableColumnPreferenceIndex(int fromIdx, int toIdx, String username) {
+<span class="nc" id="L275">		final String sql = &quot;UPDATE movie_attributes_table_columns SET idx = ? WHERE username = ? AND idx = ?&quot;;</span>
+<span class="nc" id="L276">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L277">			ps.setInt(1, toIdx);</span>
+<span class="nc" id="L278">			ps.setString(2, username);</span>
+<span class="nc" id="L279">			ps.setInt(3, fromIdx);</span>
+<span class="nc" id="L280">		});</span>
+<span class="nc" id="L281">	}</span>
+	
+	@Override
+	@Transactional
+	public void deleteTableColumnPreference(int sourceIdx, String username) {
+<span class="nc" id="L286">		List&lt;String&gt; shiftPreferences = getTableColumnPreferences(username, sourceIdx+1, null);</span>
+<span class="nc" id="L287">		final String sql = &quot;DELETE FROM movie_attributes_table_columns WHERE username = ? AND idx &gt;= ?&quot;;</span>
+<span class="nc" id="L288">		int rowsAffected = jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L289">			ps.setString(1, username);</span>
+<span class="nc" id="L290">			ps.setInt(2, sourceIdx);</span>
+<span class="nc" id="L291">		});</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">		if (rowsAffected &gt; 0) {</span>
+<span class="nc" id="L293">			shiftPreferences.forEach(preference -&gt; addTableColumnPreference(preference, username));</span>
+		}
+<span class="nc" id="L295">	}</span>
+
+	@Override
+	public List&lt;String&gt; getAttributeKeysForCollection(String collectionId) {
+<span class="nc" id="L299">		final String sql = &quot;SELECT DISTINCT(attribute_name) FROM movie&quot;</span>
+				+ &quot; INNER JOIN movie_attributes ON movie.id = movie_attributes.movie_id&quot;
+				+ &quot; WHERE movie.collection_id = ?&quot;
+				+ &quot; ORDER BY LOWER(attribute_name)&quot;;
+<span class="nc" id="L303">		final List&lt;String&gt; attributeKeys = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L304">		jdbcTemplate.query(sql, ps -&gt; ps.setString(1, collectionId), rs -&gt; { attributeKeys.add(rs.getString(1)); });</span>
+<span class="nc" id="L305">		return attributeKeys;</span>
+	}
+
+	@Override
+	public Set&lt;String&gt; getAttributeValuesForCollection(String collectionId, String attributeName) {
+<span class="nc" id="L310">		final String sql = &quot;SELECT DISTINCT(attribute_value) FROM movie&quot;</span>
+				+ &quot; INNER JOIN movie_attributes ON movie.id = movie_attributes.movie_id&quot;
+				+ &quot; WHERE movie.collection_id = ? AND attribute_name = ?&quot;;
+<span class="nc" id="L313">		final Set&lt;String&gt; attributeValues = new HashSet&lt;String&gt;();</span>
+<span class="nc" id="L314">		jdbcTemplate.query(sql, ps -&gt; {</span>
+<span class="nc" id="L315">			ps.setString(1, collectionId);</span>
+<span class="nc" id="L316">			ps.setString(2, attributeName);</span>
+<span class="nc" id="L317">		}, rs -&gt; {</span>
+<span class="nc" id="L318">			attributeValues.add(rs.getString(1));</span>
+<span class="nc" id="L319">		});</span>
+<span class="nc" id="L320">		return attributeValues;</span>
+	}
+
+	@Override
+	public List&lt;Movie&gt; getMoviesWithoutAttribute(String collectionId, String attributeKey) {
+<span class="nc" id="L325">		return getMoviesForCollection(collectionId).stream()</span>
+<span class="nc" id="L326">				.filter(movie -&gt; FormatUtil.isBlank(movie.getAttribute(attributeKey)))</span>
+<span class="nc" id="L327">				.sorted(new MovieTitleComparator())</span>
+<span class="nc" id="L328">				.collect(Collectors.toList());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

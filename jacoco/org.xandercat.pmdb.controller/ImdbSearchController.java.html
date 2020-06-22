@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImdbSearchController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.controller</a> &gt; <span class="el_source">ImdbSearchController.java</span></div><h1>ImdbSearchController.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.controller;
+
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.dto.imdb.MovieDetailsRequest;
+import org.xandercat.pmdb.dto.imdb.MovieDetails;
+import org.xandercat.pmdb.dto.imdb.Result;
+import org.xandercat.pmdb.dto.imdb.SearchRequest;
+import org.xandercat.pmdb.dto.imdb.SearchResult;
+import org.xandercat.pmdb.exception.WebServicesException;
+import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.exception.ServiceLimitExceededException;
+import org.xandercat.pmdb.form.imdb.SearchForm;
+import org.xandercat.pmdb.service.CollectionService;
+import org.xandercat.pmdb.service.ImdbSearchService;
+import org.xandercat.pmdb.service.MovieService;
+import org.xandercat.pmdb.util.Alerts;
+import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.ajax.JsonResponse;
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+/**
+ * Controller for functions involving IMDB search.  This includes IMDB browsing, adding new
+ * movies using IMDB as the information source, and associating existing movie collection 
+ * movies with movies on the IMDB.
+ * 
+ * @author Scott Arnold
+ */
+@Controller
+<span class="fc" id="L51">public class ImdbSearchController {</span>
+
+<span class="fc" id="L53">	private static final Logger LOGGER = LogManager.getLogger(ImdbSearchController.class);</span>
+	private static final String SESSION_KEY_LAST_SEARCH = &quot;imdbLastSearchString&quot;;
+	public static final String IMDB_ID_PATTERN = &quot;^tt[0-9]+$&quot;;
+	
+	@Autowired
+	private ImdbSearchService imdbSearchService;
+	
+	@Autowired
+	private MovieService movieService;
+	
+	@Autowired
+	private CollectionService collectionService;
+	
+	@ModelAttribute(&quot;viewTab&quot;)
+	public String getViewTab() {
+<span class="fc" id="L68">		return ViewUtil.TAB_IMDB_SEARCH;</span>
+	}
+	
+	/**
+	 * Page for performing IMDB search.
+	 * 
+	 * @param model    model
+	 * @param session  session
+	 * 
+	 * @return page for performing IMDB search
+	 */
+	@RequestMapping(&quot;/imdbsearch&quot;)
+	public String imdbSearch(Model model, HttpSession session) {
+<span class="nc" id="L81">		model.addAttribute(&quot;searchForm&quot;, new SearchForm());</span>
+<span class="nc" id="L82">		Alerts.setSessionAlertWithKey(model, session, &quot;IMDBSearchLimit&quot;, Alerts.AlertType.WARNING, &quot;alert.imdbsearch.limits&quot;);</span>
+<span class="nc" id="L83">		return &quot;imdbsearch/imdbSearch&quot;;</span>
+	}
+
+	/**
+	 * Handle linking operation on movie, returning final view to navigate to.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param searchForm  search form
+	 * @param result      binding result
+	 * @param session     http session
+	 * @param movie       movie being linked
+	 * @return view to navigate to
+	 * @throws ServiceLimitExceededException 
+	 * @throws WebServicesException 
+	 * @throws CollectionSharingException 
+	 */
+	private String handleLinkImdb(Model model, Principal principal, SearchForm searchForm, BindingResult result, HttpSession session, Movie movie) 
+			throws WebServicesException, ServiceLimitExceededException, CollectionSharingException {
+<span class="fc" id="L102">		String linkId = searchForm.getLinkImdbId().trim();</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">		if (&quot;unlink&quot;.equals(linkId)) {</span>
+<span class="nc" id="L104">			imdbSearchService.removeImdbAttributes(movie);</span>
+<span class="nc" id="L105">			movieService.updateMovie(movie, principal.getName());	</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">		} else if (!&quot;skip&quot;.equals(linkId)) {</span>
+<span class="fc" id="L107">			MovieDetails movieDetails = imdbSearchService.getMovieDetails(new MovieDetailsRequest(searchForm.getLinkImdbId().trim()));</span>
+<span class="fc" id="L108">			imdbSearchService.addImdbAttributes(movie, movieDetails);</span>
+<span class="fc" id="L109">			movieService.updateMovie(movie, principal.getName());</span>
+		}
+<span class="fc bfc" id="L111" title="All 2 branches covered.">		if (searchForm.isLinkAll()) {</span>
+<span class="fc" id="L112">			final String previousTitle = movie.getTitle().toLowerCase();</span>
+<span class="fc" id="L113">			List&lt;Movie&gt; unlinkedMovies = movieService.getUnlinkedMoviesForDefaultCollection(principal.getName());</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">			if (unlinkedMovies.size() &gt; 0) {</span>
+<span class="fc" id="L115">				Optional&lt;Movie&gt; nextMovie = unlinkedMovies.stream()</span>
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">						.filter(uMovie -&gt; uMovie.getTitle().toLowerCase().compareTo(previousTitle) &gt; 0)</span>
+<span class="fc" id="L117">						.findFirst();</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">				if (!nextMovie.isPresent()) {</span>
+					// wrap back around to beginning of list
+<span class="nc" id="L120">					nextMovie = unlinkedMovies.stream().findFirst();</span>
+				}
+<span class="fc" id="L122">				searchForm.setLinkMovieId(nextMovie.get().getId());</span>
+<span class="fc" id="L123">				searchForm.setLinkImdbId(null); // this is critical or it would trigger infinite recursion</span>
+<span class="fc" id="L124">				searchForm.setTitle(nextMovie.get().getTitle());</span>
+<span class="fc" id="L125">				searchForm.setPage(1);</span>
+<span class="fc" id="L126">				return imdbSearchSubmit(model, principal, searchForm, result, session);</span>
+			}
+		}
+<span class="fc" id="L129">		return &quot;redirect:/&quot;;		</span>
+	}
+	
+	/**
+	 * Handles link mode operations, storing movie to link in the model, and either returning final view to navigate to, 
+	 * or empty if no actual link needs to be performed.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param searchForm  search form
+	 * @param result      binding result
+	 * @param session     http session
+	 * @return view to navigate to, or empty if unable to successfully handle linking
+	 */
+	private Optional&lt;String&gt; handleLinkMovie(Model model, Principal principal, SearchForm searchForm, BindingResult result, HttpSession session) {
+		try {
+<span class="fc" id="L145">			Optional&lt;Movie&gt; movie = movieService.getMovie(searchForm.getLinkMovieId(), principal.getName());</span>
+<span class="fc" id="L146">			collectionService.assertCollectionEditable(movie.get().getCollectionId(), principal.getName());</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">			if (FormatUtil.isNotBlank(searchForm.getLinkImdbId())) {</span>
+				// link movie and return to movie list or go to next unlinked movie
+<span class="fc" id="L149">				return Optional.of(handleLinkImdb(model, principal, searchForm, result, session, movie.get()));</span>
+			}
+<span class="fc" id="L151">			model.addAttribute(&quot;linkMovie&quot;, movie.get());</span>
+<span class="nc" id="L152">		} catch (Exception e) {</span>
+<span class="nc" id="L153">			LOGGER.error(&quot;Unable to get movie to link.&quot;, e);</span>
+<span class="nc" id="L154">			Alerts.setErrorMessage(model, &quot;This movie cannot be linked.&quot;);</span>
+<span class="fc" id="L155">		}</span>
+<span class="fc" id="L156">		return Optional.empty();</span>
+	}
+	
+	/**
+	 * Helper method to build a search result from a movie details pull.  This allows a user to search by IMDB id.  This can be 
+	 * helpful if a movie cannot be found via the IMDB search service but can be found on the IMDB website itself.  Example:  the
+	 * movie &quot;F/X&quot; cannot be found in the IMDB search service due to limitations of their API in handling the slash character, but can 
+	 * be found on the IMDB site itself.
+	 * 
+	 * @param imdbId IMDB id
+	 * 
+	 * @return search result
+	 * @throws WebServicesException
+	 * @throws ServiceLimitExceededException
+	 */
+	private SearchResult buildSearchResultFromImdbId(String imdbId) throws WebServicesException, ServiceLimitExceededException {
+<span class="nc" id="L172">		MovieDetailsRequest request = new MovieDetailsRequest(imdbId);</span>
+<span class="nc" id="L173">		MovieDetails movieDetails = imdbSearchService.getMovieDetails(request);</span>
+<span class="nc" id="L174">		SearchResult searchResult = new SearchResult();</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if (movieDetails == null) {</span>
+<span class="nc" id="L176">			searchResult.setTotalResults(&quot;0&quot;);</span>
+<span class="nc" id="L177">			searchResult.setResults(new ArrayList&lt;Result&gt;());</span>
+		} else {
+<span class="nc" id="L179">			searchResult.setTotalResults(&quot;1&quot;);</span>
+<span class="nc" id="L180">			Result result = new Result();</span>
+<span class="nc" id="L181">			result.setImdbID(imdbId);</span>
+<span class="nc" id="L182">			result.setPoster(movieDetails.getPoster());</span>
+<span class="nc" id="L183">			result.setTitle(movieDetails.getTitle());</span>
+<span class="nc" id="L184">			result.setType(movieDetails.getType());</span>
+<span class="nc" id="L185">			result.setYear(movieDetails.getYear());</span>
+<span class="nc" id="L186">			searchResult.setResults(Collections.singletonList(result));</span>
+		}
+<span class="nc" id="L188">		return searchResult;</span>
+	}
+	
+	/**
+	 * Search the IMDB.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param searchForm  search form
+	 * @param result      binding result
+	 * @param session     session
+	 * 
+	 * @return search results page
+	 */
+	@RequestMapping(&quot;/imdbsearch/searchSubmit&quot;)
+	public String imdbSearchSubmit(Model model, Principal principal,
+			@ModelAttribute(&quot;searchForm&quot;) @Valid SearchForm searchForm,
+			BindingResult result, HttpSession session) {
+		
+		// handle alerts and errors
+<span class="fc" id="L208">		Alerts.setSessionAlertWithKey(model, session, &quot;IMDBSearchLimit&quot;, Alerts.AlertType.WARNING, &quot;alert.imdbsearch.limits&quot;);</span>
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">		if (result.hasErrors()) {</span>
+<span class="nc" id="L210">			return &quot;imdbsearch/imdbSearch&quot;;</span>
+		}
+		
+		// handle mode where user is linking movies in their collection to IMDB
+<span class="fc bfc" id="L214" title="All 2 branches covered.">		if (FormatUtil.isNotBlank(searchForm.getLinkMovieId())) {</span>
+<span class="fc" id="L215">			Optional&lt;String&gt; returnView = handleLinkMovie(model, principal, searchForm, result, session);</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">			if (returnView.isPresent()) {</span>
+<span class="fc" id="L217">				return returnView.get();</span>
+			}
+		}
+		
+		// execute search
+<span class="fc" id="L222">		String title = searchForm.getTitle();</span>
+<span class="pc bpc" id="L223" title="1 of 2 branches missed.">		String year = (FormatUtil.isBlank(searchForm.getYear()))? null : searchForm.getYear().trim();</span>
+<span class="fc" id="L224">		SearchResult searchResult = null;</span>
+		try {
+<span class="fc" id="L226">			Integer previousHash = (Integer) session.getAttribute(SESSION_KEY_LAST_SEARCH);</span>
+<span class="fc" id="L227">			Integer currentHash = Integer.valueOf(searchForm.hashCode());</span>
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">			if (!currentHash.equals(previousHash)) {</span>
+				// search criteria has changed; reset to page 1
+<span class="fc" id="L230">				searchForm.setPage(1);</span>
+			}
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">			if (title.matches(IMDB_ID_PATTERN)) {</span>
+				// shortcut for finding movie by the IMDB ID when regular search is insufficient (the RapidAPI web service has some limitations on title format)
+<span class="nc" id="L234">				searchResult = buildSearchResultFromImdbId(title);</span>
+			} else {
+<span class="fc" id="L236">				searchResult = imdbSearchService.searchImdb(new SearchRequest(title, year, Integer.valueOf(searchForm.getPage())));</span>
+			}
+<span class="fc" id="L238">			session.setAttribute(SESSION_KEY_LAST_SEARCH, currentHash);</span>
+<span class="fc" id="L239">			model.addAttribute(&quot;searched&quot;, Boolean.TRUE);</span>
+<span class="nc" id="L240">		} catch (ServiceLimitExceededException e) {</span>
+<span class="nc" id="L241">			Alerts.setErrorMessage(model, &quot;The maximum number of allowed IMDB service calls for today has been reached.  Please retry at a later date.&quot;);</span>
+<span class="nc" id="L242">			return &quot;imdbsearch/imdbSearch&quot;;</span>
+<span class="nc" id="L243">		} catch (WebServicesException wse) {</span>
+			// with a little more work we could still provide paginator, as sometimes only a specific page fails. (example: &quot;dragon&quot; page 3 results in error 5/23/2020)
+<span class="nc" id="L245">			Alerts.setErrorMessage(model, &quot;Search results could not be obtained for this page.&quot;);</span>
+<span class="nc" id="L246">			return &quot;imdbsearch/imdbSearch&quot;;</span>
+<span class="fc" id="L247">		}</span>
+<span class="fc" id="L248">		List&lt;Result&gt; searchResults = searchResult.getResults();</span>
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">		if (FormatUtil.isBlank(searchResult.getTotalResults())) {</span>
+<span class="nc" id="L250">			model.addAttribute(&quot;totalResults&quot;, Integer.valueOf(0));</span>
+		} else {
+<span class="fc" id="L252">			model.addAttribute(&quot;totalResults&quot;, Integer.valueOf(searchResult.getTotalResults()));</span>
+		}
+<span class="fc" id="L254">		model.addAttribute(&quot;searchResults&quot;, searchResults);</span>
+		
+		// pass information about users default collection to view
+<span class="fc" id="L257">		Optional&lt;MovieCollection&gt; defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">		if (defaultMovieCollection.isPresent()) {</span>
+<span class="fc" id="L259">			model.addAttribute(&quot;defaultMovieCollection&quot;, defaultMovieCollection.get());</span>
+<span class="pc bpc" id="L260" title="2 of 4 branches missed.">			if (searchResults != null &amp;&amp; searchResults.size() &gt; 0) {</span>
+				try {
+<span class="nc" id="L262">					Set&lt;String&gt; imdbIdsInCollection = movieService.getImdbIdsInDefaultCollection(principal.getName());</span>
+<span class="nc" id="L263">					searchResults.stream()</span>
+<span class="nc" id="L264">							.filter(r -&gt; imdbIdsInCollection.contains(r.getImdbID()))</span>
+<span class="nc" id="L265">							.forEach(r -&gt; r.setInCollection(true));</span>
+<span class="nc" id="L266">				} catch (WebServicesException e) {</span>
+<span class="nc" id="L267">					LOGGER.error(&quot;Unable to read IMDB IDs from collection.&quot;, e);</span>
+<span class="nc" id="L268">					Alerts.setErrorMessage(model, &quot;What movies you already have in your collection will not be indicated due to an error accessing your movie collection.&quot;);</span>
+<span class="nc" id="L269">				}</span>
+			}
+		}
+<span class="fc" id="L272">		return &quot;imdbsearch/imdbSearch&quot;;</span>
+	}
+	
+	/**
+	 * AJAX request to add movie of given IMDB id to the user's default/active movie collection.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param imdbId     IMDB id for the movie to add to the movie collecction
+	 * 
+	 * @return JSON response with results of adding movie to the collection
+	 */
+	@RequestMapping(value=&quot;/imdbsearch/addToCollection&quot;, produces=MediaType.APPLICATION_JSON_VALUE)
+	public @ResponseBody JsonResponse addToCollection(Model model, Principal principal, @RequestParam String imdbId) {
+<span class="fc" id="L286">		LOGGER.debug(&quot;Add To Collection called with ID &quot; + imdbId);</span>
+<span class="fc" id="L287">		JsonResponse response = new JsonResponse();</span>
+<span class="fc" id="L288">		response.put(&quot;imdbId&quot;, imdbId);</span>
+<span class="fc" id="L289">		MovieDetails movieDetails = null;</span>
+		try {
+<span class="fc" id="L291">			movieDetails = imdbSearchService.getMovieDetails(new MovieDetailsRequest(imdbId));</span>
+<span class="nc" id="L292">		} catch (ServiceLimitExceededException e1) {</span>
+<span class="nc" id="L293">			response.setOk(false);</span>
+<span class="nc" id="L294">			response.setErrorMessage(&quot;Service limit exceeded. You will not be able to add any more movies to your collection today through the IMDB Search function.&quot;);</span>
+<span class="nc" id="L295">			return response;</span>
+<span class="nc" id="L296">		} catch (WebServicesException wse) {</span>
+<span class="nc" id="L297">			response.setOk(false);</span>
+<span class="nc" id="L298">			response.setErrorMessage(&quot;Unable to retrieve details for this movie from the IMDB.  Movie could not be added to your collection.&quot;);</span>
+<span class="nc" id="L299">			return response;</span>
+<span class="fc" id="L300">		}</span>
+<span class="fc" id="L301">		Optional&lt;MovieCollection&gt; movieCollection = collectionService.getDefaultMovieCollection(principal.getName());</span>
+<span class="fc" id="L302">		Movie movie = new Movie();</span>
+<span class="fc" id="L303">		movie.setCollectionId(movieCollection.get().getId());</span>
+<span class="fc" id="L304">		imdbSearchService.addImdbAttributes(movie, movieDetails);</span>
+		try {
+<span class="fc" id="L306">			movieService.addMovie(movie, principal.getName());</span>
+<span class="nc" id="L307">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L308">			LOGGER.error(&quot;Unable to add IMDB movie to collection.&quot;, e);</span>
+<span class="nc" id="L309">			response.setOk(false);</span>
+<span class="nc" id="L310">			response.setErrorMessage(&quot;You cannot add movies to the collection.&quot;);</span>
+<span class="nc" id="L311">			return response;</span>
+<span class="nc" id="L312">		} catch (WebServicesException e) {</span>
+<span class="nc" id="L313">			LOGGER.error(&quot;Unable to add IMDB movie to collection.&quot;, e);</span>
+<span class="nc" id="L314">			response.setOk(false);</span>
+<span class="nc" id="L315">			response.setErrorMessage(&quot;Unable to add movie to the collection due to a problem with cloud services.&quot;);</span>
+<span class="nc" id="L316">			return response;			</span>
+<span class="fc" id="L317">		}</span>
+<span class="fc" id="L318">		return response;</span>
+	}
+	
+	/**
+	 * Process of linking a movie or movie collection to their corresponding movie or movies in the IMDB.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param movieId    movie ID of movie to link, or &quot;any&quot; if should link first available unlinked movie
+	 * @param linkAll    whether or not all movies in a movie collection are being linked
+	 * @param session    session
+	 * 
+	 * @return search result page (executes automatic search for movie being linked)
+	 */
+	@RequestMapping(&quot;/imdbsearch/link&quot;)
+	public String link(Model model, Principal principal, @RequestParam String movieId, @RequestParam boolean linkAll, HttpSession session) {
+		try {
+<span class="pc bpc" id="L335" title="1 of 2 branches missed.">			if (&quot;any&quot;.equals(movieId)) {</span>
+<span class="nc" id="L336">				Optional&lt;Movie&gt; anyMovie = movieService.getUnlinkedMoviesForDefaultCollection(principal.getName()).stream().findFirst();</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">				if (anyMovie.isPresent()) {</span>
+<span class="nc" id="L338">					movieId = anyMovie.get().getId();</span>
+				}
+			}
+<span class="fc" id="L341">			Optional&lt;Movie&gt; movie = movieService.getMovie(movieId, principal.getName());</span>
+<span class="pc bpc" id="L342" title="1 of 2 branches missed.">			if (!movie.isPresent()) {</span>
+<span class="nc" id="L343">				Alerts.setErrorMessage(model, &quot;Requested movie not found.&quot;);</span>
+<span class="nc" id="L344">				return imdbSearch(model, session);</span>
+			}
+<span class="fc" id="L346">			collectionService.assertCollectionEditable(movie.get().getCollectionId(), principal.getName());</span>
+<span class="fc" id="L347">			SearchForm searchForm = new SearchForm();</span>
+<span class="fc" id="L348">			searchForm.setTitle(movie.get().getTitle());</span>
+<span class="fc" id="L349">			searchForm.setLinkMovieId(movie.get().getId());</span>
+<span class="fc" id="L350">			searchForm.setLinkAll(linkAll);</span>
+<span class="fc" id="L351">			model.addAttribute(&quot;searchForm&quot;, searchForm);</span>
+<span class="fc" id="L352">			return imdbSearchSubmit(model, principal, searchForm, ViewUtil.emptyBindingResult(&quot;searchForm&quot;), session);</span>
+<span class="nc" id="L353">		} catch (Exception e) {</span>
+<span class="nc" id="L354">			LOGGER.error(&quot;Unable to access movie collection.&quot;, e);</span>
+<span class="nc" id="L355">			Alerts.setErrorMessage(model, &quot;You cannot add movies to the collection.&quot;);</span>
+<span class="nc" id="L356">			return imdbSearch(model, session);</span>
+		} 
+		
+		
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

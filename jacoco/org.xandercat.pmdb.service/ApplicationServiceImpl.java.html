@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApplicationServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.service</a> &gt; <span class="el_source">ApplicationServiceImpl.java</span></div><h1>ApplicationServiceImpl.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.service;
+
+import java.time.LocalDate;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.xandercat.pmdb.dao.ApplicationDao;
+import org.xandercat.pmdb.dto.ApplicationAttribute;
+
+@Component
+<span class="nc" id="L13">public class ApplicationServiceImpl implements ApplicationService {</span>
+
+	public static final String IMDB_SERVICE_CALLS = &quot;IMDB Service Calls&quot;;
+	public static final String REGISTRATIONS_COUNT_TRIGGER_TIME = &quot;Registrations Trigger Time&quot;;
+	public static final String REGISTRATIONS_COUNT = &quot;Registrations Trigger Count&quot;;
+	
+	private static final int MAX_REGISTRATIONS_COUNT = 1000;
+	
+	@Autowired
+	private ApplicationDao applicationDao;
+	
+	@Value(&quot;${registrations.interval.minutes}&quot;)
+	private int regMinutes;
+	
+	@Override
+	public int getImdbServiceCallCount() {
+<span class="nc" id="L29">		return getImdbServiceCallCount(LocalDate.now());</span>
+	}
+
+	@Override
+	public int getImdbServiceCallCount(LocalDate date) {
+<span class="nc" id="L34">		Optional&lt;ApplicationAttribute&gt; imdbServiceCalls = applicationDao.getApplicationAttribute(IMDB_SERVICE_CALLS, date);</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">		return (imdbServiceCalls.isPresent())? Integer.parseInt(imdbServiceCalls.get().getValue()) : 0;		</span>
+	}
+	
+	@Override
+	public void incrementImdbServiceCallCount() {
+<span class="nc" id="L40">		LocalDate today = LocalDate.now();</span>
+<span class="nc" id="L41">		Optional&lt;ApplicationAttribute&gt; imdbServiceCallsOptional = applicationDao.getApplicationAttribute(IMDB_SERVICE_CALLS, today);</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">		if (!imdbServiceCallsOptional.isPresent()) {</span>
+<span class="nc" id="L43">			ApplicationAttribute imdbServiceCalls = new ApplicationAttribute();</span>
+<span class="nc" id="L44">			imdbServiceCalls.setName(IMDB_SERVICE_CALLS);</span>
+<span class="nc" id="L45">			imdbServiceCalls.setDate(today);</span>
+<span class="nc" id="L46">			imdbServiceCalls.setValue(&quot;1&quot;);</span>
+<span class="nc" id="L47">			applicationDao.addApplicationAttribute(imdbServiceCalls);</span>
+<span class="nc" id="L48">		} else {</span>
+<span class="nc" id="L49">			ApplicationAttribute imdbServiceCalls = imdbServiceCallsOptional.get();</span>
+<span class="nc" id="L50">			int count = Integer.parseInt(imdbServiceCalls.getValue());</span>
+<span class="nc" id="L51">			imdbServiceCalls.setValue(String.valueOf(count+1));</span>
+<span class="nc" id="L52">			applicationDao.updateApplicationAttribute(imdbServiceCalls);</span>
+		}
+<span class="nc" id="L54">	}</span>
+
+	@Override
+	public int incrementRegistrationsTriggerCount() {
+<span class="nc" id="L58">		LocalDate today = LocalDate.now();</span>
+<span class="nc" id="L59">		Optional&lt;ApplicationAttribute&gt; triggerTimeAttributeOptional = applicationDao.getApplicationAttribute(REGISTRATIONS_COUNT_TRIGGER_TIME, today);</span>
+<span class="nc" id="L60">		long systemTime = System.currentTimeMillis();</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (!triggerTimeAttributeOptional.isPresent()) {</span>
+<span class="nc" id="L62">			ApplicationAttribute triggerTimeAttribute = new ApplicationAttribute(REGISTRATIONS_COUNT_TRIGGER_TIME, String.valueOf(systemTime), today);</span>
+<span class="nc" id="L63">			applicationDao.addApplicationAttribute(triggerTimeAttribute);</span>
+<span class="nc" id="L64">			setRegistrationsTriggerCount(1, today);</span>
+<span class="nc" id="L65">			return 1;</span>
+		}
+<span class="nc" id="L67">		ApplicationAttribute triggerTimeAttribute = triggerTimeAttributeOptional.get();</span>
+<span class="nc" id="L68">		long triggerTime = Long.parseLong(triggerTimeAttribute.getValue());</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if ((systemTime - triggerTime) &gt; (regMinutes * 60 * 1000)) {</span>
+<span class="nc" id="L70">			triggerTimeAttribute.setValue(String.valueOf(systemTime));</span>
+<span class="nc" id="L71">			applicationDao.updateApplicationAttribute(triggerTimeAttribute);</span>
+<span class="nc" id="L72">			setRegistrationsTriggerCount(1, today);</span>
+<span class="nc" id="L73">			return 1;</span>
+		}
+<span class="nc" id="L75">		return incrementRegistrationsTriggerCount(today);</span>
+	}
+	
+	private int incrementRegistrationsTriggerCount(LocalDate date) {
+<span class="nc" id="L79">		Optional&lt;ApplicationAttribute&gt; triggerCountAttributeOptional = applicationDao.getApplicationAttribute(REGISTRATIONS_COUNT, date);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (!triggerCountAttributeOptional.isPresent()) {</span>
+<span class="nc" id="L81">			ApplicationAttribute triggerCountAttribute = new ApplicationAttribute(REGISTRATIONS_COUNT, &quot;1&quot;, date);</span>
+<span class="nc" id="L82">			applicationDao.addApplicationAttribute(triggerCountAttribute);</span>
+<span class="nc" id="L83">			return 1;</span>
+		}
+<span class="nc" id="L85">		ApplicationAttribute triggerCountAttribute = triggerCountAttributeOptional.get();</span>
+<span class="nc" id="L86">		int count = Integer.parseInt(triggerCountAttribute.getValue());</span>
+<span class="nc" id="L87">		count = Math.min(MAX_REGISTRATIONS_COUNT, count+1);</span>
+<span class="nc" id="L88">		triggerCountAttribute.setValue(String.valueOf(count));</span>
+<span class="nc" id="L89">		applicationDao.updateApplicationAttribute(triggerCountAttribute);</span>
+<span class="nc" id="L90">		return count;</span>
+	}
+	
+	private void setRegistrationsTriggerCount(int count, LocalDate date) {
+<span class="nc" id="L94">		Optional&lt;ApplicationAttribute&gt; triggerCountAttributeOptional = applicationDao.getApplicationAttribute(REGISTRATIONS_COUNT, date);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (!triggerCountAttributeOptional.isPresent()) {</span>
+<span class="nc" id="L96">			ApplicationAttribute triggerCountAttribute = new ApplicationAttribute(REGISTRATIONS_COUNT, String.valueOf(count), date);</span>
+<span class="nc" id="L97">			applicationDao.addApplicationAttribute(triggerCountAttribute);			</span>
+<span class="nc" id="L98">		} else {</span>
+<span class="nc" id="L99">			ApplicationAttribute triggerCountAttribute = triggerCountAttributeOptional.get();</span>
+<span class="nc" id="L100">			triggerCountAttribute.setValue(String.valueOf(count));</span>
+<span class="nc" id="L101">			applicationDao.updateApplicationAttribute(triggerCountAttribute);</span>
+		}
+<span class="nc" id="L103">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SearchForm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.form.imdb</a> &gt; <span class="el_source">SearchForm.java</span></div><h1>SearchForm.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.form.imdb;
+
+import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.Range;
+import org.springframework.validation.annotation.Validated;
+
+/**
+ * Form for IMDB searches. Hash code for this form hashes on user criteria excluding page number.
+ * By excluding page number, search hashes can be compared to determine if search criteria
+ * has changed.
+ * 
+ * Only the title, year, and page are meant to be manipulated by the user.  linkMovieId,
+ * linkImdbId, and linkAll flag are for use internally for link processing.
+ * 
+ * @author Scott Arnold
+ */
+@Validated
+<span class="fc" id="L18">public class SearchForm {</span>
+
+	@NotBlank
+	private String title;
+	
+	private String year;
+	
+<span class="fc" id="L25">	@Range(min=1)</span>
+	private int page = 1;
+	
+	private String linkMovieId;
+	private String linkImdbId;
+	private boolean linkAll;
+	
+	public String getTitle() {
+<span class="fc" id="L33">		return title;</span>
+	}
+	public void setTitle(String title) {
+<span class="fc" id="L36">		this.title = title;</span>
+<span class="fc" id="L37">	}</span>
+	public String getYear() {
+<span class="fc" id="L39">		return year;</span>
+	}
+	public void setYear(String year) {
+<span class="nc" id="L42">		this.year = year;</span>
+<span class="nc" id="L43">	}</span>
+	public int getPage() {
+<span class="fc" id="L45">		return page;</span>
+	}
+	public void setPage(int page) {
+<span class="fc" id="L48">		this.page = page;</span>
+<span class="fc" id="L49">	}</span>
+	public String getLinkMovieId() {
+<span class="fc" id="L51">		return linkMovieId;</span>
+	}
+	public void setLinkMovieId(String linkMovieId) {
+<span class="fc" id="L54">		this.linkMovieId = linkMovieId;</span>
+<span class="fc" id="L55">	}</span>
+	public String getLinkImdbId() {
+<span class="fc" id="L57">		return linkImdbId;</span>
+	}
+	public void setLinkImdbId(String linkImdbId) {
+<span class="fc" id="L60">		this.linkImdbId = linkImdbId;</span>
+<span class="fc" id="L61">	}</span>
+	public boolean isLinkAll() {
+<span class="fc" id="L63">		return linkAll;</span>
+	}
+	public void setLinkAll(boolean linkAll) {
+<span class="fc" id="L66">		this.linkAll = linkAll;</span>
+<span class="fc" id="L67">	}</span>
+	@Override
+	public int hashCode() {
+<span class="fc" id="L70">		final int prime = 31;</span>
+<span class="fc" id="L71">		int result = 1;</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">		result = prime * result + ((title == null) ? 0 : title.hashCode());</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">		result = prime * result + ((year == null) ? 0 : year.hashCode());</span>
+<span class="fc" id="L74">		return result;</span>
+	}
+	@Override
+	public boolean equals(Object obj) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (this == obj)</span>
+<span class="nc" id="L79">			return true;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (obj == null)</span>
+<span class="nc" id="L81">			return false;</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (getClass() != obj.getClass())</span>
+<span class="nc" id="L83">			return false;</span>
+<span class="nc" id="L84">		SearchForm other = (SearchForm) obj;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (title == null) {</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">			if (other.title != null)</span>
+<span class="nc" id="L87">				return false;</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		} else if (!title.equals(other.title))</span>
+<span class="nc" id="L89">			return false;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (year == null) {</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			if (other.year != null)</span>
+<span class="nc" id="L92">				return false;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		} else if (!year.equals(other.year))</span>
+<span class="nc" id="L94">			return false;</span>
+<span class="nc" id="L95">		return true;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

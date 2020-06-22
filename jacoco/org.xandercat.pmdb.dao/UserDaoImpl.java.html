@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDaoImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.dao</a> &gt; <span class="el_source">UserDaoImpl.java</span></div><h1>UserDaoImpl.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.dao;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.util.DBUtil;
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+@Component
+<span class="nc" id="L21">public class UserDaoImpl implements UserDao {</span>
+	
+<span class="nc" id="L23">	private static final Logger LOGGER = LogManager.getLogger(UserDaoImpl.class);</span>
+	
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+	
+	@Override
+	@Transactional
+	public void addUser(PmdbUser user, String unencryptedPassword) {
+<span class="nc" id="L34">		addUser(user, unencryptedPassword, false);</span>
+<span class="nc" id="L35">	}</span>
+	
+	@Override
+	@Transactional
+	public void readdUser(PmdbUser user) {
+<span class="nc" id="L40">		addUser(user, null, true);</span>
+<span class="nc" id="L41">	}</span>
+	
+	private void addUser(PmdbUser user, String unencryptedPassword, boolean readd) {
+<span class="nc" id="L44">		LOGGER.debug(&quot;Request to add user: &quot; + user.getUsername());</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		if (FormatUtil.isBlank(user.getUsername())) {</span>
+<span class="nc" id="L46">			throw new IllegalArgumentException(&quot;Username cannot be empty.&quot;);</span>
+		}
+<span class="nc bnc" id="L48" title="All 4 branches missed.">		if (!readd &amp;&amp; FormatUtil.isBlank(unencryptedPassword)) {</span>
+<span class="nc" id="L49">			throw new IllegalArgumentException(&quot;Password cannot be empty.&quot;);</span>
+		}
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		String encryptedPassword = readd? user.getPassword() : passwordEncoder.encode(unencryptedPassword);</span>
+<span class="nc" id="L52">		final String sql = &quot;INSERT INTO users(username, password, enabled) VALUES (?, ?, ?)&quot;;</span>
+<span class="nc" id="L53">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L54">			ps.setString(1, user.getUsername());</span>
+<span class="nc" id="L55">			ps.setBytes(2, encryptedPassword.getBytes());</span>
+<span class="nc" id="L56">			ps.setBoolean(3, user.isEnabled());</span>
+<span class="nc" id="L57">		});</span>
+<span class="nc" id="L58">		user.setPassword(encryptedPassword);</span>
+<span class="nc" id="L59">		final String detailsSql = &quot;INSERT INTO user_details(username, firstName, lastName, email, createdTs, updatedTs) VALUES (?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L60">		Date now = new Date();</span>
+<span class="nc" id="L61">		jdbcTemplate.update(detailsSql, ps -&gt; {</span>
+<span class="nc" id="L62">			ps.setString(1, user.getUsername());</span>
+<span class="nc" id="L63">			ps.setString(2, user.getFirstName());</span>
+<span class="nc" id="L64">			ps.setString(3, user.getLastName());</span>
+<span class="nc" id="L65">			ps.setString(4, user.getEmail());</span>
+<span class="nc" id="L66">			DBUtil.setGMTTimestamp(ps, 5, now);</span>
+<span class="nc" id="L67">			DBUtil.setGMTTimestamp(ps, 6, now);</span>
+<span class="nc" id="L68">		});</span>
+<span class="nc" id="L69">	}</span>
+
+	@Override
+	@Transactional
+	public void saveUser(PmdbUser user) {
+<span class="nc" id="L74">		LOGGER.debug(&quot;Request to save user: &quot; + user.getUsername());</span>
+<span class="nc" id="L75">		final String sql = &quot;UPDATE users SET enabled = ? WHERE username = ?&quot;;</span>
+<span class="nc" id="L76">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L77">			ps.setBoolean(1, user.isEnabled());</span>
+<span class="nc" id="L78">			ps.setString(2, user.getUsername());</span>
+<span class="nc" id="L79">		});</span>
+<span class="nc" id="L80">		final String detailsSql = &quot;UPDATE user_details SET firstName = ?, lastName = ?, email = ?, updatedTs = ?&quot;</span>
+				+ &quot; WHERE username = ?&quot;;
+<span class="nc" id="L82">		Date now = new Date();</span>
+<span class="nc" id="L83">		jdbcTemplate.update(detailsSql, ps -&gt; {</span>
+<span class="nc" id="L84">			ps.setString(1, user.getFirstName());</span>
+<span class="nc" id="L85">			ps.setString(2, user.getLastName());</span>
+<span class="nc" id="L86">			ps.setString(3, user.getEmail());</span>
+<span class="nc" id="L87">			DBUtil.setGMTTimestamp(ps, 4, now);</span>
+<span class="nc" id="L88">			ps.setString(5, user.getUsername());</span>
+<span class="nc" id="L89">		});</span>
+<span class="nc" id="L90">	}</span>
+
+	@Override
+	public String changePassword(String username, String newPassword) {
+<span class="nc" id="L94">		final String sql = &quot;UPDATE users SET password = ? WHERE username = ?&quot;;</span>
+<span class="nc" id="L95">		String encryptedPassword = passwordEncoder.encode(newPassword);</span>
+<span class="nc" id="L96">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L97">			ps.setBytes(1, encryptedPassword.getBytes());</span>
+<span class="nc" id="L98">			ps.setString(2, username);</span>
+<span class="nc" id="L99">		});</span>
+<span class="nc" id="L100">		return encryptedPassword;</span>
+	}
+
+	@Override
+	public Optional&lt;PmdbUser&gt; getUser(String username) {
+<span class="nc" id="L105">		LOGGER.debug(&quot;Request to get user: &quot; + username);</span>
+<span class="nc" id="L106">		List&lt;PmdbUser&gt; pmdbUsers = new ArrayList&lt;PmdbUser&gt;();</span>
+<span class="nc" id="L107">		final String sql = &quot;SELECT users.username, password, enabled, firstName, lastName, email, createdTs, updatedTs, lastAccessTs FROM users&quot;</span>
+				+ &quot; INNER JOIN user_details ON users.username = user_details.username&quot;
+				+ &quot; WHERE users.username = ?&quot;;
+<span class="nc" id="L110">		jdbcTemplate.query(sql, ps -&gt; ps.setString(1, username), rs-&gt; {</span>
+<span class="nc" id="L111">			PmdbUser pmdbUser = new PmdbUser();</span>
+<span class="nc" id="L112">			pmdbUser.setUsername(rs.getString(1));</span>
+			try {
+<span class="nc" id="L114">				pmdbUser.setPassword(new String(rs.getBytes(2), &quot;UTF-8&quot;));</span>
+<span class="nc" id="L115">			} catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L116">				LOGGER.error(&quot;Unable to read password hash from database.&quot;, e);</span>
+<span class="nc" id="L117">			} </span>
+<span class="nc" id="L118">			pmdbUser.setEnabled(rs.getBoolean(3));</span>
+<span class="nc" id="L119">			pmdbUser.setFirstName(rs.getString(4));</span>
+<span class="nc" id="L120">			pmdbUser.setLastName(rs.getString(5));</span>
+<span class="nc" id="L121">			pmdbUser.setEmail(rs.getString(6));</span>
+<span class="nc" id="L122">			pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));</span>
+<span class="nc" id="L123">			pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));</span>
+<span class="nc" id="L124">			pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));</span>
+<span class="nc" id="L125">			pmdbUsers.add(pmdbUser);</span>
+<span class="nc" id="L126">		});</span>
+<span class="nc" id="L127">		return pmdbUsers.stream().findAny();</span>
+	}
+
+	@Override
+	public Optional&lt;PmdbUser&gt; getUserByEmail(String email) {
+<span class="nc" id="L132">		LOGGER.debug(&quot;Request to get user by email: &quot; + email);</span>
+<span class="nc" id="L133">		List&lt;PmdbUser&gt; pmdbUsers = new ArrayList&lt;PmdbUser&gt;();</span>
+<span class="nc" id="L134">		final String sql = &quot;SELECT users.username, password, enabled, firstName, lastName, email, createdTs, updatedTs, lastAccessTs FROM users&quot;</span>
+				+ &quot; INNER JOIN user_details ON users.username = user_details.username&quot;
+				+ &quot; WHERE user_details.email = ?&quot;;
+<span class="nc" id="L137">		jdbcTemplate.query(sql, ps -&gt; ps.setString(1, email), rs -&gt; {</span>
+<span class="nc" id="L138">			PmdbUser pmdbUser = new PmdbUser();</span>
+<span class="nc" id="L139">			pmdbUser.setUsername(rs.getString(1));</span>
+			try {
+<span class="nc" id="L141">				pmdbUser.setPassword(new String(rs.getBytes(2), &quot;UTF-8&quot;));</span>
+<span class="nc" id="L142">			} catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L143">				LOGGER.error(&quot;Unable to read password hash from database.&quot;, e);</span>
+<span class="nc" id="L144">			} </span>
+<span class="nc" id="L145">			pmdbUser.setEnabled(rs.getBoolean(3));</span>
+<span class="nc" id="L146">			pmdbUser.setFirstName(rs.getString(4));</span>
+<span class="nc" id="L147">			pmdbUser.setLastName(rs.getString(5));</span>
+<span class="nc" id="L148">			pmdbUser.setEmail(rs.getString(6));</span>
+<span class="nc" id="L149">			pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));</span>
+<span class="nc" id="L150">			pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));</span>
+<span class="nc" id="L151">			pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));</span>
+<span class="nc" id="L152">			pmdbUsers.add(pmdbUser);</span>
+<span class="nc" id="L153">		});</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		return (pmdbUsers.size() == 1)? pmdbUsers.stream().findAny() : Optional.empty();</span>
+	}
+	
+	@Override
+	public void updateLastAccess(String username) {
+<span class="nc" id="L159">		final String sql = &quot;UPDATE user_details SET lastAccessTs = ? WHERE username = ?&quot;;</span>
+<span class="nc" id="L160">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L161">			DBUtil.setGMTTimestamp(ps, 1, new Date());</span>
+<span class="nc" id="L162">			ps.setString(2, username);</span>
+<span class="nc" id="L163">		});</span>
+<span class="nc" id="L164">	}</span>
+
+	@Override
+	public int getUserCount() {
+<span class="nc" id="L168">		return jdbcTemplate.queryForObject(&quot;select count(*) from users&quot;, Integer.class).intValue();</span>
+	}
+
+	@Override
+	public List&lt;PmdbUser&gt; searchUsers(String searchString) {
+<span class="nc" id="L173">		final String lcSearchString = searchString.trim().toLowerCase();</span>
+<span class="nc" id="L174">		final List&lt;PmdbUser&gt; users = new ArrayList&lt;PmdbUser&gt;();</span>
+<span class="nc" id="L175">		final String sql = &quot;SELECT users.username, password, enabled, firstName, lastName, email, createdTs, updatedTs, lastAccessTs FROM users&quot;</span>
+				+ &quot; INNER JOIN user_details ON users.username = user_details.username&quot;
+				+ &quot; WHERE LOWER(users.username) like ?&quot;
+				+ &quot; OR LOWER(user_details.firstName) like ?&quot;
+				+ &quot; OR LOWER(user_details.lastName) like ?&quot;
+				+ &quot; ORDER BY LOWER(users.username)&quot;;
+<span class="nc" id="L181">		jdbcTemplate.query(sql, ps -&gt; {</span>
+<span class="nc" id="L182">			ps.setString(1, &quot;%&quot; + lcSearchString + &quot;%&quot;);</span>
+<span class="nc" id="L183">			ps.setString(2, &quot;%&quot; + lcSearchString + &quot;%&quot;);</span>
+<span class="nc" id="L184">			ps.setString(3, &quot;%&quot; + lcSearchString + &quot;%&quot;);</span>
+<span class="nc" id="L185">		}, rs -&gt; {</span>
+<span class="nc" id="L186">			PmdbUser pmdbUser = new PmdbUser();</span>
+<span class="nc" id="L187">			pmdbUser.setUsername(rs.getString(1));</span>
+			try {
+<span class="nc" id="L189">				pmdbUser.setPassword(new String(rs.getBytes(2), &quot;UTF-8&quot;));</span>
+<span class="nc" id="L190">			} catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L191">				LOGGER.error(&quot;Unable to read password hash from database.&quot;, e);</span>
+<span class="nc" id="L192">			} </span>
+<span class="nc" id="L193">			pmdbUser.setEnabled(rs.getBoolean(3));</span>
+<span class="nc" id="L194">			pmdbUser.setFirstName(rs.getString(4));</span>
+<span class="nc" id="L195">			pmdbUser.setLastName(rs.getString(5));</span>
+<span class="nc" id="L196">			pmdbUser.setEmail(rs.getString(6));</span>
+<span class="nc" id="L197">			pmdbUser.setCreatedDate(DBUtil.getDateFromGMTTimestamp(rs, 7));</span>
+<span class="nc" id="L198">			pmdbUser.setUpdatedDate(DBUtil.getDateFromGMTTimestamp(rs, 8));</span>
+<span class="nc" id="L199">			pmdbUser.setLastAccessDate(DBUtil.getDateFromGMTTimestamp(rs, 9));</span>
+<span class="nc" id="L200">			users.add(pmdbUser);</span>
+<span class="nc" id="L201">		});		</span>
+<span class="nc" id="L202">		return users;</span>
+	}
+
+	@Override
+	@Transactional
+	public void delete(String username) {
+<span class="nc" id="L208">		final String detailsSql = &quot;DELETE FROM user_details WHERE username = ?&quot;;</span>
+<span class="nc" id="L209">		final String sql = &quot;DELETE FROM users WHERE username = ?&quot;;</span>
+<span class="nc" id="L210">		jdbcTemplate.update(detailsSql, ps -&gt; ps.setString(1, username));</span>
+<span class="nc" id="L211">		jdbcTemplate.update(sql, ps -&gt; ps.setString(1, username));</span>
+<span class="nc" id="L212">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

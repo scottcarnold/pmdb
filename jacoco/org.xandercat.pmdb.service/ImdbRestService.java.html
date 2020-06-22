@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImdbRestService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.service</a> &gt; <span class="el_source">ImdbRestService.java</span></div><h1>ImdbRestService.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.service;
+
+import java.util.Arrays;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.dto.imdb.MovieDetailsRequest;
+import org.xandercat.pmdb.dto.imdb.MovieDetails;
+import org.xandercat.pmdb.dto.imdb.MovieDetailsWrapper;
+import org.xandercat.pmdb.dto.imdb.ResponseType;
+import org.xandercat.pmdb.dto.imdb.SearchRequest;
+import org.xandercat.pmdb.dto.imdb.SearchResult;
+import org.xandercat.pmdb.exception.ServiceLimitExceededException;
+import org.xandercat.pmdb.exception.WebServicesException;
+import org.xandercat.pmdb.util.format.FormatUtil;
+import org.xandercat.pmdb.ws.ClientQueryParamMarshaller;
+
+@Component
+<span class="fc" id="L28">public class ImdbRestService implements ImdbSearchService {</span>
+	
+<span class="fc" id="L30">	private static final Logger LOGGER = LogManager.getLogger(ImdbRestService.class);</span>
+	
+	private static final int MAX_ATTRIBUTE_VALUE_LENGTH = 400;
+	private static final String IMDB_URL_BASE = &quot;https://www.imdb.com/title/&quot;;
+	
+	@Value(&quot;${imdb.rapidapi.host.url}&quot;)
+	private String hostUrl;
+	
+	@Value(&quot;${imdb.rapidapi.host.header.key}&quot;)
+	private String hostHeaderKey;
+	
+	@Value(&quot;${imdb.rapidapi.host.header.value}&quot;)
+	private String hostHeaderValue;
+	
+	@Value(&quot;${imdb.rapidapi.key.header.key}&quot;)
+	private String apiKeyHeaderKey;
+	
+	@Value(&quot;${imdb.rapidapi.key.header.value}&quot;)
+	private String apiKeyHeaderValue;
+	
+	@Value(&quot;${imdb.calls.per.day.maximum}&quot;)
+	private int maxServiceCallsPerDay;
+	
+	@Autowired
+	private Client restClient;
+	
+	@Autowired
+	private ClientQueryParamMarshaller clientQueryParamMarshaller;
+	
+	@Autowired
+	private ApplicationService applicationService;
+
+	private Builder builder(Object request) {
+<span class="fc" id="L63">		WebTarget webTarget = restClient.target(hostUrl);</span>
+<span class="fc" id="L64">		webTarget = clientQueryParamMarshaller.queryParams(webTarget, request);</span>
+<span class="fc" id="L65">		return webTarget.request()</span>
+<span class="fc" id="L66">			.header(hostHeaderKey, hostHeaderValue)</span>
+<span class="fc" id="L67">			.header(apiKeyHeaderKey, apiKeyHeaderValue);</span>
+	}
+	
+	public SearchResult searchImdb(SearchRequest request) throws WebServicesException, ServiceLimitExceededException {
+<span class="fc" id="L71">		int serviceCalls = applicationService.getImdbServiceCallCount();</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">		if (serviceCalls &gt;= maxServiceCallsPerDay) {</span>
+<span class="fc" id="L73">			throw new ServiceLimitExceededException(serviceCalls, maxServiceCallsPerDay);</span>
+		} else {
+<span class="fc" id="L75">			applicationService.incrementImdbServiceCallCount();</span>
+		}
+<span class="fc bfc" id="L77" title="All 2 branches covered.">		if (FormatUtil.isBlank(request.getTitle())) {</span>
+<span class="fc" id="L78">			throw new IllegalArgumentException(&quot;Title is required.&quot;);</span>
+		}
+<span class="fc" id="L80">		request.setResponseType(ResponseType.XML);</span>
+<span class="fc" id="L81">		request.setTitle(request.getTitle().replaceAll(&quot;[\\u0091\\u0092]&quot;, &quot;'&quot;)); // for clients that insist on using curly quotes that would cause search to fail</span>
+		try {
+<span class="fc" id="L83">			return builder(request).get(new GenericType&lt;SearchResult&gt;() {});</span>
+<span class="nc" id="L84">		} catch (Exception e) {</span>
+<span class="nc" id="L85">			throw new WebServicesException(e);</span>
+		}
+	}
+	
+	@Override
+	public MovieDetails getMovieDetails(MovieDetailsRequest request) throws WebServicesException, ServiceLimitExceededException {
+<span class="nc" id="L91">		int serviceCalls = applicationService.getImdbServiceCallCount();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (serviceCalls &gt;= maxServiceCallsPerDay) {</span>
+<span class="nc" id="L93">			throw new ServiceLimitExceededException(serviceCalls, maxServiceCallsPerDay);</span>
+		} else {
+<span class="nc" id="L95">			applicationService.incrementImdbServiceCallCount();</span>
+		}
+<span class="nc" id="L97">		request.setResponseType(ResponseType.XML);</span>
+<span class="nc" id="L98">		MovieDetailsWrapper movieDetailsWrapper = null;</span>
+		try {
+<span class="nc" id="L100">			movieDetailsWrapper = builder(request).get(new GenericType&lt;MovieDetailsWrapper&gt;() {});</span>
+<span class="nc" id="L101">		} catch (Exception e) {</span>
+<span class="nc" id="L102">			throw new WebServicesException(e);</span>
+<span class="nc" id="L103">		}</span>
+<span class="nc" id="L104">		return movieDetailsWrapper.getMovieDetails();</span>
+	}
+
+	private void setAttribute(Movie movie, ImdbAttribute imdbAttribute, String value) {
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">		if (FormatUtil.isNotBlank(value)) {</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">			if (value.length() &gt; MAX_ATTRIBUTE_VALUE_LENGTH) {</span>
+<span class="nc" id="L110">				value = value.substring(0, MAX_ATTRIBUTE_VALUE_LENGTH);</span>
+			}
+<span class="nc" id="L112">			movie.addAttribute(imdbAttribute.getKey(), value);</span>
+		}
+<span class="fc" id="L114">	}</span>
+	
+	@Override
+	public void addImdbAttributes(Movie movie, MovieDetails movieDetails) {
+<span class="fc bfc" id="L118" title="All 2 branches covered.">		if (FormatUtil.isBlank(movie.getTitle())) {</span>
+			// only add title if it doesn't already have one; this allows custom names for pre-existing movies
+<span class="fc" id="L120">			movie.setTitle(movieDetails.getTitle());</span>
+		}
+<span class="fc" id="L122">		setAttribute(movie, ImdbAttribute.YEAR, movieDetails.getYear());</span>
+<span class="fc" id="L123">		setAttribute(movie, ImdbAttribute.GENRE, movieDetails.getGenre());</span>
+<span class="fc" id="L124">		setAttribute(movie, ImdbAttribute.RATED, movieDetails.getRated());</span>
+<span class="fc" id="L125">		setAttribute(movie, ImdbAttribute.PLOT, movieDetails.getPlot());</span>
+<span class="fc" id="L126">		setAttribute(movie, ImdbAttribute.ACTORS, movieDetails.getActors());</span>
+<span class="fc" id="L127">		setAttribute(movie, ImdbAttribute.DIRECTOR, movieDetails.getDirector());</span>
+<span class="fc" id="L128">		setAttribute(movie, ImdbAttribute.AWARDS, movieDetails.getAwards());</span>
+<span class="fc" id="L129">		setAttribute(movie, ImdbAttribute.IMDB_ID, movieDetails.getImdbId());</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">		if (FormatUtil.isNotBlank(movieDetails.getImdbId())) {</span>
+<span class="nc" id="L131">			setAttribute(movie, ImdbAttribute.IMDB_URL, IMDB_URL_BASE + movieDetails.getImdbId());</span>
+		}
+<span class="fc" id="L133">		setAttribute(movie, ImdbAttribute.IMDB_RATING, movieDetails.getImdbRating());</span>
+<span class="fc" id="L134">		setAttribute(movie, ImdbAttribute.IMDB_VOTES, movieDetails.getImdbVotes());</span>
+<span class="fc" id="L135">		setAttribute(movie, ImdbAttribute.LANGUAGE, movieDetails.getLanguage());</span>
+<span class="fc" id="L136">		setAttribute(movie, ImdbAttribute.METASCORE, movieDetails.getMetascore());		</span>
+<span class="fc" id="L137">		setAttribute(movie, ImdbAttribute.POSTER, movieDetails.getPoster());		</span>
+<span class="fc" id="L138">		setAttribute(movie, ImdbAttribute.RELEASED, movieDetails.getReleased());</span>
+<span class="fc" id="L139">		setAttribute(movie, ImdbAttribute.RUNTIME, movieDetails.getRuntime());</span>
+<span class="fc" id="L140">		setAttribute(movie, ImdbAttribute.TYPE, movieDetails.getType());</span>
+<span class="fc" id="L141">		setAttribute(movie, ImdbAttribute.COUNTRY, movieDetails.getCountry());</span>
+<span class="fc" id="L142">	}</span>
+
+	@Override
+	public void removeImdbAttributes(Movie movie) {
+<span class="nc" id="L146">		Arrays.stream(ImdbAttribute.values()).forEach(imdbAttribute -&gt; movie.removeAttribute(imdbAttribute.getKey()));	</span>
+<span class="nc" id="L147">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

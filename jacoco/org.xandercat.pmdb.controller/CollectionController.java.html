@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CollectionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.controller</a> &gt; <span class="el_source">CollectionController.java</span></div><h1>CollectionController.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.controller;
+
+import java.io.IOException;
+import java.security.Principal;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.xandercat.pmdb.dto.CollectionPermission;
+import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.dto.PmdbUser;
+import org.xandercat.pmdb.exception.WebServicesException;
+import org.xandercat.pmdb.exception.CollectionSharingException;
+import org.xandercat.pmdb.form.collection.CollectionForm;
+import org.xandercat.pmdb.form.collection.ExportForm;
+import org.xandercat.pmdb.form.collection.ExportType;
+import org.xandercat.pmdb.form.collection.ImportForm;
+import org.xandercat.pmdb.form.collection.ImportOptionsForm;
+import org.xandercat.pmdb.form.collection.ShareCollectionForm;
+import org.xandercat.pmdb.service.CollectionService;
+import org.xandercat.pmdb.service.MovieService;
+import org.xandercat.pmdb.service.UserService;
+import org.xandercat.pmdb.util.Alerts;
+import org.xandercat.pmdb.util.ExcelPorter;
+import org.xandercat.pmdb.util.ViewUtil;
+
+/**
+ * Controller for functions specific to movie collections management.
+ * 
+ * @author Scott Arnold
+ */
+@Controller
+<span class="fc" id="L49">public class CollectionController {</span>
+
+<span class="fc" id="L51">	private static final Logger LOGGER = LogManager.getLogger(CollectionController.class);</span>
+	
+	@Autowired
+	private UserService userService;
+	
+	@Autowired
+	private CollectionService collectionService;
+	
+	@Autowired
+	private MovieService movieService;
+	
+	@ModelAttribute(&quot;viewTab&quot;)
+	public String getViewTab() {
+<span class="fc" id="L64">		return ViewUtil.TAB_COLLECTIONS;</span>
+	}
+
+	/**
+	 * Page for showing viewable movie collections and actions that can be taken for them.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * 
+	 * @return page for showing viewable movie collections and actions that can be taken for them
+	 */
+	@RequestMapping(&quot;/collections&quot;)
+	public String collections(Model model, Principal principal) {
+<span class="fc" id="L77">		String username = principal.getName();</span>
+<span class="fc" id="L78">		Optional&lt;MovieCollection&gt; defaultMovieCollection = collectionService.getDefaultMovieCollection(username);</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">		if (defaultMovieCollection.isPresent()) {</span>
+<span class="fc" id="L80">			model.addAttribute(&quot;defaultMovieCollection&quot;, defaultMovieCollection.get());</span>
+		}
+<span class="fc" id="L82">		List&lt;MovieCollection&gt; movieCollections = collectionService.getViewableMovieCollections(username);</span>
+<span class="fc" id="L83">		List&lt;MovieCollection&gt; shareOffers = collectionService.getShareOfferMovieCollections(username);</span>
+<span class="fc" id="L84">		model.addAttribute(&quot;movieCollections&quot;, movieCollections);</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">		if (shareOffers.size() &gt; 0) {</span>
+<span class="fc" id="L86">			model.addAttribute(&quot;shareOffers&quot;, shareOffers);</span>
+		}
+<span class="fc" id="L88">		return &quot;collection/collections&quot;;</span>
+	}
+	
+	/**
+	 * Page for adding a new movie collection.
+	 * 
+	 * @param model  model
+	 * 
+	 * @return page for adding a new movie collection
+	 */
+	@RequestMapping(&quot;/collections/addCollection&quot;)
+	public String addCollection(Model model) {
+<span class="nc" id="L100">		model.addAttribute(&quot;collectionForm&quot;, new CollectionForm());</span>
+<span class="nc" id="L101">		return &quot;collection/addCollection&quot;;</span>
+	}
+	
+	/**
+	 * Process adding a new movie collection.  If it is the user's first movie collection,
+	 * automatically set it as the default/active collection for the user and take them to
+	 * the home page (movie list) for that collection.  If it is not the user's first movie
+	 * collection, just return them to the movie collections management page.
+	 * 
+	 * @param model           model
+	 * @param principal       principal
+	 * @param collectionForm  movie collection form
+	 * @param result          binding result
+	 * 
+	 * @return page following adding a new movie collection.
+	 */
+	@RequestMapping(&quot;/collections/addCollectionSubmit&quot;)
+	public String addCollectionSubmit(Model model, Principal principal,
+			@ModelAttribute(&quot;collectionForm&quot;) @Valid CollectionForm collectionForm,
+			BindingResult result) {
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">		if (result.hasErrors()) {</span>
+<span class="nc" id="L122">			return &quot;collection/addCollection&quot;;</span>
+		}
+<span class="fc" id="L124">		List&lt;MovieCollection&gt; movieCollections = collectionService.getViewableMovieCollections(principal.getName());</span>
+<span class="fc" id="L125">		MovieCollection movieCollection = new MovieCollection();</span>
+<span class="fc" id="L126">		movieCollection.setName(collectionForm.getName());</span>
+<span class="fc" id="L127">		movieCollection.setCloud(collectionForm.isCloud());</span>
+		try {
+<span class="fc" id="L129">			collectionService.addMovieCollection(movieCollection, principal.getName());</span>
+<span class="nc" id="L130">		} catch (WebServicesException e1) {</span>
+<span class="nc" id="L131">			LOGGER.error(&quot;Unable to save movie collection to cloud.&quot;, e1);</span>
+<span class="nc" id="L132">			Alerts.setErrorMessage(model, &quot;Movie collection could not be added to the cloud.&quot;);</span>
+<span class="nc" id="L133">			return &quot;collection/addCollection&quot;;</span>
+<span class="fc" id="L134">		}</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">		if (movieCollections.size() == 0) {</span>
+			// user had no viewable movie collections; set the newly created collection as default
+			try {
+<span class="fc" id="L138">				collectionService.setDefaultMovieCollection(movieCollection.getId(), principal.getName());</span>
+<span class="fc" id="L139">				return &quot;redirect:/&quot;;  // after setting a new default collection, immediately go to movie list for that collection</span>
+<span class="nc" id="L140">			} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L141">				LOGGER.error(&quot;Unable to set newly created movie collection as default.  This shouldn't happen.&quot;, e);</span>
+				// despite that this represents an unsettling error, there is no real value in notifying the user, so not setting message here
+			}
+		}
+<span class="fc" id="L145">		Alerts.setMessage(model, &quot;Movie collection added.&quot;);</span>
+<span class="fc" id="L146">		return collections(model, principal);</span>
+	}
+	
+	/**
+	 * Change the default/active collection for the user to the collection of given id and return them to the 
+	 * home page (movie list) for that collection.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to change to
+	 * 
+	 * @return home page for the new default/active collection
+	 */
+	@RequestMapping(&quot;/collections/changeDefaultCollection&quot;)
+	public String changeDefaultCollection(Model model, Principal principal, @RequestParam String collectionId) {
+		try {
+<span class="nc" id="L162">			collectionService.setDefaultMovieCollection(collectionId, principal.getName());</span>
+<span class="nc" id="L163">			return &quot;redirect:/&quot;;  // after setting a new default collection, immediately go to movie list for that collection			</span>
+<span class="nc" id="L164">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L165">			LOGGER.error(&quot;Unable to set default movie collection&quot;, e);</span>
+<span class="nc" id="L166">			Alerts.setErrorMessage(model, &quot;Default movie collection could not be set.&quot;);</span>
+<span class="nc" id="L167">			return collections(model, principal);</span>
+		}
+	}
+	
+	/**
+	 * Page for editing a movie collection.  
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to edit
+	 * 
+	 * @return page for editing movie collection of given id
+	 */
+	@RequestMapping(&quot;/collections/editCollection&quot;)
+	public String editCollection(Model model, Principal principal, @RequestParam String collectionId) {
+<span class="nc" id="L182">		MovieCollection movieCollection = null;</span>
+		try {
+<span class="nc" id="L184">			movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());</span>
+<span class="nc" id="L185">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L186">			LOGGER.error(&quot;Unable to edit movie collection.&quot;, e);</span>
+<span class="nc" id="L187">			Alerts.setErrorMessage(model, &quot;Unable to edit requested movie collection.&quot;);</span>
+<span class="nc" id="L188">			return collections(model, principal);</span>
+<span class="nc" id="L189">		}</span>
+<span class="nc" id="L190">		CollectionForm collectionForm = new CollectionForm(movieCollection);</span>
+<span class="nc" id="L191">		model.addAttribute(&quot;collectionForm&quot;, collectionForm);</span>
+<span class="nc" id="L192">		return &quot;collection/editCollection&quot;;</span>
+	}
+
+	/**
+	 * Process editing of a movie collection and return to collections management.
+	 * 
+	 * @param model           model
+	 * @param principal       principal
+	 * @param collectionForm  movie collection form
+	 * @param result          binding result
+	 * 
+	 * @return collections management page
+	 */
+	@RequestMapping(&quot;/collections/editCollectionSubmit&quot;)
+	public String editCollectionSubmit(Model model, Principal principal,
+			@ModelAttribute(&quot;collectionForm&quot;) @Valid CollectionForm collectionForm,
+			BindingResult result) {
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">		if (result.hasErrors()) {</span>
+<span class="nc" id="L210">			return &quot;collection/editCollection&quot;;</span>
+		}
+<span class="fc" id="L212">		MovieCollection movieCollection = new MovieCollection();</span>
+<span class="fc" id="L213">		movieCollection.setId(collectionForm.getId());</span>
+<span class="fc" id="L214">		movieCollection.setName(collectionForm.getName());</span>
+<span class="fc" id="L215">		movieCollection.setCloud(collectionForm.isCloud()); // this isn't really used, as it will only update the name</span>
+		try {
+<span class="fc" id="L217">			collectionService.updateMovieCollection(movieCollection, principal.getName());</span>
+<span class="nc" id="L218">		} catch (CollectionSharingException | WebServicesException e) {</span>
+<span class="nc" id="L219">			LOGGER.error(&quot;Unable to save collection.&quot;, e);</span>
+<span class="nc" id="L220">			Alerts.setErrorMessage(model, &quot;Unable to save movie collection.&quot;);</span>
+<span class="nc" id="L221">			return collections(model, principal);</span>
+<span class="fc" id="L222">		}</span>
+<span class="fc" id="L223">		Alerts.setMessage(model, &quot;Movie collection saved.&quot;);</span>
+<span class="fc" id="L224">		return collections(model, principal);</span>
+	}
+	
+	/**
+	 * Delete movie collection of given id and return to collections management.  There is no intermediate
+	 * confirmation page; confirmation should be handled on client side.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to delete
+	 * 
+	 * @return movie collections management page
+	 */
+	@RequestMapping(value=&quot;/collections/deleteCollection&quot;, method=RequestMethod.POST)
+	public String deleteCollection(Model model, Principal principal, @RequestParam String collectionId) {
+		try {
+<span class="fc" id="L240">			collectionService.deleteMovieCollection(collectionId, principal.getName());</span>
+<span class="nc" id="L241">		} catch (CollectionSharingException | WebServicesException e) {</span>
+<span class="nc" id="L242">			LOGGER.error(&quot;Unable to delete collection.&quot;, e);</span>
+<span class="nc" id="L243">			Alerts.setErrorMessage(model, &quot;Unable to delete movie collection.&quot;);</span>
+<span class="nc" id="L244">			return collections(model, principal);</span>
+<span class="fc" id="L245">		}</span>
+<span class="fc" id="L246">		Alerts.setMessage(model, &quot;Movie collection deleted.&quot;);</span>
+<span class="fc" id="L247">		return collections(model, principal);</span>
+	}
+	
+	/**
+	 * Page for changing who a movie collection is shared with.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to edit sharing of
+	 * 
+	 * @return page for changing who a movie collection is shared with
+	 */
+	@RequestMapping(&quot;/collections/editSharing&quot;)
+	public String editSharing(Model model, Principal principal, @RequestParam String collectionId) {
+		try {
+<span class="fc" id="L262">			MovieCollection movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());</span>
+<span class="fc" id="L263">			List&lt;CollectionPermission&gt; collectionPermissions = collectionService.getCollectionPermissions(collectionId, principal.getName());</span>
+<span class="fc" id="L264">			model.addAttribute(&quot;movieCollection&quot;, movieCollection);</span>
+<span class="fc" id="L265">			model.addAttribute(&quot;collectionPermissions&quot;, collectionPermissions);</span>
+<span class="nc" id="L266">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L267">			LOGGER.error(&quot;Unable to retrieve collection permissions for collection &quot; + collectionId + &quot; user &quot; + principal.getName(), e);</span>
+<span class="nc" id="L268">			Alerts.setErrorMessage(model, &quot;Sharing is not available on the collection.&quot;);</span>
+<span class="nc" id="L269">			return collections(model, principal);</span>
+<span class="fc" id="L270">		}</span>
+<span class="fc" id="L271">		return &quot;collection/editSharing&quot;;</span>
+	}
+	
+	/**
+	 * Accept a movie collection share offer and return to collections management.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to accept share offer of
+	 * @param session       session
+	 * 
+	 * @return collections management page
+	 */
+	@RequestMapping(&quot;/collections/acceptShareOffer&quot;)
+	public String acceptShareOffer(Model model, Principal principal, @RequestParam String collectionId, HttpSession session) {
+		try {
+<span class="nc" id="L287">			collectionService.acceptShareOffer(collectionId, principal.getName());</span>
+<span class="nc" id="L288">			ViewUtil.updateNumShareOffers(collectionService, session, principal.getName());</span>
+<span class="nc" id="L289">			Alerts.setMessage(model, &quot;Share offer accepted.&quot;);</span>
+<span class="nc" id="L290">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L291">			Alerts.setErrorMessage(model, &quot;Unable to accept share offer.&quot;);</span>
+<span class="nc" id="L292">		}</span>
+<span class="nc" id="L293">		return collections(model, principal);</span>
+	}
+	
+	/**
+	 * Decline a movie collection share offer and return to collections management.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to decline share offer of
+	 * @param session       session
+	 * 
+	 * @return collections management page
+	 */
+	@RequestMapping(&quot;/collections/declineShareOffer&quot;)
+	public String declineShareOffer(Model model, Principal principal, @RequestParam String collectionId, HttpSession session) {
+		try {
+<span class="nc" id="L309">			collectionService.declineShareOffer(collectionId, principal.getName());</span>
+<span class="nc" id="L310">			ViewUtil.updateNumShareOffers(collectionService, session, principal.getName());</span>
+<span class="nc" id="L311">			Alerts.setMessage(model, &quot;Share offer declined.&quot;);</span>
+<span class="nc" id="L312">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L313">			Alerts.setErrorMessage(model, &quot;Unable to decline share offer.&quot;);</span>
+<span class="nc" id="L314">		}</span>
+<span class="nc" id="L315">		return collections(model, principal);</span>
+	}
+	
+	/**
+	 * Toggle whether or not a user can edit the shared movie collection.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to toggle edit permission on
+	 * @param username      username of user to toggle edit permission for
+	 * 
+	 * @return edit sharing page
+	 */
+	@RequestMapping(&quot;/collections/toggleEditPermission&quot;)
+	public String toggleEditPermission(Model model, Principal principal, @RequestParam String collectionId, @RequestParam String username) {
+		try {
+<span class="nc" id="L331">			Optional&lt;CollectionPermission&gt; permission = collectionService.getCollectionPermission(collectionId, username, principal.getName());</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">			if (!permission.isPresent()) {</span>
+<span class="nc" id="L333">				throw new CollectionSharingException(&quot;Unable to obtain permission for collection &quot; + collectionId + &quot; user &quot; + username);</span>
+			}
+<span class="nc bnc" id="L335" title="All 2 branches missed.">			collectionService.updateEditable(collectionId, username, !permission.get().isAllowEdit(), principal.getName());</span>
+<span class="nc" id="L336">			Alerts.setMessage(model, &quot;Edit permission updated.&quot;);</span>
+<span class="nc" id="L337">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L338">			LOGGER.error(&quot;Unable to update edit permission for user.&quot;, e);</span>
+<span class="nc" id="L339">			Alerts.setErrorMessage(model, &quot;Could not update edit permission for user.&quot;);</span>
+<span class="nc" id="L340">		}</span>
+<span class="nc" id="L341">		return editSharing(model, principal, collectionId);		</span>
+	}
+	
+	/**
+	 * Revoke share of movie collection with user.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to revoke share permission to
+	 * @param username      username of user to revoke share permission from
+	 * 
+	 * @return edit sharing page
+	 */
+	@RequestMapping(value=&quot;/collections/revokePermission&quot;, method=RequestMethod.POST)
+	public String revokePermission(Model model, Principal principal, @RequestParam String collectionId, @RequestParam String username) {
+		try {
+<span class="nc" id="L357">			collectionService.unshareMovieCollection(collectionId, username, principal.getName());</span>
+<span class="nc" id="L358">			Alerts.setMessage(model, &quot;Share revoked.&quot;);</span>
+<span class="nc" id="L359">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L360">			LOGGER.error(&quot;Unable to revoke share.&quot;, e);</span>
+<span class="nc" id="L361">			Alerts.setErrorMessage(model, &quot;Share could not be revoked.&quot;);</span>
+<span class="nc" id="L362">		}</span>
+<span class="nc" id="L363">		return editSharing(model, principal, collectionId);</span>
+	}
+	
+	/**
+	 * Revoke share of movie collection on self.  This is for users who no longer want access to a movie collection
+	 * that was previously shared with them.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection that share is no longer desired of
+	 * 
+	 * @return collections management page
+	 */
+	@RequestMapping(value=&quot;/collections/revokeMyPermission&quot;, method=RequestMethod.POST)
+	public String revokeMyPermission(Model model, Principal principal, @RequestParam String collectionId) {
+		try {
+<span class="nc" id="L379">			collectionService.unshareMovieCollection(collectionId, principal.getName(), principal.getName());</span>
+<span class="nc" id="L380">			Alerts.setMessage(model, &quot;Removed access to collection.&quot;);</span>
+<span class="nc" id="L381">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L382">			LOGGER.error(&quot;User unable to remove their own permission to a collection.&quot;, e);</span>
+<span class="nc" id="L383">			Alerts.setErrorMessage(model, &quot;Access cannot be removed.&quot;);</span>
+<span class="nc" id="L384">		}</span>
+<span class="nc" id="L385">		return collections(model, principal);</span>
+	}
+	
+	/**
+	 * Page for sharing a movie collection with other users.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  id of movie collection to update sharing on
+	 * 
+	 * @return page for sharing a movie collection with other users.
+	 */
+	@RequestMapping(&quot;/collections/shareCollection&quot;)
+	public String shareCollection(Model model, Principal principal, @RequestParam String collectionId) {
+		try {
+<span class="nc" id="L400">			MovieCollection movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());</span>
+<span class="nc" id="L401">			model.addAttribute(&quot;movieCollection&quot;, movieCollection);</span>
+<span class="nc" id="L402">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L403">			LOGGER.error(&quot;Unable to share movie collection.&quot;, e);</span>
+<span class="nc" id="L404">			Alerts.setErrorMessage(model, &quot;Unable to share movie collection.&quot;);</span>
+<span class="nc" id="L405">			return editSharing(model, principal, collectionId);</span>
+<span class="nc" id="L406">		}</span>
+<span class="nc" id="L407">		model.addAttribute(&quot;shareCollectionForm&quot;, new ShareCollectionForm(collectionId));</span>
+<span class="nc" id="L408">		return &quot;collection/shareCollection&quot;;</span>
+	}
+	
+	/**
+	 * Process sharing of movie collection with another user.  
+	 * 
+	 * This is a low security process intended for a generally trusted user base.  With a less
+	 * trusted user base, the user would not be notified if the user reference was invalid, and users would have some measure of
+	 * control over who could share collections with them.
+	 * 
+	 * @param model                model
+	 * @param principal            principal
+	 * @param shareCollectionForm  form for sharing collection with another user
+	 * @param result               binding result
+	 * 
+	 * @return edit sharing page
+	 */
+	@RequestMapping(&quot;/collections/shareCollectionSubmit&quot;)
+	public String shareCollectionSubmit(Model model, Principal principal,
+			@ModelAttribute(&quot;shareCollectionForm&quot;) @Valid ShareCollectionForm shareCollectionForm,
+			BindingResult result) {
+<span class="fc" id="L429">		Optional&lt;PmdbUser&gt; shareWithUser = userService.getUser(shareCollectionForm.getUsernameOrEmail());</span>
+<span class="pc bpc" id="L430" title="1 of 2 branches missed.">		if (!shareWithUser.isPresent()) {</span>
+<span class="nc" id="L431">			shareWithUser = userService.getUserByEmail(shareCollectionForm.getUsernameOrEmail());</span>
+		}
+<span class="pc bpc" id="L433" title="1 of 2 branches missed.">		if (!shareWithUser.isPresent()) {</span>
+			//TODO: Future educational activity -- see about using SpringConstraintValidationFactory to create a Spring wired validator for this
+<span class="nc" id="L435">			result.rejectValue(&quot;usernameOrEmail&quot;, &quot;{validation.UserReference.message}&quot;, &quot;Invalid user reference.&quot;);</span>
+		}
+<span class="pc bpc" id="L437" title="1 of 2 branches missed.">		if (result.hasErrors()) {</span>
+<span class="nc" id="L438">			MovieCollection movieCollection = null;</span>
+			try {
+<span class="nc" id="L440">				movieCollection = collectionService.getViewableMovieCollection(shareCollectionForm.getCollectionId(), principal.getName());</span>
+<span class="nc" id="L441">			} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L442">			}</span>
+<span class="nc" id="L443">			model.addAttribute(&quot;movieCollection&quot;, movieCollection);</span>
+<span class="nc" id="L444">			return &quot;collection/shareCollection&quot;;</span>
+		}
+		try {
+<span class="fc" id="L447">			collectionService.shareMovieCollection(shareCollectionForm.getCollectionId(), </span>
+<span class="fc" id="L448">					shareWithUser.get().getUsername(), shareCollectionForm.isEditable(), principal.getName());</span>
+<span class="fc" id="L449">			Alerts.setMessage(model, &quot;Offer sent to share collection.&quot;);</span>
+<span class="nc" id="L450">		} catch (CollectionSharingException e) {</span>
+<span class="nc" id="L451">			LOGGER.error(&quot;Unable to share collection.&quot;, e);</span>
+<span class="nc" id="L452">			Alerts.setErrorMessage(model, &quot;Unable to share collection.&quot;);</span>
+<span class="fc" id="L453">		}</span>
+<span class="fc" id="L454">		return editSharing(model, principal, shareCollectionForm.getCollectionId());</span>
+	}
+	
+	/**
+	 * Page for exporting a movie collection.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * 
+	 * @return collections export page
+	 */
+	@RequestMapping(&quot;/collections/export&quot;)
+	public String export(Model model, Principal principal) {
+<span class="fc" id="L467">		List&lt;MovieCollection&gt; movieCollections = collectionService.getViewableMovieCollections(principal.getName());</span>
+<span class="pc bpc" id="L468" title="1 of 2 branches missed.">		if (movieCollections.size() == 0) {</span>
+<span class="nc" id="L469">			Alerts.setErrorMessage(model, &quot;There are no collections that can be exported.&quot;);</span>
+<span class="nc" id="L470">			return collections(model, principal);</span>
+		}
+<span class="fc" id="L472">		Optional&lt;MovieCollection&gt; defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());</span>
+<span class="fc" id="L473">		String exportCollectionId = movieCollections.get(0).getId();</span>
+<span class="pc bpc" id="L474" title="1 of 2 branches missed.">		if (defaultMovieCollection.isPresent()) {</span>
+<span class="fc" id="L475">			exportCollectionId = defaultMovieCollection.get().getId();</span>
+		}
+<span class="fc" id="L477">		model.addAttribute(&quot;exportForm&quot;, new ExportForm(exportCollectionId, ExportType.XLSX));</span>
+<span class="fc" id="L478">		model.addAttribute(&quot;collectionOptions&quot;, ViewUtil.getOptions(movieCollections, &quot;getId&quot;, &quot;getName&quot;));</span>
+<span class="fc" id="L479">		model.addAttribute(&quot;typeOptions&quot;, ViewUtil.getOptions(ExportType.class));</span>
+<span class="fc" id="L480">		return &quot;collection/export&quot;;</span>
+	}
+	
+	/**
+	 * Export a movie collection.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param exportForm  form for exporting a movie collection
+	 * @param response    HTTP servlet response
+	 * 
+	 * @return export page
+	 */
+	@RequestMapping(value=&quot;/collections/exportSubmit&quot;, method=RequestMethod.POST)
+	public String exportSubmit(Model model, Principal principal,
+			@ModelAttribute(&quot;exportForm&quot;) ExportForm exportForm, HttpServletResponse response) {
+<span class="nc bnc" id="L496" title="All 4 branches missed.">		if (exportForm.getCollections() == null || exportForm.getCollections().size() == 0) {</span>
+<span class="nc" id="L497">			Alerts.setErrorMessage(model, &quot;You must select at least 1 collection to export.&quot;);</span>
+<span class="nc" id="L498">			return export(model, principal);</span>
+		}
+		try {
+<span class="nc" id="L501">			ExportType exportType = ExportType.valueOf(exportForm.getType());</span>
+<span class="nc" id="L502">			ExcelPorter.Format format = ExcelPorter.Format.XLSX;</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">			if (exportType == ExportType.XLS) {</span>
+<span class="nc" id="L504">				format = ExcelPorter.Format.XLS;</span>
+			}  
+<span class="nc" id="L506">			ExcelPorter excelPorter = new ExcelPorter(format);</span>
+<span class="nc" id="L507">			response.setContentType(excelPorter.getContentType());</span>
+<span class="nc" id="L508">			response.setHeader(&quot;Content-Disposition&quot;, &quot;attachment; filename=\&quot;&quot; + excelPorter.getFilename(&quot;PMDBExport&quot;) + &quot;\&quot;&quot;);</span>
+<span class="nc" id="L509">			List&lt;String&gt; collectionIds = exportForm.getCollections();</span>
+<span class="nc bnc" id="L510" title="All 2 branches missed.">			for (String collectionId : collectionIds) {</span>
+<span class="nc" id="L511">				MovieCollection movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());</span>
+<span class="nc" id="L512">				Set&lt;Movie&gt; movies = movieService.getMoviesForCollection(collectionId, principal.getName());</span>
+<span class="nc" id="L513">				List&lt;String&gt; attributeKeys = movieService.getAttributeKeysForCollection(collectionId, principal.getName());</span>
+<span class="nc" id="L514">				excelPorter.addSheet(movieCollection, movies, attributeKeys);</span>
+<span class="nc" id="L515">			}</span>
+<span class="nc" id="L516">			excelPorter.writeWorkbook(response.getOutputStream());</span>
+<span class="nc" id="L517">			response.flushBuffer();</span>
+<span class="nc" id="L518">		} catch (Exception e) {</span>
+<span class="nc" id="L519">			LOGGER.error(&quot;Unable to export collections to Excel.&quot;, e);</span>
+<span class="nc" id="L520">		}</span>
+<span class="nc" id="L521">		return export(model, principal);</span>
+	}
+	
+	/**
+	 * Page for importing movie collections.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * 
+	 * @return page for importing movie collections.
+	 */
+	@RequestMapping(&quot;/collections/import&quot;)
+	public String importCollections(Model model, Principal principal) {
+<span class="fc" id="L534">		model.addAttribute(&quot;importForm&quot;, new ImportForm());</span>
+<span class="fc" id="L535">		return &quot;collection/import&quot;;</span>
+	}
+	
+	/**
+	 * Import a movie collection.  This does not fully import the movie collection; it performs an initial
+	 * analysis of the import in order to provide a series of import options before completing the import process.
+	 * 
+	 * @param model       model
+	 * @param principal   principal
+	 * @param session     session
+	 * @param importForm  form for importing a movie
+	 * 
+	 * @return import options page
+	 */
+	@RequestMapping(&quot;/collections/importSubmit&quot;)
+	public String importCollectionsSubmit(Model model, Principal principal, HttpSession session,
+			@ModelAttribute(&quot;importForm&quot;) ImportForm importForm) {
+<span class="fc" id="L552">		MultipartFile mFile = importForm.getFile();</span>
+<span class="fc" id="L553">		List&lt;String&gt; sheetNames = null;</span>
+<span class="fc" id="L554">		List&lt;String&gt; columnNames = null;</span>
+		try {
+<span class="nc" id="L556">			ExcelPorter excelPorter = new ExcelPorter(mFile.getInputStream(), mFile.getOriginalFilename());</span>
+<span class="nc bnc" id="L557" title="All 2 branches missed.">			if (excelPorter.getSheetNames().size() == 0) {</span>
+<span class="nc" id="L558">				Alerts.setErrorMessage(model, &quot;Unable to find movies table on any of the workbook sheets.  Make sure your movies table has a header row and that the header for the movie title has the word \&quot;title\&quot; in it.&quot;);</span>
+<span class="nc" id="L559">				return importCollections(model, principal);</span>
+			}
+<span class="nc" id="L561">			sheetNames = excelPorter.getSheetNames();</span>
+<span class="nc" id="L562">			columnNames = excelPorter.getAllColumnNames();</span>
+<span class="nc" id="L563">			model.addAttribute(&quot;sheetOptions&quot;, ViewUtil.getOptions(sheetNames));</span>
+<span class="nc" id="L564">			model.addAttribute(&quot;columnOptions&quot;, ViewUtil.getOptions(columnNames));</span>
+<span class="nc" id="L565">			model.addAttribute(&quot;importOptionsForm&quot;, new ImportOptionsForm(excelPorter.getSheetNames(), excelPorter.getAllColumnNames()));</span>
+<span class="fc" id="L566">		} catch (IOException ioe) {</span>
+<span class="fc" id="L567">			Alerts.setErrorMessage(model, &quot;File could not be successfully uploaded.&quot;);</span>
+<span class="fc" id="L568">			return importCollections(model, principal);</span>
+<span class="nc" id="L569">		}</span>
+<span class="nc" id="L570">		ViewUtil.setImportedCollectionFile(session, mFile, sheetNames, columnNames);</span>
+<span class="nc" id="L571">		return &quot;collection/importOptions&quot;;</span>
+	}
+	
+	/**
+	 * Import a movie collection.  This performs the final import of the movie collection using the user options provided.
+	 * 
+	 * @param model              model
+	 * @param principal          principal
+	 * @param session            session
+	 * @param importOptionsForm  form of users import options
+	 * @param result             binding result
+	 * 
+	 * @return collections management page
+	 */
+	@RequestMapping(&quot;/collections/importOptionsSubmit&quot;)
+	public String importOptionsSubmit(Model model, Principal principal, HttpSession session,
+			@ModelAttribute(&quot;importOptionsForm&quot;) @Valid ImportOptionsForm importOptionsForm,
+			BindingResult result) {
+<span class="nc bnc" id="L589" title="All 2 branches missed.">		if (result.hasErrors()) {</span>
+<span class="nc" id="L590">			List&lt;String&gt; sheets = ViewUtil.getImportedCollectionSheets(session);</span>
+<span class="nc" id="L591">			List&lt;String&gt; columns = ViewUtil.getImportedCollectionColumns(session);</span>
+<span class="nc" id="L592">			model.addAttribute(&quot;sheetOptions&quot;, ViewUtil.getOptions(sheets));</span>
+<span class="nc" id="L593">			model.addAttribute(&quot;columnOptions&quot;, ViewUtil.getOptions(columns));</span>
+<span class="nc" id="L594">			return &quot;collection/importOptions&quot;;</span>
+		}
+<span class="nc" id="L596">		MultipartFile mFile = ViewUtil.getImportedCollectionFile(session);</span>
+		try {
+<span class="nc" id="L598">			collectionService.importCollection(mFile, importOptionsForm.getCollectionName(), importOptionsForm.isCloud(),</span>
+<span class="nc" id="L599">					importOptionsForm.getSheetNames(), importOptionsForm.getColumnNames(), principal.getName());</span>
+<span class="nc" id="L600">			Alerts.setMessage(model, &quot;Collection imported.&quot;);</span>
+<span class="nc" id="L601">		} catch (Exception e) {</span>
+<span class="nc" id="L602">			LOGGER.error(&quot;Unable to import collection from Excel.&quot;, e);</span>
+<span class="nc" id="L603">			Alerts.setErrorMessage(model, &quot;Your collection could not be imported.&quot;);</span>
+<span class="nc" id="L604">		}</span>
+<span class="nc" id="L605">		ViewUtil.clearImportedCollectionFile(session);</span>
+<span class="nc" id="L606">		return collections(model, principal);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

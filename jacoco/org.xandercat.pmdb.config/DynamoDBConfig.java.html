@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DynamoDBConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.config</a> &gt; <span class="el_source">DynamoDBConfig.java</span></div><h1>DynamoDBConfig.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.config;
+
+import org.socialsignin.spring.data.dynamodb.config.AbstractDynamoDBConfiguration;
+import org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate;
+import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.xandercat.pmdb.util.PmdbAwsCredentialsProvider;
+
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
+
+/**
+ * Configuration specific to AWS DynamoDB.
+ * 
+ * @author Scott Arnold
+ */
+@Configuration
+@EnableDynamoDBRepositories(&quot;org.xandercat.pmdb.dao.repository&quot;)  // similar to @EnableJpaRepositories, defines where CRUD repo interfaces are
+<span class="nc" id="L25">public class DynamoDBConfig extends AbstractDynamoDBConfiguration {</span>
+
+	@Autowired
+	private ApplicationContext applicationContext;
+	
+	@Override
+	public AmazonDynamoDB amazonDynamoDB() {
+<span class="nc" id="L32">		return applicationContext.getBean(AmazonDynamoDB.class);</span>
+	}
+
+	@Override
+	public AWSCredentials amazonAWSCredentials() {
+<span class="nc" id="L37">		return applicationContext.getBean(AWSCredentialsProvider.class).getCredentials();</span>
+	}
+
+	@Override
+	protected String[] getMappingBasePackages() {
+<span class="nc" id="L42">		return new String[] { &quot;org.xandercat.pmdb.dto&quot; }; // defines where spring-data-dynamodb annotated classes are</span>
+	}
+
+	/**
+	 * Bean for providing AWS credentials.
+	 * 
+	 * @param accessKeyId      AWS access key id
+	 * @param secretAccessKey  AWS secret access key
+	 * 
+	 * @return AWS credentials
+	 * @throws Exception if AWS credentials provider cannot be created
+	 */
+	@Bean
+	public AWSCredentialsProvider awsCredentialsProvider(
+			@Value(&quot;${aws.key.id}&quot;) String accessKeyId, 
+			@Value(&quot;${aws.secret.key}&quot;) String secretAccessKey) throws Exception {
+<span class="nc" id="L58">		return new PmdbAwsCredentialsProvider(accessKeyId, secretAccessKey);</span>
+	}
+	
+	/**
+	 * DynamoDB client.
+	 * 
+	 * @param awsCredentialsProvider  AWS credentials provider
+	 * @param region                  AWS region
+	 * 
+	 * @return DynamoDB client
+	 */
+	@Bean
+	public AmazonDynamoDB amazonDynamoDB(AWSCredentialsProvider awsCredentialsProvider,
+			@Value(&quot;${aws.region}&quot;) String region) {
+<span class="nc" id="L72">		return AmazonDynamoDBClientBuilder.standard()</span>
+<span class="nc" id="L73">			.withCredentials(awsCredentialsProvider)</span>
+<span class="nc" id="L74">			.withRegion(region)</span>
+<span class="nc" id="L75">			.build();</span>
+	}
+	
+	/**
+	 * DynamoDB template for spring-data-dynamodb queries.
+	 * 
+	 * @param amazonDynamoDB  DynamoDB client
+	 * 
+	 * @return DynamoDB template
+	 */
+	@Bean
+	public DynamoDBTemplate dynamoDBTemplate(AmazonDynamoDB amazonDynamoDB) {
+<span class="nc" id="L87">		return new DynamoDBTemplate(amazonDynamoDB);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

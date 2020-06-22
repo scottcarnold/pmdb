@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExportForm.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.form.collection</a> &gt; <span class="el_source">ExportForm.java</span></div><h1>ExportForm.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.form.collection;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Form for exporting movie collections.
+ * 
+ * @author Scott Arnold
+ */
+public class ExportForm {
+
+	private List&lt;String&gt; collections;
+	private String type;
+
+<span class="nc" id="L16">	public ExportForm() {</span>
+<span class="nc" id="L17">	}</span>
+	
+<span class="fc" id="L19">	public ExportForm(String defaultCollectionId, ExportType defaultExportType) {</span>
+<span class="fc" id="L20">		this.collections = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L21">		this.collections.add(defaultCollectionId);</span>
+<span class="fc" id="L22">		this.type = defaultExportType.name();</span>
+<span class="fc" id="L23">	}</span>
+	
+	public List&lt;String&gt; getCollections() {
+<span class="nc" id="L26">		return collections;</span>
+	}
+
+	public void setCollections(List&lt;String&gt; collections) {
+<span class="nc" id="L30">		this.collections = collections;</span>
+<span class="nc" id="L31">	}</span>
+
+	public String getType() {
+<span class="nc" id="L34">		return type;</span>
+	}
+
+	public void setType(String type) {
+<span class="nc" id="L38">		this.type = type;</span>
+<span class="nc" id="L39">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

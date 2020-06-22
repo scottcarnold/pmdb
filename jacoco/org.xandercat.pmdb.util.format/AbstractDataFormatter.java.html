@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractDataFormatter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.util.format</a> &gt; <span class="el_source">AbstractDataFormatter.java</span></div><h1>AbstractDataFormatter.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.util.format;
+
+import java.text.ParseException;
+
+/**
+ * Abstract class for formatting values for display and sort in the view.
+ * 
+ * @author Scott Arnold
+ *
+ * @param &lt;T&gt; native type for value being formatted
+ */
+<span class="fc" id="L12">public abstract class AbstractDataFormatter&lt;T&gt; implements DataFormatter {</span>
+
+	private String defaultDisplayValue;
+	private String defaultSortValue;
+<span class="fc" id="L16">	private boolean displayFormattedValue = true;</span>
+
+	/**
+	 * Parse the provided string value to the native data type.  If the value
+	 * cannot be parsed, a ParseException should be thrown.  This method does
+	 * not need to concern itself with blank values; it will only be called
+	 * for non-blank values.
+	 * 
+	 * @param value value to parse
+	 * 
+	 * @return parsed value
+	 * @throws ParseException if value cannot be parsed
+	 */
+	protected abstract T parse(String value) throws ParseException;
+	
+	/**
+	 * Returns value suitable for display to a user.  This method does not
+	 * need to concern itself with blank values; it will only be called for 
+	 * non-blank values.
+	 * 
+	 * @param value value in native type
+	 * 
+	 * @return value formatted for display to user
+	 */
+	protected abstract String getDisplayValue(T value);
+	
+	/**
+	 * Returns value suitable for natural String sorting.
+	 * 
+	 * @param value value in native type
+	 * 
+	 * @return value formatted for string sorting
+	 */
+	protected abstract String getSortValue(T value);
+	
+	@Override
+	public boolean isAcceptable(String value) {
+<span class="fc bfc" id="L53" title="All 2 branches covered.">		if (FormatUtil.isBlank(value)) {</span>
+<span class="fc" id="L54">			return true;</span>
+		}
+		try {
+<span class="fc" id="L57">			parse(value);</span>
+<span class="fc" id="L58">		} catch (ParseException e) {</span>
+<span class="fc" id="L59">			return false;</span>
+<span class="fc" id="L60">		}</span>
+<span class="fc" id="L61">		return true;</span>
+	}
+
+	@Override
+	public String displayValue(String value) {
+<span class="fc bfc" id="L66" title="All 2 branches covered.">		if (FormatUtil.isBlank(value)) {</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">			return (defaultDisplayValue != null)? defaultDisplayValue : value;</span>
+		}
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">		if (!displayFormattedValue) {</span>
+<span class="nc" id="L70">			return value;</span>
+		}
+		try {
+<span class="fc" id="L73">			T convertedValue = parse(value);</span>
+<span class="fc" id="L74">			return getDisplayValue(convertedValue);</span>
+<span class="nc" id="L75">		} catch (ParseException e) {</span>
+<span class="nc" id="L76">			return value;</span>
+		}
+	}
+
+	@Override
+	public String sortValue(String value) {
+<span class="fc bfc" id="L82" title="All 2 branches covered.">		if (FormatUtil.isBlank(value)) {</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">			return (defaultSortValue != null)? defaultSortValue : value;</span>
+		}
+		try {
+<span class="fc" id="L86">			T convertedValue = parse(value);</span>
+<span class="fc" id="L87">			return getSortValue(convertedValue);</span>
+<span class="nc" id="L88">		} catch (ParseException e) {</span>
+<span class="nc" id="L89">			return value;</span>
+		}
+	}
+	
+	public AbstractDataFormatter&lt;T&gt; defaultDisplayValue(String defaultDisplayValue) {
+<span class="fc" id="L94">		this.defaultDisplayValue = defaultDisplayValue;</span>
+<span class="fc" id="L95">		return this;</span>
+	}
+	
+	public AbstractDataFormatter&lt;T&gt; defaultSortValue(String defaultSortValue) {
+<span class="fc" id="L99">		this.defaultSortValue = defaultSortValue;</span>
+<span class="fc" id="L100">		return this;</span>
+	}
+	
+	public AbstractDataFormatter&lt;T&gt; displayFormattedValue(boolean displayFormattedValue) {
+<span class="fc" id="L104">		this.displayFormattedValue = displayFormattedValue;</span>
+<span class="fc" id="L105">		return this;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

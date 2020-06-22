@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MovieStatistics.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.dto</a> &gt; <span class="el_source">MovieStatistics.java</span></div><h1>MovieStatistics.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.dto;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.util.StringUtils;
+import org.xandercat.pmdb.util.DoubleStatistics;
+import org.xandercat.pmdb.util.LongStatistics;
+import org.xandercat.pmdb.util.WordStatistics;
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+/**
+ * Class for providing generic statistics about a collection of movies.
+ * 
+ * @author Scott Arnold
+ */
+public class MovieStatistics {
+
+	private Collection&lt;Movie&gt; movies;
+	
+<span class="fc" id="L23">	public MovieStatistics(Collection&lt;Movie&gt; movies) {</span>
+<span class="fc" id="L24">		this.movies = movies;</span>
+<span class="fc" id="L25">	}</span>
+	
+	private Double getDoubleAttribute(Movie movie, String attributeKey) {
+<span class="fc" id="L28">		String value = movie.getAttribute(attributeKey);</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">		if (StringUtils.hasText(value)) {</span>
+			try {
+<span class="fc" id="L31">				return Double.valueOf(value);</span>
+<span class="nc" id="L32">			} catch (Exception e) {</span>
+			}
+		}
+<span class="fc" id="L35">		return null;</span>
+	}
+	
+	private Long getLongAttribute(Movie movie, String attributeKey) {
+<span class="fc" id="L39">		String value = movie.getAttribute(attributeKey);</span>
+<span class="fc bfc" id="L40" title="All 2 branches covered.">		if (StringUtils.hasText(value)) {</span>
+			try {
+<span class="fc" id="L42">				return Long.valueOf(value);</span>
+<span class="nc" id="L43">			} catch (Exception e) {</span>
+			}
+		}
+<span class="fc" id="L46">		return null;</span>
+	}
+	
+	private Long getLenientLongAttribute(Movie movie, String attributeKey) {
+<span class="fc" id="L50">		String value = movie.getAttribute(attributeKey);</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">		if (StringUtils.hasText(value)) {</span>
+			try {
+<span class="fc" id="L53">				return Long.valueOf(FormatUtil.formatAsNumber(value));</span>
+<span class="nc" id="L54">			} catch (Exception e) {</span>
+			}
+		}
+<span class="nc" id="L57">		return null;		</span>
+	}
+	
+	/**
+	 * Returns statistics for a movie attribute that should contain double values.
+	 * Statistics will only be present if there is at least 1 value to calculate statistics on.
+	 * 
+	 * @param attributeKey  key for movie attribute to run statistics on
+	 * 
+	 * @return statistics for the attribute
+	 */
+	public Optional&lt;DoubleStatistics&gt; getDoubleStatistics(String attributeKey) {
+<span class="fc" id="L69">		List&lt;Double&gt; doubles = movies.stream()</span>
+<span class="fc" id="L70">				.map(movie -&gt; getDoubleAttribute(movie, attributeKey))</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">				.filter(value -&gt; value != null)</span>
+<span class="fc" id="L72">				.collect(Collectors.toList());</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">		return (doubles.size() &gt; 0)? Optional.of(new DoubleStatistics(doubles)) : Optional.empty();</span>
+	}
+	
+	/**
+	 * Returns statistics for a movie attribute that should contain long values.
+	 * Statistics will only be present if there is at least 1 value to calculate statistics on.
+	 * 
+	 * @param attributeKey  key for movie attribute to run statistics on
+	 * 
+	 * @return statistics for the attribute
+	 */
+	public Optional&lt;LongStatistics&gt; getLongStatistics(String attributeKey) {
+<span class="fc" id="L85">		List&lt;Long&gt; longs = movies.stream()</span>
+<span class="fc" id="L86">				.map(movie -&gt; getLongAttribute(movie, attributeKey))</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">				.filter(value -&gt; value != null)</span>
+<span class="fc" id="L88">				.collect(Collectors.toList());</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">		return (longs.size() &gt; 0)? Optional.of(new LongStatistics(longs)) : Optional.empty();</span>
+	}
+	
+	/**
+	 * Returns statistics for a movie attribute that should contain long values with lenient parsing.
+	 * Lenient parsing throws away extraneous commas, currency symbols, or other non-numeric clutter in 
+	 * the attribute value.  Statistics will only be present if there is at least 1 value to calculate statistics on.
+	 * 
+	 * @param attributeKey  key for movie attribute to run statistics on
+	 * 
+	 * @return statistics for the attribute
+	 */
+	public Optional&lt;LongStatistics&gt; getLenientLongStatistics(String attributeKey) {
+<span class="fc" id="L102">		List&lt;Long&gt; longs = movies.stream()</span>
+<span class="fc" id="L103">				.map(movie -&gt; getLenientLongAttribute(movie, attributeKey))</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">				.filter(value -&gt; value != null)</span>
+<span class="fc" id="L105">				.collect(Collectors.toList());</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">		return (longs.size() &gt; 0)? Optional.of(new LongStatistics(longs)) : Optional.empty();</span>
+	}
+	
+	/**
+	 * Returns word statistics for a movie attribute.
+	 * 
+	 * @param attributeKey  key for movie attribute to run statistics on
+	 * 
+	 * @return statistics for the attribute
+	 */
+	public Optional&lt;WordStatistics&gt; getWordStatistics(String attributeKey) {
+<span class="fc" id="L117">		List&lt;String&gt; wordStrings = movies.stream()</span>
+<span class="fc" id="L118">				.map(movie -&gt; movie.getAttribute(attributeKey))</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">				.filter(value -&gt; value != null)</span>
+<span class="fc" id="L120">				.collect(Collectors.toList());</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">		if (wordStrings.size() == 0) {</span>
+<span class="fc" id="L122">			return Optional.empty();</span>
+		}
+<span class="fc" id="L124">		final WordStatistics wordStatistics = new WordStatistics();</span>
+<span class="fc" id="L125">		wordStrings.forEach(wordStatistics::addWords);</span>
+<span class="fc" id="L126">		return Optional.of(wordStatistics);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

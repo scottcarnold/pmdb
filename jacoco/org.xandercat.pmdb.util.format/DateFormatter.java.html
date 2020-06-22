@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DateFormatter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.util.format</a> &gt; <span class="el_source">DateFormatter.java</span></div><h1>DateFormatter.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.util.format;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+/**
+ * Data formatter for dates (less time).
+ * 
+ * @author Scott Arnold
+ */
+<span class="fc" id="L15">public class DateFormatter extends AbstractDataFormatter&lt;Date&gt; {</span>
+
+<span class="fc" id="L17">	private List&lt;DateFormat&gt; dateParsers = new ArrayList&lt;DateFormat&gt;();</span>
+<span class="fc" id="L18">	private DateFormat displayFormat = new SimpleDateFormat(&quot;MM/dd/yyyy&quot;);</span>
+<span class="fc" id="L19">	private DateFormat sortFormat = new SimpleDateFormat(&quot;yyyyMMdd&quot;);</span>
+	
+	@Override
+	protected Date parse(String value) throws ParseException {
+<span class="fc bfc" id="L23" title="All 2 branches covered.">		for (DateFormat dateFormat : dateParsers) {</span>
+			try {
+<span class="fc" id="L25">				return dateFormat.parse(value);</span>
+<span class="fc" id="L26">			} catch (ParseException e) {</span>
+			}
+<span class="fc" id="L28">		}</span>
+<span class="fc" id="L29">		throw new ParseException(&quot;Unable to parse \&quot;&quot; + value + &quot;\&quot; to a date.&quot;, 0);</span>
+	}
+
+	@Override
+	protected String getDisplayValue(Date value) {
+<span class="fc" id="L34">		return displayFormat.format(value);</span>
+	}
+
+	@Override
+	protected String getSortValue(Date value) {
+<span class="fc" id="L39">		return sortFormat.format(value);</span>
+	}
+
+	public DateFormatter parseFormat(String parseFormat) {
+<span class="fc" id="L43">		dateParsers.add(new SimpleDateFormat(parseFormat));</span>
+<span class="fc" id="L44">		return this;</span>
+	}
+
+	public DateFormatter parseFormats(String... parseFormats) {
+<span class="fc bfc" id="L48" title="All 2 branches covered.">		for (String parseFormat : parseFormats) {</span>
+<span class="fc" id="L49">			dateParsers.add(new SimpleDateFormat(parseFormat));</span>
+		}
+<span class="fc" id="L51">		return this;</span>
+	}
+	
+	public DateFormatter displayFormat(String displayFormat) {
+<span class="fc" id="L55">		this.displayFormat = new SimpleDateFormat(displayFormat);</span>
+<span class="fc" id="L56">		return this;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

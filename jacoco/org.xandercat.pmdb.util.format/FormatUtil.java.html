@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormatUtil.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.util.format</a> &gt; <span class="el_source">FormatUtil.java</span></div><h1>FormatUtil.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.util.format;
+
+import org.springframework.util.StringUtils;
+
+/**
+ * Utility class for formatting values and checking value formats.
+ * 
+ * @author Scott Arnold
+ */
+<span class="nc" id="L10">public class FormatUtil {</span>
+
+	public static final String ALPHA_NUMERIC_PATTERN = &quot;^[a-zA-Z0-9 ]*$&quot;;
+	public static final String USERNAME_PATTERN = &quot;^[a-zA-Z0-9@_\\.\\-]*$&quot;;
+	
+	/**
+	 * Returns whether or not the given string value is blank, meaning null, being of 0 length, or 
+	 * consisting only of white space.
+	 * 
+	 * @param s  string to test
+	 * 
+	 * @return whether or not string is blank
+	 */
+	public static boolean isBlank(String s) {
+<span class="fc bfc" id="L24" title="All 2 branches covered.">		return !StringUtils.hasText(s);</span>
+	}
+	
+	/**
+	 * Returns whether or not the given string value is NOT blank, meaning it has greater than 0 length
+	 * and contains at least 1 non-white-space character.
+	 * 
+	 * @param s  string to test
+	 * 
+	 * @return whether or not string is NOT blank
+	 */
+	public static boolean isNotBlank(String s) {
+<span class="fc" id="L36">		return StringUtils.hasText(s);</span>
+	}
+	/**
+	 * Returns whether or not a string consists only of alphanumeric letters and spaces.
+	 * 
+	 * @param s           string value to test
+	 * @param allowEmpty  if true, empty is considered valid
+	 * 
+	 * @return whether or not string contains only letters, numbers, and spaces.
+	 */
+	public static boolean isAlphaNumeric(String s, boolean allowEmpty) {
+<span class="pc bpc" id="L47" title="1 of 4 branches missed.">		if (s == null || s.trim().length() == 0) {</span>
+<span class="fc" id="L48">			return allowEmpty;</span>
+		}
+<span class="fc" id="L50">		return s.matches(ALPHA_NUMERIC_PATTERN);</span>
+	}
+
+	/**
+	 * Returns whether or not a username should be considered valid.  A valid username
+	 * is considered to be a username consisting only of letters, numbers, periods, dashes,
+	 * underscores, and at symbols.
+	 * 
+	 * @param username username to test
+	 * 
+	 * @return whether or not username should be considered valid
+	 */
+	public static boolean isValidUsername(String username) {
+<span class="fc bfc" id="L63" title="All 4 branches covered.">		if (username == null || username.length() == 0) {</span>
+<span class="fc" id="L64">			return false;</span>
+		}
+<span class="fc" id="L66">		return username.matches(USERNAME_PATTERN);</span>
+	}
+	
+	/**
+	 * Returns an alphanumeric formatted string where any non alphanumeric characters have been removed.
+	 * Alphanumeric for this method is considered to be letters (upper or lower case), numbers, and spaces.
+	 * @param s
+	 * @return
+	 */
+	public static String formatAlphaNumeric(String s) {
+<span class="fc bfc" id="L76" title="All 2 branches covered.">		if (isAlphaNumeric(s, true)) {</span>
+<span class="fc" id="L77">			return s;</span>
+		}
+<span class="fc" id="L79">		final String acceptableCharacters = &quot;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 &quot;;</span>
+<span class="fc" id="L80">		StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">		for (int i=0; i&lt;s.length(); i++) {</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">			if (acceptableCharacters.indexOf(s.charAt(i)) &gt;= 0) {</span>
+<span class="fc" id="L83">				sb.append(s.charAt(i));</span>
+			}
+		}
+<span class="fc" id="L86">		return sb.toString();</span>
+	}
+	
+	/**
+	 * Returns string formatted as a number, containing only digits and a single decimal place.
+	 * This can be used to format currencies and numbers with thousands separators to a format
+	 * that can be parsed.  This is a dumb format that does not expect the number to conform to 
+	 * any particular pattern, so it should only be used if certain the values represent numbers.
+	 * This method can handle commas for thousands separator and period for decimal place as well
+	 * as periods for thousand separator and comma for decimal place.
+	 * 
+	 * @param s string to format
+	 * 
+	 * @return string formatted as a number
+	 */
+	public static String formatAsNumber(String s) {
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">		if (s == null) {</span>
+<span class="nc" id="L103">			return null;</span>
+		}
+<span class="fc" id="L105">		final String acceptableCharacters = &quot;0123456789&quot;;</span>
+<span class="fc" id="L106">		int dpIndex = s.lastIndexOf(&quot;.&quot;);</span>
+<span class="fc" id="L107">		int eudpIndex = s.lastIndexOf(&quot;,&quot;);</span>
+<span class="fc bfc" id="L108" title="All 4 branches covered.">		if (dpIndex &gt;= 0 &amp;&amp; eudpIndex &gt; dpIndex) {</span>
+<span class="fc" id="L109">			dpIndex = eudpIndex;</span>
+		}
+<span class="fc" id="L111">		StringBuilder sb = new StringBuilder();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">		for (int i=0; i&lt;s.length(); i++) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">			if (acceptableCharacters.indexOf(s.charAt(i)) &gt;= 0) {</span>
+<span class="fc" id="L114">				sb.append(s.charAt(i));</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">			} else if (i == dpIndex) {</span>
+<span class="fc" id="L116">				sb.append('.');</span>
+			}
+		}
+<span class="fc" id="L119">		return sb.toString();</span>
+	}
+	
+	/**
+	 * Returns a &quot;title case&quot; formatted string from the string provided where each word begins with an upper case
+	 * letter, and all other characters are lower case.
+	 * 
+	 * @param s  string to format
+	 * 
+	 * @return title case formatted string
+	 */
+	public static String titleCase(String s) {
+<span class="pc bpc" id="L131" title="1 of 4 branches missed.">		if (s == null || s.trim().length() == 0) {</span>
+<span class="fc" id="L132">			return s;</span>
+		}
+<span class="fc" id="L134">		StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L135">		boolean newWord = true;</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">		for (int i=0; i&lt;s.length(); i++) {</span>
+<span class="fc bfc" id="L137" title="All 4 branches covered.">			if (s.charAt(i) != ' ' &amp;&amp; newWord) {</span>
+<span class="fc" id="L138">				newWord = false;</span>
+<span class="fc" id="L139">				sb.append(String.valueOf(s.charAt(i)).toUpperCase());</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">			} else if (s.charAt(i) == ' ') {</span>
+<span class="fc" id="L141">				newWord = true;</span>
+<span class="fc" id="L142">				sb.append(' ');</span>
+			} else {
+<span class="fc" id="L144">				sb.append(String.valueOf(s.charAt(i)).toLowerCase());</span>
+			}
+		}
+<span class="fc" id="L147">		return sb.toString();</span>
+	}
+	
+	/**
+	 * Converts a PMDB key value to a DynamoDB key value.
+	 * 
+	 * @param key key to convert
+	 * 
+	 * @return key value for DynamoDB
+	 */
+	public static String convertToDynamoKey(String key) {
+<span class="fc" id="L158">		return key.replaceAll(&quot; &quot;, &quot;_&quot;);</span>
+	}
+	
+	/**
+	 * Converts a DynamoDB key value to a PMDB key value.
+	 * 
+	 * @param key key to convert
+	 * 
+	 * @return key value for PMDB
+	 */
+	public static String convertFromDynamoKey(String key) {
+<span class="fc" id="L169">		return key.replaceAll(&quot;_&quot;, &quot; &quot;);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

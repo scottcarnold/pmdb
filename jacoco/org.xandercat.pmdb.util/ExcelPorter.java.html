@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ExcelPorter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.util</a> &gt; <span class="el_source">ExcelPorter.java</span></div><h1>ExcelPorter.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.util;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.xandercat.pmdb.dto.Movie;
+import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.util.format.FormatUtil;
+
+/**
+ * Movie exporter and importer for Microsoft Excel workbooks.
+ * 
+ * For importing, any movie list in a worksheet must have a header row that can be found somewhere
+ * near the top of the sheet, and at least one column header must have the text &quot;title&quot; in it
+ * (case insensitive) to indicate a movie title column.
+ * 
+ * @author Scott Arnold
+ */
+public class ExcelPorter {
+
+	private static final int MAX_SCAN_ROW_IDX = 10;
+	private static final int MAX_SCAN_COL_IDX = 10;
+<span class="fc" id="L37">	private static final DataFormatter DATA_FORMATTER = new DataFormatter();</span>
+	
+<span class="fc" id="L39">	public static enum Format {</span>
+<span class="fc" id="L40">		XLS(&quot;application/vnd.ms-excel&quot;, &quot;.xls&quot;), </span>
+<span class="fc" id="L41">		XLSX(&quot;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet&quot;, &quot;.xlsx&quot;);</span>
+		
+		private String contentType;
+		private String extension;
+		
+<span class="fc" id="L46">		private Format(String contentType, String extension) {</span>
+<span class="fc" id="L47">			this.contentType = contentType;</span>
+<span class="fc" id="L48">			this.extension = extension;</span>
+<span class="fc" id="L49">		}</span>
+		
+		public String getContentType() {
+<span class="nc" id="L52">			return contentType;</span>
+		}
+		
+		public String getExtension() {
+<span class="fc" id="L56">			return extension;</span>
+		}
+	}
+	
+	private class HeaderRow {
+		private int rowIdx;
+		private int colStartIdx;
+		private int titleIdx;
+		private List&lt;String&gt; headers; 
+<span class="fc" id="L65">		public HeaderRow(int rowIdx, int colStartIdx, int titleIdx, List&lt;String&gt; headers) {</span>
+<span class="fc" id="L66">			this.rowIdx = rowIdx;</span>
+<span class="fc" id="L67">			this.colStartIdx = colStartIdx;</span>
+<span class="fc" id="L68">			this.titleIdx = titleIdx;</span>
+<span class="fc" id="L69">			this.headers = headers;</span>
+<span class="fc" id="L70">		}</span>
+		public int getIndex(String header) {
+<span class="fc" id="L72">			int idx = headers.indexOf(header);</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">			return (idx &lt; 0)? -1 : colStartIdx + idx;</span>
+		}
+	}
+	
+	private Workbook workbook;
+	private Format format;
+<span class="fc" id="L79">	private List&lt;String&gt; sheetNames = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L80">	private List&lt;String&gt; allColumnNames = new ArrayList&lt;String&gt;();</span>
+	private Map&lt;String, HeaderRow&gt; headerRows;
+	
+	/**
+	 * Constructor for export mode using the provided format.
+	 * 
+	 * @param format document format to use
+	 */
+<span class="fc" id="L88">	public ExcelPorter(Format format) {</span>
+<span class="fc" id="L89">		this.format = format;</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">		if (format == Format.XLS) {</span>
+<span class="nc" id="L91">			this.workbook = new HSSFWorkbook();</span>
+		} else {
+<span class="fc" id="L93">			this.workbook = new XSSFWorkbook();</span>
+		}
+<span class="fc" id="L95">	}</span>
+	
+	/**
+	 * Constructor for import mode using provided input stream and filename. 
+	 * Filename is used to determine the document format.
+	 * 
+	 * @param inputStream input stream
+	 * @param fileName    name of file for given input stream
+	 * @throws IOException if any io errors occur
+	 */
+<span class="fc" id="L105">	public ExcelPorter(InputStream inputStream, String fileName) throws IOException {</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">		if (fileName.toLowerCase().endsWith(Format.XLSX.getExtension())) {</span>
+<span class="nc" id="L107">			this.format = Format.XLSX;</span>
+<span class="nc" id="L108">			this.workbook = new XSSFWorkbook(inputStream);</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">		} else if (fileName.toLowerCase().endsWith(Format.XLS.getExtension())) {</span>
+<span class="fc" id="L110">			this.format = Format.XLS;</span>
+<span class="nc" id="L111">			this.workbook = new HSSFWorkbook(inputStream);</span>
+		} else {
+<span class="nc" id="L113">			throw new IOException(&quot;File name should end with &quot; + Format.XLSX.getExtension() + &quot; or &quot; + Format.XLS.getExtension());</span>
+		}
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		for (int i=0; i&lt;workbook.getNumberOfSheets(); i++) {</span>
+<span class="nc" id="L116">			sheetNames.add(workbook.getSheetAt(i).getSheetName());</span>
+		}
+<span class="nc" id="L118">		this.headerRows = scanForHeaderRows();</span>
+		
+		// remove sheets we couldn't identify a header row for
+<span class="nc" id="L121">		this.sheetNames.retainAll(headerRows.keySet());</span>
+		
+		// combine headers for all sheets to create master list of column names
+<span class="nc" id="L124">		this.allColumnNames = headerRows.values().stream()</span>
+<span class="nc" id="L125">				.flatMap(headerRow -&gt; headerRow.headers.stream())</span>
+<span class="nc" id="L126">				.distinct().sorted().collect(Collectors.toList());</span>
+<span class="nc" id="L127">	}</span>
+	
+	/**
+	 * Returns the content-type header value for the workbook.
+	 * 
+	 * @return content-type header value for the workbook
+	 */
+	public String getContentType() {
+<span class="nc" id="L135">		return format.getContentType();</span>
+	}
+	
+	/**
+	 * Returns a filename with extension provided a base filename without extension.
+	 * 
+	 * @param baseFilename base filename without extension
+	 * @return filename with extension
+	 */
+	public String getFilename(String baseFilename) {
+<span class="nc" id="L145">		return baseFilename + format.getExtension();</span>
+	}
+	
+	/**
+	 * Returns list of all sheet names in the document.
+	 * 
+	 * @return sheet names
+	 */
+	public List&lt;String&gt; getSheetNames() {
+<span class="fc" id="L154">		return sheetNames;</span>
+	}
+	
+	/**
+	 * Returns list of all column names found from all sheets.  Only populated when importing.
+	 * 
+	 * Duplicates are not included across sheets.  However, duplicates are included is found within
+	 * the same sheet, but duplicate row names are appended with an identifier to keep the name unique.
+	 * 
+	 * @return list of column names found from all sheets
+	 */
+	public List&lt;String&gt; getAllColumnNames() {
+<span class="nc" id="L166">		return allColumnNames;</span>
+	}
+	
+	/**
+	 * Add a sheet to the document with the given movie collection and movies with columns for the given column names.
+	 * It is the responsibility of the caller to ensure that the movies provided are associated with the given 
+	 * movie collection, and that the column names are valid attribute names for the movies.
+	 * 
+	 * @param movieCollection  movie collection to add sheet for
+	 * @param movies           movies to include on the sheet
+	 * @param columns          columns or movie attributes to include from the movies
+	 */
+	public void addSheet(MovieCollection movieCollection, Collection&lt;Movie&gt; movies, List&lt;String&gt; columns) {
+<span class="fc" id="L179">		Sheet sheet = workbook.createSheet(movieCollection.getName());</span>
+<span class="fc" id="L180">		sheetNames.add(sheet.getSheetName());</span>
+<span class="fc" id="L181">		Row row = sheet.createRow(0);</span>
+<span class="fc" id="L182">		row.createCell(0).setCellValue(&quot;Title&quot;);</span>
+<span class="fc" id="L183">		int colIdx = 1;</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">		for (String column : columns) {</span>
+<span class="nc" id="L185">			Cell cell = row.createCell(colIdx++);</span>
+<span class="nc" id="L186">			cell.setCellValue(FormatUtil.titleCase(column));</span>
+<span class="nc" id="L187">		}</span>
+<span class="fc" id="L188">		int rowIdx = 1;</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">		for (Movie movie : movies) {</span>
+<span class="fc" id="L190">			row = sheet.createRow(rowIdx++);</span>
+<span class="fc" id="L191">			row.createCell(0).setCellValue(movie.getTitle());</span>
+<span class="fc" id="L192">			colIdx = 1;</span>
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">			for (String column : columns) {</span>
+<span class="nc" id="L194">				Cell cell = row.createCell(colIdx++);</span>
+<span class="nc" id="L195">				cell.setCellValue(movie.getAttribute(column));</span>
+<span class="nc" id="L196">			}</span>
+<span class="fc" id="L197">		}</span>
+<span class="fc" id="L198">	}</span>
+
+	private Map&lt;String, HeaderRow&gt; scanForHeaderRows() {
+<span class="fc" id="L201">		return sheetNames.stream()</span>
+<span class="fc" id="L202">				.map(workbook::getSheet)</span>
+<span class="fc" id="L203">				.collect(Collectors.toMap(Sheet::getSheetName, this::scanSheetForHeaderRow))</span>
+<span class="fc" id="L204">				.entrySet().stream()</span>
+<span class="fc" id="L205">				.filter(entry -&gt; entry.getValue().isPresent())</span>
+<span class="fc" id="L206">				.collect(Collectors.toMap(Map.Entry::getKey, entry -&gt; entry.getValue().get()));</span>
+	}
+	
+	private Optional&lt;HeaderRow&gt; scanSheetForHeaderRow(Sheet sheet) {
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">		for (int r=0; r&lt;=MAX_SCAN_ROW_IDX; r++) {</span>
+<span class="fc" id="L211">			Row row = sheet.getRow(r);</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">			if (row != null) {</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">				for (int c=0; c&lt;=MAX_SCAN_COL_IDX; c++) {</span>
+<span class="fc" id="L214">					Cell cell = row.getCell(c);</span>
+<span class="fc" id="L215">					boolean titleRowLikelyFound = false;</span>
+<span class="fc" id="L216">					int startIdx = c;</span>
+<span class="fc" id="L217">					int titleIdx = 0;</span>
+<span class="fc" id="L218">					List&lt;String&gt; headers = new ArrayList&lt;String&gt;();</span>
+<span class="pc bpc" id="L219" title="1 of 4 branches missed.">					while (cell != null &amp;&amp; FormatUtil.isNotBlank(DATA_FORMATTER.formatCellValue(cell))) {</span>
+<span class="fc" id="L220">						String heading = FormatUtil.titleCase(FormatUtil.formatAlphaNumeric(DATA_FORMATTER.formatCellValue(cell).trim()));</span>
+<span class="fc" id="L221">						String origHeading = heading;</span>
+<span class="fc" id="L222">						int dupIdx = 2;</span>
+<span class="pc bpc" id="L223" title="1 of 2 branches missed.">						while (headers.contains(heading)) {</span>
+<span class="nc" id="L224">							heading = origHeading + &quot; &quot; + dupIdx;</span>
+<span class="nc" id="L225">							dupIdx++;</span>
+						}
+<span class="fc" id="L227">						headers.add(heading);</span>
+<span class="pc bpc" id="L228" title="2 of 4 branches missed.">						if (!titleRowLikelyFound &amp;&amp; heading.toLowerCase().indexOf(&quot;title&quot;) &gt;= 0) {</span>
+<span class="fc" id="L229">							titleRowLikelyFound = true;</span>
+<span class="fc" id="L230">							titleIdx = c;</span>
+						}
+<span class="fc" id="L232">						cell = row.getCell(++c);</span>
+<span class="fc" id="L233">					}</span>
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">					if (titleRowLikelyFound) {</span>
+<span class="fc" id="L235">						return Optional.of(new HeaderRow(r, startIdx, titleIdx, headers));</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L240">		return Optional.empty();</span>
+	}
+	
+	/**
+	 * Extract movies from the given sheet, setting attributes for the given columns. Movie title will always be
+	 * pulled regardless of whether or not it is in the included columns list.
+	 * 
+	 * @param sheetName          sheet name
+	 * @param includedColumns    columns to include
+	 * @return movies for sheet
+	 */
+	public List&lt;Movie&gt; getMoviesForSheet(String sheetName, List&lt;String&gt; includedColumns) {
+<span class="fc" id="L252">		List&lt;Movie&gt; movies = new ArrayList&lt;Movie&gt;();</span>
+<span class="fc" id="L253">		Sheet sheet = workbook.getSheet(sheetName);</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">		if (headerRows == null) {</span>
+<span class="fc" id="L255">			this.headerRows = scanForHeaderRows();</span>
+		}
+<span class="fc" id="L257">		HeaderRow headerRow = headerRows.get(sheetName);</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">		if (headerRow == null) {</span>
+<span class="nc" id="L259">			return movies;</span>
+		}
+<span class="fc" id="L261">		int r = headerRow.rowIdx;</span>
+		while (true) {
+<span class="fc" id="L263">			Row row = sheet.getRow(++r);</span>
+<span class="fc" id="L264">			Movie movie = new Movie();</span>
+<span class="fc bfc" id="L265" title="All 2 branches covered.">			if (row != null) {</span>
+<span class="fc bfc" id="L266" title="All 2 branches covered.">				for (String includedColumn : includedColumns) {</span>
+<span class="fc" id="L267">					int idx = headerRow.getIndex(includedColumn);</span>
+<span class="fc" id="L268">					Cell cell = null;</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">					if (idx &gt;= 0) {</span>
+<span class="fc" id="L270">						cell = row.getCell(idx);</span>
+					}
+<span class="pc bpc" id="L272" title="2 of 4 branches missed.">					if (cell != null &amp;&amp; FormatUtil.isNotBlank(DATA_FORMATTER.formatCellValue(cell))) {</span>
+<span class="fc" id="L273">						String value = DATA_FORMATTER.formatCellValue(cell).trim();</span>
+<span class="pc bpc" id="L274" title="1 of 2 branches missed.">						if (idx != headerRow.titleIdx) {</span>
+<span class="nc" id="L275">							movie.addAttribute(includedColumn, value);</span>
+						}
+					}
+<span class="fc" id="L278">				}</span>
+<span class="fc" id="L279">				Cell cell = row.getCell(headerRow.titleIdx);</span>
+<span class="pc bpc" id="L280" title="2 of 4 branches missed.">				if (cell != null &amp;&amp; FormatUtil.isNotBlank(DATA_FORMATTER.formatCellValue(cell))) {</span>
+<span class="fc" id="L281">					movie.setTitle(DATA_FORMATTER.formatCellValue(cell).trim());</span>
+				}
+			}
+<span class="fc bfc" id="L284" title="All 2 branches covered.">			if (FormatUtil.isBlank(movie.getTitle())) {</span>
+<span class="fc" id="L285">				return movies;</span>
+			} else {
+<span class="fc" id="L287">				movies.add(movie);</span>
+			}
+<span class="fc" id="L289">		}</span>
+	}
+	
+	/**
+	 * Write out and close the workbook.  This only need be called when exporting.
+	 * 
+	 * @param outputStream the output stream to write to
+	 * @throws IOException if any io errors occur
+	 */
+	public void writeWorkbook(OutputStream outputStream) throws IOException {
+<span class="nc" id="L299">		workbook.write(outputStream);</span>
+<span class="nc" id="L300">		workbook.close();</span>
+<span class="nc" id="L301">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

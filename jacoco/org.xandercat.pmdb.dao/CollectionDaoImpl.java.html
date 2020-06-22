@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CollectionDaoImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.dao</a> &gt; <span class="el_source">CollectionDaoImpl.java</span></div><h1>CollectionDaoImpl.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.xandercat.pmdb.dto.CollectionPermission;
+import org.xandercat.pmdb.dto.MovieCollection;
+
+@Component
+<span class="nc" id="L15">public class CollectionDaoImpl implements CollectionDao {</span>
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+	
+	@Autowired
+	private KeyGenerator keyGenerator;
+	
+	@Override
+	public List&lt;MovieCollection&gt; getViewableMovieCollections(String username) {
+<span class="nc" id="L25">		return getSharedMovieCollections(username, true);</span>
+	}
+	
+	@Override
+	public List&lt;MovieCollection&gt; getShareOfferMovieCollections(String username) {
+<span class="nc" id="L30">		return getSharedMovieCollections(username, false);</span>
+	}
+
+	private List&lt;MovieCollection&gt; getSharedMovieCollections(String username, boolean accepted) {
+<span class="nc" id="L34">		final String sql = &quot;SELECT id, name, owner, cloud, allowEdit FROM collection&quot;</span>
+				+ &quot; INNER JOIN collection_permission ON collection.id = collection_permission.collection_id&quot;
+				+ &quot; WHERE username = ? AND accepted = ?&quot;;
+<span class="nc" id="L37">		final List&lt;MovieCollection&gt; movieCollections = new ArrayList&lt;MovieCollection&gt;();</span>
+<span class="nc" id="L38">		jdbcTemplate.query(sql, ps -&gt; {</span>
+<span class="nc" id="L39">			ps.setString(1, username);</span>
+<span class="nc" id="L40">			ps.setBoolean(2, accepted);</span>
+<span class="nc" id="L41">		}, rs -&gt; {</span>
+<span class="nc" id="L42">			MovieCollection movieCollection = new MovieCollection();</span>
+<span class="nc" id="L43">			movieCollection.setId(rs.getString(1));</span>
+<span class="nc" id="L44">			movieCollection.setName(rs.getString(2));</span>
+<span class="nc" id="L45">			movieCollection.setOwnerAndOwned(rs.getString(3), username);</span>
+<span class="nc" id="L46">			movieCollection.setCloud(rs.getBoolean(4));</span>
+<span class="nc" id="L47">			movieCollection.setEditable(rs.getBoolean(5));</span>
+<span class="nc" id="L48">			movieCollections.add(movieCollection);</span>
+<span class="nc" id="L49">		});</span>
+<span class="nc" id="L50">		return movieCollections;</span>
+	}
+
+	@Override
+	public Optional&lt;MovieCollection&gt; getViewableMovieCollection(String collectionId, String username) {
+<span class="nc" id="L55">		return getViewableMovieCollections(username).stream()</span>
+<span class="nc" id="L56">				.filter(movieCollection -&gt; movieCollection.getId().equals(collectionId))</span>
+<span class="nc" id="L57">				.findAny();</span>
+	}
+
+	@Override
+	@Transactional
+	public void addMovieCollection(MovieCollection movieCollection) {
+<span class="nc" id="L63">		final String sql = &quot;INSERT INTO collection (id, name, owner, cloud) VALUES (?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L64">		movieCollection.setId(keyGenerator.getKey());</span>
+<span class="nc" id="L65">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L66">			ps.setString(1, movieCollection.getId());</span>
+<span class="nc" id="L67">			ps.setString(2, movieCollection.getName());</span>
+<span class="nc" id="L68">			ps.setString(3, movieCollection.getOwner());</span>
+<span class="nc" id="L69">			ps.setBoolean(4, movieCollection.isCloud());</span>
+<span class="nc" id="L70">		});</span>
+<span class="nc" id="L71">		shareCollection(movieCollection.getId(), movieCollection.getOwner(), true);</span>
+<span class="nc" id="L72">		acceptShareOffer(movieCollection.getId(), movieCollection.getOwner());</span>
+<span class="nc" id="L73">	}</span>
+
+	@Override
+	public void updateMovieCollection(MovieCollection movieCollection) {
+<span class="nc" id="L77">		final String sql = &quot;UPDATE collection SET name = ? WHERE id = ?&quot;;</span>
+<span class="nc" id="L78">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L79">			ps.setString(1, movieCollection.getName());</span>
+<span class="nc" id="L80">			ps.setString(2, movieCollection.getId());</span>
+<span class="nc" id="L81">		});</span>
+<span class="nc" id="L82">	}</span>
+
+	@Override
+	@Transactional
+	public void deleteMovieCollection(String collectionId) {
+<span class="nc" id="L87">		final String sql = &quot;DELETE FROM collection WHERE id = ?&quot;;</span>
+<span class="nc" id="L88">		final String shareSql = &quot;DELETE FROM collection_permission WHERE collection_id = ?&quot;;</span>
+<span class="nc" id="L89">		final String defSql = &quot;DELETE FROM collection_default WHERE collection_id = ?&quot;;</span>
+<span class="nc" id="L90">		jdbcTemplate.update(shareSql, ps -&gt; ps.setString(1, collectionId));</span>
+<span class="nc" id="L91">		jdbcTemplate.update(defSql, ps -&gt; ps.setString(1, collectionId));</span>
+<span class="nc" id="L92">		jdbcTemplate.update(sql, ps -&gt; ps.setString(1, collectionId));</span>
+<span class="nc" id="L93">	}</span>
+
+	@Override
+	public void shareCollection(String collectionId, String username, boolean editable) {
+<span class="nc" id="L97">		final String sql = &quot;INSERT INTO collection_permission(collection_id, username, allowEdit, accepted) VALUES (?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L98">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L99">			ps.setString(1, collectionId);</span>
+<span class="nc" id="L100">			ps.setString(2, username);</span>
+<span class="nc" id="L101">			ps.setBoolean(3, editable);</span>
+<span class="nc" id="L102">			ps.setBoolean(4, false);</span>
+<span class="nc" id="L103">		});</span>
+<span class="nc" id="L104">	}</span>
+
+	@Override
+	public void updateEditable(String collectionId, String username, boolean editable) {
+<span class="nc" id="L108">		final String sql = &quot;UPDATE collection_permission SET allowEdit = ? WHERE collection_id = ? AND username = ?&quot;;</span>
+<span class="nc" id="L109">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L110">			ps.setBoolean(1, editable);</span>
+<span class="nc" id="L111">			ps.setString(2, collectionId);</span>
+<span class="nc" id="L112">			ps.setString(3, username);</span>
+<span class="nc" id="L113">		});</span>
+<span class="nc" id="L114">	}</span>
+
+	@Override
+	@Transactional
+	public boolean unshareCollection(String collectionId, String username) {
+<span class="nc" id="L119">		final String sql = &quot;DELETE FROM collection_permission WHERE collection_id = ? AND username = ?&quot;;</span>
+<span class="nc" id="L120">		final String defSql = &quot;DELETE FROM collection_default WHERE collection_id = ? AND username = ?&quot;; // may or may not exist</span>
+<span class="nc" id="L121">		jdbcTemplate.update(defSql, ps -&gt; {</span>
+<span class="nc" id="L122">			ps.setString(1, collectionId);</span>
+<span class="nc" id="L123">			ps.setString(2, username);</span>
+<span class="nc" id="L124">		});	</span>
+<span class="nc" id="L125">		int rowsAffected = jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L126">			ps.setString(1, collectionId);</span>
+<span class="nc" id="L127">			ps.setString(2, username);</span>
+<span class="nc" id="L128">		});</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		return rowsAffected &gt; 0;</span>
+	}
+
+	@Override
+	public Optional&lt;String&gt; getDefaultCollectionId(String username) {
+<span class="nc" id="L134">		final String sql = &quot;SELECT collection_id FROM collection_default WHERE username = ?&quot;;</span>
+<span class="nc" id="L135">		List&lt;String&gt; ids = new ArrayList&lt;String&gt;();</span>
+<span class="nc" id="L136">		jdbcTemplate.query(sql, ps -&gt; ps.setString(1, username), rs -&gt; {</span>
+<span class="nc" id="L137">			ids.add(rs.getString(1));</span>
+<span class="nc" id="L138">		});</span>
+<span class="nc" id="L139">		return ids.stream().findAny();</span>
+	}
+
+	@Override
+	public void setDefaultCollection(String username, String collectionId) {
+<span class="nc" id="L144">		Optional&lt;String&gt; currentDefault = getDefaultCollectionId(username);</span>
+<span class="nc" id="L145">		final String insertSql = &quot;INSERT INTO collection_default(collection_id, username) VALUES (?, ?)&quot;;</span>
+<span class="nc" id="L146">		final String updateSql = &quot;UPDATE collection_default SET collection_id = ? WHERE username = ?&quot;;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		String sql = (currentDefault.isPresent())? updateSql : insertSql;</span>
+<span class="nc" id="L148">		jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L149">			ps.setString(1, collectionId);</span>
+<span class="nc" id="L150">			ps.setString(2, username);</span>
+<span class="nc" id="L151">		});</span>
+<span class="nc" id="L152">	}</span>
+
+	@Override
+	public boolean acceptShareOffer(String collectionId, String username) {
+<span class="nc" id="L156">		final String sql = &quot;UPDATE collection_permission SET accepted = 1 WHERE collection_id = ? AND username = ?&quot;;</span>
+<span class="nc" id="L157">		int rowsAffected = jdbcTemplate.update(sql, ps -&gt; {</span>
+<span class="nc" id="L158">			ps.setString(1, collectionId);</span>
+<span class="nc" id="L159">			ps.setString(2, username);</span>
+<span class="nc" id="L160">		});</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		return rowsAffected &gt; 0;</span>
+	}
+
+	@Override
+	@Transactional
+	public List&lt;CollectionPermission&gt; getCollectionPermissions(String collectionId) {
+<span class="nc" id="L167">		final String ownerSql = &quot;SELECT owner FROM collection WHERE id = ?&quot;;</span>
+<span class="nc" id="L168">		String owner = jdbcTemplate.queryForObject(ownerSql, String.class, collectionId);</span>
+<span class="nc" id="L169">		final String sql = &quot;SELECT username, allowEdit, accepted FROM collection_permission WHERE collection_id = ? AND username &lt;&gt; ?&quot;;</span>
+<span class="nc" id="L170">		final List&lt;CollectionPermission&gt; permissions = new ArrayList&lt;CollectionPermission&gt;();</span>
+<span class="nc" id="L171">		jdbcTemplate.query(sql, ps -&gt; {</span>
+<span class="nc" id="L172">			ps.setString(1, collectionId);</span>
+<span class="nc" id="L173">			ps.setString(2, owner);</span>
+<span class="nc" id="L174">		}, rs -&gt; {</span>
+<span class="nc" id="L175">			CollectionPermission permission = new CollectionPermission();</span>
+<span class="nc" id="L176">			permission.setCollectionId(collectionId);</span>
+<span class="nc" id="L177">			permission.setUsername(rs.getString(1));</span>
+<span class="nc" id="L178">			permission.setAllowEdit(rs.getBoolean(2));</span>
+<span class="nc" id="L179">			permission.setAccepted(rs.getBoolean(3));</span>
+<span class="nc" id="L180">			permissions.add(permission);</span>
+<span class="nc" id="L181">		});</span>
+<span class="nc" id="L182">		return permissions;</span>
+	}
+
+	@Override
+	public Optional&lt;CollectionPermission&gt; getCollectionPermission(String collectionId, String username) {
+<span class="nc" id="L187">		return getCollectionPermissions(collectionId).stream()</span>
+<span class="nc" id="L188">				.filter(permission -&gt; permission.getUsername().equals(username))</span>
+<span class="nc" id="L189">				.findAny();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

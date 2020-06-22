@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AppConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.config</a> &gt; <span class="el_source">AppConfig.java</span></div><h1>AppConfig.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.config;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.util.SystemPropertyUtils;
+import org.xandercat.pmdb.ws.ClientQueryParamMarshaller;
+
+/**
+ * General application configuration not specific to data, security, or web config.
+ * 
+ * @author Scott Arnold
+ */
+@Configuration
+<span class="nc" id="L20">public class AppConfig {</span>
+
+	/**
+	 * Bean that defines where properties are to be loaded from.
+	 * 
+	 * @return resource for properties
+	 */
+	@Bean
+	public Resource propertiesResource() {
+<span class="nc" id="L29">		String propertiesLocation = SystemPropertyUtils.resolvePlaceholders(&quot;${pmdb.properties.location}pmdb_${pmdb.environment}.properties&quot;);</span>
+<span class="nc" id="L30">		return new FileSystemResource(propertiesLocation);</span>
+	}
+	
+	/**
+	 * Bean utilized to fill property placeholders throughout the application.
+	 * 
+	 * @param propertiesResource resource for properties
+	 * 
+	 * @return bean for property placeholders
+	 */
+	@Bean
+	public PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer(Resource propertiesResource) {
+<span class="nc" id="L42">		PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer = new PropertySourcesPlaceholderConfigurer();</span>
+<span class="nc" id="L43">		propertySourcesPlaceholderConfigurer.setLocation(propertiesResource);</span>
+<span class="nc" id="L44">		return propertySourcesPlaceholderConfigurer;</span>
+	}
+	
+	/**
+	 * REST client for application.
+	 * 
+	 * @return REST client
+	 */
+	@Bean
+	public Client restClient() {
+<span class="nc" id="L54">		return ClientBuilder.newBuilder().build();</span>
+	}
+	
+	/**
+	 * Bean for mapping request objects to REST GET query parameters.  This is a custom bean of the application and not something regularly
+	 * used with REST web services.
+	 * 
+	 * @return bean for mapping request objects to REST GET query parameters.
+	 */
+	@Bean
+	public ClientQueryParamMarshaller clientQueryParamMarshaller() {
+<span class="nc" id="L65">		return new ClientQueryParamMarshaller();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

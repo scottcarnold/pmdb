@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImdbAttribute.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.service</a> &gt; <span class="el_source">ImdbAttribute.java</span></div><h1>ImdbAttribute.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.service;
+
+/**
+ * Enum to represent the various IMDB movie attributes.
+ * 
+ * @author Scott Arnold
+ */
+<span class="fc" id="L8">public enum ImdbAttribute {</span>
+<span class="fc" id="L9">	IMDB_ID(&quot;Imdb Id&quot;), </span>
+<span class="fc" id="L10">	YEAR(&quot;Year&quot;), </span>
+<span class="fc" id="L11">	GENRE(&quot;Genre&quot;), </span>
+<span class="fc" id="L12">	RATED(&quot;Rated&quot;), </span>
+<span class="fc" id="L13">	PLOT(&quot;Plot&quot;), </span>
+<span class="fc" id="L14">	ACTORS(&quot;Actors&quot;), </span>
+<span class="fc" id="L15">	DIRECTOR(&quot;Director&quot;), </span>
+<span class="fc" id="L16">	AWARDS(&quot;Awards&quot;), </span>
+<span class="fc" id="L17">	IMDB_URL(&quot;Imdb Url&quot;), </span>
+<span class="fc" id="L18">	IMDB_RATING(&quot;Imdb Rating&quot;), </span>
+<span class="fc" id="L19">	IMDB_VOTES(&quot;Imdb Votes&quot;), </span>
+<span class="fc" id="L20">	LANGUAGE(&quot;Language&quot;), </span>
+<span class="fc" id="L21">	METASCORE(&quot;Metascore&quot;), </span>
+<span class="fc" id="L22">	POSTER(&quot;Poster&quot;), </span>
+<span class="fc" id="L23">	RELEASED(&quot;Released&quot;), </span>
+<span class="fc" id="L24">	RUNTIME(&quot;Runtime&quot;), </span>
+<span class="fc" id="L25">	TYPE(&quot;Type&quot;), </span>
+<span class="fc" id="L26">	COUNTRY(&quot;Country&quot;);</span>
+	
+	private String key;
+	
+<span class="fc" id="L30">	private ImdbAttribute(String key) {</span>
+<span class="fc" id="L31">		this.key = key;</span>
+<span class="fc" id="L32">	}</span>
+	
+	public String getKey() {
+<span class="fc" id="L35">		return key;</span>
+	}
+	
+	public String toString() {
+<span class="nc" id="L39">		return key;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>

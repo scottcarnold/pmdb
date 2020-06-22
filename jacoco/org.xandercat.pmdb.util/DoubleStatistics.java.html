@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DoubleStatistics.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PMDB</a> &gt; <a href="index.source.html" class="el_package">org.xandercat.pmdb.util</a> &gt; <span class="el_source">DoubleStatistics.java</span></div><h1>DoubleStatistics.java</h1><pre class="source lang-java linenums">package org.xandercat.pmdb.util;
+
+import java.util.Collections;
+import java.util.DoubleSummaryStatistics;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Statistics for double values.  This class expects the list of doubles to be non-null, contain no null values, and have a size of at least 1.
+ * 
+ * Standard deviation and interquartile range are lazy calculated when needed.
+ * 
+ * @author Scott Arnold
+ */
+public class DoubleStatistics extends NumberStatistics&lt;Double&gt; {
+
+	public static final double IQR_MULTIPLIER = 1.5;  // standard multiplier for finding outliers using IQR
+	
+	private DoubleSummaryStatistics summaryStatistics;
+	
+	/**
+	 * Construct statistics for the provided list of double values.
+	 * 
+	 * @param values  double values
+	 */
+	public DoubleStatistics(List&lt;Double&gt; values) {
+<span class="fc" id="L27">		super(values);</span>
+<span class="fc" id="L28">		this.summaryStatistics = values.stream().collect(Collectors.summarizingDouble(value -&gt; value));</span>
+<span class="fc" id="L29">	}</span>
+
+	@Override
+	protected void sort(List&lt;Double&gt; values) {
+<span class="fc" id="L33">		Collections.sort(values);</span>
+<span class="fc" id="L34">	}</span>
+
+	@Override
+	protected Double parse(String value) {
+		try {
+<span class="nc" id="L39">			return Double.valueOf(value);</span>
+<span class="nc" id="L40">		} catch (Exception e) {</span>
+		}
+<span class="nc" id="L42">		return null;</span>
+	}
+	
+	@Override
+	public Double getMin() {
+<span class="fc" id="L47">		return summaryStatistics.getMin();</span>
+	}
+
+	@Override
+	public Double getMax() {
+<span class="fc" id="L52">		return summaryStatistics.getMax();</span>
+	}
+
+	@Override
+	public double getAverage() {
+<span class="fc" id="L57">		return summaryStatistics.getAverage();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.5.201910111838</span></div></body></html>
