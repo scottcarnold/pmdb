@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.dto.imdb.MovieDetails;
 import org.xandercat.pmdb.dto.imdb.Result;
 import org.xandercat.pmdb.dto.imdb.SearchResult;
 import org.xandercat.pmdb.form.imdb.SearchForm;
@@ -26,6 +27,7 @@ import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.ImdbSearchService;
 import org.xandercat.pmdb.service.MovieService;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -164,5 +166,19 @@ public class ImdbSearchControllerTest {
 				.session(session)
 		)
 				.andExpect(redirectedUrlPattern("/?**"));			
+	}
+	
+	@Test
+	public void testAddToCollection() throws Exception {
+		MovieDetails movieDetails = new MovieDetails();
+		movieDetails.setImdbId("tt123456789");
+		movieDetails.setTitle("Title");
+		movieDetails.setGenre("Action");
+		when(imdbSearchService.getMovieDetails(any())).thenReturn(movieDetails);
+		mockMvc.perform(get("/imdbsearch/addToCollection")
+				.param("imdbId", "tt123456789")
+				.principal(principal)
+		)
+				.andExpect(content().json("{'ok':true,'errorMessage':null,'content':{'imdbId':'tt123456789'}}"));
 	}
 }

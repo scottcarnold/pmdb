@@ -154,4 +154,18 @@ public class MovieServiceImplTest {
 		assertEquals(2, attrKeys.size());
 		assertEquals("Genre", attrKeys.get(0));  // service method should return them sorted
 	}
+	
+	@Test
+	public void testGetImdbIdsInDefaultCollection() throws Exception {
+		when(collectionService.getDefaultMovieCollection("User")).thenReturn(Optional.of(movieCollection));
+		service.getImdbIdsInDefaultCollection("User");
+		verify(movieDao, times(1)).getAttributeValuesForCollection(movieCollection.getId(), ImdbAttribute.IMDB_ID.getKey());
+	}
+	
+	@Test
+	public void testGetUnlinkedMovies() throws Exception {
+		when(collectionService.getDefaultMovieCollection("User")).thenReturn(Optional.of(movieCollection));
+		service.getUnlinkedMoviesForDefaultCollection("User");
+		verify(movieDao, times(1)).getMoviesWithoutAttribute(movieCollection.getId(), ImdbAttribute.IMDB_ID.getKey());
+	}
 }

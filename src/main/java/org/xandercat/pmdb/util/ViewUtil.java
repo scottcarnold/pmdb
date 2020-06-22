@@ -31,6 +31,11 @@ import org.xandercat.pmdb.util.format.DoubleFormatter;
 import org.xandercat.pmdb.util.format.LongFormatter;
 import org.xandercat.pmdb.util.format.StringFormatter;
 
+/**
+ * Utility methods for interacting with the view.
+ * 
+ * @author Scott Arnold
+ */
 public class ViewUtil {
 
 	public static String TAB_HOME = "isHomeTab";
