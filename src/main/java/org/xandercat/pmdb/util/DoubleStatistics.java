@@ -13,8 +13,6 @@ import java.util.stream.Collectors;
  * @author Scott Arnold
  */
 public class DoubleStatistics extends NumberStatistics<Double> {
-
-	public static final double IQR_MULTIPLIER = 1.5;  // standard multiplier for finding outliers using IQR
 	
 	private DoubleSummaryStatistics summaryStatistics;
 	
