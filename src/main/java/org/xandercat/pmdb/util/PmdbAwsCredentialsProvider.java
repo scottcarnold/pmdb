@@ -3,6 +3,11 @@ package org.xandercat.pmdb.util;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 
+/**
+ * Class for providing AWS Cloud credentials.
+ * 
+ * @author Scott Arnold
+ */
 public class PmdbAwsCredentialsProvider implements AWSCredentialsProvider {
 	
 	public static class PmdbAwsCredentials implements AWSCredentials {

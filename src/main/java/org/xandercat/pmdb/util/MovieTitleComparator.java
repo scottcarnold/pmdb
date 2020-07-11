@@ -4,6 +4,11 @@ import java.util.Comparator;
 
 import org.xandercat.pmdb.dto.Movie;
 
+/**
+ * Comparator for comparing movies by movie title.  Comparison is case insensitive.
+ * 
+ * @author Scott Arnold
+ */
 public class MovieTitleComparator implements Comparator<Movie> {
 
 	@Override

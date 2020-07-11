@@ -10,6 +10,11 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
+/**
+ * Utility class for working with prepared statements and result sets.
+ * 
+ * @author Scott Arnold
+ */
 public class DBUtil {
 
 	private static final Calendar GMT_CALENDAR = new GregorianCalendar(TimeZone.getTimeZone("GMT"));

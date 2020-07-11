@@ -71,6 +71,7 @@ public class ViewUtil {
 	public static List<String> getImportedCollectionColumns(HttpSession session) {
 		return (List<String>) session.getAttribute(SESSION_COLLECTION_UPLOAD_COLUMNS);
 	}
+	
 	public static void setImportedCollectionFile(HttpSession session, MultipartFile multipartFile, List<String> sheets, List<String> columns) {
 		session.setAttribute(SESSION_COLLECTION_UPLOAD_FILE, multipartFile);
 		session.setAttribute(SESSION_COLLECTION_UPLOAD_SHEETS, sheets);

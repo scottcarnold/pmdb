@@ -1,5 +1,12 @@
 package org.xandercat.pmdb.util;
 
+/**
+ * Container class for a pair of related values.
+ * 
+ * @author Scott Arnold
+ *
+ * @param <T> value type
+ */
 public class Pair<T> {
 
 	private T first;
