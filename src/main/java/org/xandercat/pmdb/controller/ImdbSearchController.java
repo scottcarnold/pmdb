@@ -242,7 +242,8 @@ public class ImdbSearchController {
 			return "imdbsearch/imdbSearch";
 		} catch (WebServicesException wse) {
 			// with a little more work we could still provide paginator, as sometimes only a specific page fails. (example: "dragon" page 3 results in error 5/23/2020)
-			Alerts.setErrorMessage(model, "Search results could not be obtained for this page.");
+			LOGGER.error("Unable to retrieve search results.", wse);
+			Alerts.setErrorMessage(model, "Search results could not be obtained for this page. Try again later.");
 			return "imdbsearch/imdbSearch";
 		}
 		List<Result> searchResults = searchResult.getResults();
