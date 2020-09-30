@@ -25,6 +25,8 @@ public class MovieCollection {
 	private String owner;
 	@DynamoDBAttribute
 	private boolean cloud;
+	@DynamoDBAttribute
+	private boolean publicView;
 	private boolean editable;  // this is here as a convenience and will be dependent on who the user is; why does spring-data-dynamodb map this when it's not annotated?
 	private boolean owned;     // this is here as a convenience and will be dependent on who the user is; why does spring-data-dynamodb map this when it's not annotated? 
 	
@@ -63,6 +65,12 @@ public class MovieCollection {
 	}
 	public void setCloud(boolean cloud) {
 		this.cloud = cloud;
+	}
+	public boolean isPublicView() {
+		return publicView;
+	}
+	public void setPublicView(boolean publicView) {
+		this.publicView = publicView;
 	}
 	public boolean isEditable() {
 		return editable;

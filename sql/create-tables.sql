@@ -29,6 +29,7 @@ CREATE TABLE collection(
     name          VARCHAR(100) NOT NULL,
     owner         VARCHAR(50) NOT NULL,
     cloud         TINYINT(1) NOT NULL,
+    publicView    TINYINT(1) NOT NULL,
     CONSTRAINT fk_collection_owner FOREIGN KEY(owner) REFERENCES users(username)
 );
 

@@ -31,7 +31,7 @@ public class CollectionDaoImpl implements CollectionDao {
 	}
 
 	private List<MovieCollection> getSharedMovieCollections(String username, boolean accepted) {
-		final String sql = "SELECT id, name, owner, cloud, allowEdit FROM collection"
+		final String sql = "SELECT id, name, owner, cloud, allowEdit, publicView FROM collection"
 				+ " INNER JOIN collection_permission ON collection.id = collection_permission.collection_id"
 				+ " WHERE username = ? AND accepted = ?";
 		final List<MovieCollection> movieCollections = new ArrayList<MovieCollection>();
@@ -45,6 +45,7 @@ public class CollectionDaoImpl implements CollectionDao {
 			movieCollection.setOwnerAndOwned(rs.getString(3), username);
 			movieCollection.setCloud(rs.getBoolean(4));
 			movieCollection.setEditable(rs.getBoolean(5));
+			movieCollection.setPublicView(rs.getBoolean(6));
 			movieCollections.add(movieCollection);
 		});
 		return movieCollections;
@@ -60,13 +61,14 @@ public class CollectionDaoImpl implements CollectionDao {
 	@Override
 	@Transactional
 	public void addMovieCollection(MovieCollection movieCollection) {
-		final String sql = "INSERT INTO collection (id, name, owner, cloud) VALUES (?, ?, ?, ?)";
+		final String sql = "INSERT INTO collection (id, name, owner, cloud, publicView) VALUES (?, ?, ?, ?, ?)";
 		movieCollection.setId(keyGenerator.getKey());
 		jdbcTemplate.update(sql, ps -> {
 			ps.setString(1, movieCollection.getId());
 			ps.setString(2, movieCollection.getName());
 			ps.setString(3, movieCollection.getOwner());
 			ps.setBoolean(4, movieCollection.isCloud());
+			ps.setBoolean(5, movieCollection.isPublicView());
 		});
 		shareCollection(movieCollection.getId(), movieCollection.getOwner(), true);
 		acceptShareOffer(movieCollection.getId(), movieCollection.getOwner());
@@ -74,10 +76,11 @@ public class CollectionDaoImpl implements CollectionDao {
 
 	@Override
 	public void updateMovieCollection(MovieCollection movieCollection) {
-		final String sql = "UPDATE collection SET name = ? WHERE id = ?";
+		final String sql = "UPDATE collection SET name = ?, publicView = ? WHERE id = ?";
 		jdbcTemplate.update(sql, ps -> {
 			ps.setString(1, movieCollection.getName());
-			ps.setString(2, movieCollection.getId());
+			ps.setBoolean(2, movieCollection.isPublicView());
+			ps.setString(3, movieCollection.getId());
 		});
 	}
 

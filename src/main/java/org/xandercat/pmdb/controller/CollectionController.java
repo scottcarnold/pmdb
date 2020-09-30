@@ -342,6 +342,31 @@ public class CollectionController {
 	}
 	
 	/**
+	 * Toggle whether or not a movie collection is viewable by the public.
+	 * 
+	 * @param model         model
+	 * @param principal     principal
+	 * @param collectionId  collection ID
+	 * 
+	 * @return edit sharing page
+	 */
+	@RequestMapping("/collections/togglePublicView")
+	public String togglePublicView(Model model, Principal principal, @RequestParam String collectionId) {
+		try {
+			MovieCollection movieCollection = collectionService.getViewableMovieCollection(collectionId, principal.getName());
+			movieCollection.setPublicView(!movieCollection.isPublicView());
+			collectionService.updateMovieCollection(movieCollection, principal.getName());
+		} catch (CollectionSharingException e) {
+			LOGGER.error("Unable to toggle public view for collection.", e);
+			Alerts.setErrorMessage(model, "Unable to update public view for the movie collection.");
+		} catch (WebServicesException wse) {
+			LOGGER.error("Unable to toggle public view for collection.", wse);
+			Alerts.setErrorMessage(model, "Unable to update public view for the movie collection.");
+		}
+		return editSharing(model, principal, collectionId);
+	}
+	
+	/**
 	 * Revoke share of movie collection with user.
 	 * 
 	 * @param model         model

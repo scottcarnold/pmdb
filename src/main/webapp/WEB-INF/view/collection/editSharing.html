@@ -9,9 +9,27 @@
 			<div class="panel panel-info">
 				<div class="panel-heading">
 					<h3>Movie Collection: <span th:text="${movieCollection.name}"></span></h3>
+					<p th:if="${movieCollection.publicView}">You have shared this collection with the public (view only).</p>
 					<p>You have shared this collection with <span th:text="${collectionPermissions.size()}">0</span> other user(s).</p>
 					<a href="#" th:href="@{/collections/shareCollection(collectionId=${movieCollection.id})}">Share Collection With Another User</a>
 				</div>
+				<table class="table table-striped">
+					<thead>
+					<tr>
+						<th>Shared With Public</th>
+						<th>Public URL</th>
+						<th>Action</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr>
+						<td th:text="${movieCollection.publicView}? 'Yes' : 'No'">No</td>
+						<td th:if="${movieCollection.publicView}"><a href="#" th:href="@{/public/viewCollection(collectionId=${movieCollection.id})}">Public URL</a></td>
+						<td th:if="not ${movieCollection.publicView}">No public URL is available for this collection.</td>
+						<td><a href="#" th:href="@{/collections/togglePublicView(collectionId=${movieCollection.id})}" class="btn btn-default" role="button">Toggle Public View</a></td>
+					</tr>
+					</tbody>
+				</table>
 				<table th:if="${collectionPermissions.size() > 0}" class="table table-striped">
 					<thead>
 					<tr>

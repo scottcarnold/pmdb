@@ -109,6 +109,7 @@ public class CollectionServiceImpl implements CollectionService {
 		MovieCollection editableMovieCollection = viewableMovieCollectionOptional.get();
 		assertCloudReady(editableMovieCollection);
 		editableMovieCollection.setName(movieCollection.getName());
+		editableMovieCollection.setPublicView(movieCollection.isPublicView());
 		collectionDao.updateMovieCollection(editableMovieCollection);
 		if (editableMovieCollection.isCloud()) {
 			try {
@@ -234,6 +235,7 @@ public class CollectionServiceImpl implements CollectionService {
 		movieCollection.setOwnerAndOwned(callingUsername, callingUsername);
 		movieCollection.setEditable(true);
 		movieCollection.setCloud(cloud);
+		movieCollection.setPublicView(false);
 		collectionDao.addMovieCollection(movieCollection);
 		if (cloud) {
 			dynamoCollectionRepository.save(movieCollection); // key will have already been set by mirrored movie collection save
