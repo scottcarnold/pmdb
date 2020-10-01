@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout/layout}">
+	<head>
+		<title>PMDB</title>
+	</head>
+	<body>
+		<h1>PUBLIC MOVIES PAGE</h1>
+		<div layout:fragment="content">
+			<div th:if="${defaultMovieCollection}" class="panel panel-info">
+				<div class="panel-heading">
+					<h3><span th:text="'Collection: ' + ${defaultMovieCollection.name}">Movie Collection Name</span></h3>
+					<p th:if="${totalMoviesInCollection} and ${movies.size() != totalMoviesInCollection}">Filtered to <span th:text="${movies.size()}">0</span> out of <span th:text="${totalMoviesInCollection}">0</span> movies in the collection.</p>
+					<form id="cSearchForm" th:action="@{/public/viewCollectionSearch}" th:object="${searchForm}" method="post" class="form-inline">
+						<input type="hidden" th:field="*{collectionId}"/>
+						<div class="input-group">
+							<input type="text" th:field="*{searchString}" class="form-control" placeholder="Search...">
+							<span class="input-group-btn">
+								<button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+							</span>
+						</div>
+					</form>
+				</div>
+				<table id="movieTable" class="table table-striped">
+					<thead>
+					<tr>
+						<th>Title</th>
+						<th th:each="columnName : ${attrColumns}"><span th:text="${columnName}"></span></th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="movie : ${movies}">
+						<td th:attr="data-order=${movie.title}"><a href="#" th:href="@{/public/movieDetails(movieId=${movie.id})}" class="movieTitleLink"><span th:text="${movie.title}">Movie Title</span></a></td>
+						<td th:each="columnName : ${attrColumns}" th:text="${attrFormatters.displayValue(movie, columnName)}" th:attr="data-order=${attrFormatters.sortValue(movie, columnName)}"></td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="movieDetailsDialog" title="Movie Details">&nbsp;</div>
+			<script type="text/javascript">
+			$(document).ready(function() { 
+				$("#movieDetailsDialog").dialog({
+					autoOpen: false, modal: false, width: 400
+				});
+				$("#movieDetailsDialog").dialog("option", "width", $(window).width()*0.9);
+				$(".movieTitleLink").click(function (e) {
+					e.preventDefault();
+					if ($("#movieDetailsDialog").dialog("isOpen")) {
+						$("#movieDetailsDialog").dialog("close");
+					};
+					$.ajax({
+						dataType: "html",
+						url: $(this).attr("href")
+					}).done(function (data) {
+						$("#movieDetailsDialog").html(data);
+						$("#movieDetailsDialog").dialog("open");
+						$("#movieDetailsDialog").closest(".ui-dialog")   // workaround to fix conflict causing close X to not appear
+							.find(".ui-dialog-titlebar-close")
+							.removeClass("ui-button-icon-only")
+							.html("<span class='glyphicon glyphicon-remove'></span>");
+					});
+				});
+			});
+			</script>
+			<script type="text/javascript">
+			$(document).ready(function() {  
+			        $("#movieTable").DataTable({
+			        	searching: false
+			        });
+			} );	
+			</script>
+		</div>
+	</body>
+</html>

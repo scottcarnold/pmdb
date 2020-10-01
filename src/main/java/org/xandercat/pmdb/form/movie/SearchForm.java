@@ -10,11 +10,20 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class SearchForm {
 
+	private String collectionId;
 	private String searchString;
 
 	public SearchForm() {
 	}
 	
+	public String getCollectionId() {
+		return collectionId;
+	}
+
+	public void setCollectionId(String collectionId) {
+		this.collectionId = collectionId;
+	}
+
 	public String getSearchString() {
 		return searchString;
 	}

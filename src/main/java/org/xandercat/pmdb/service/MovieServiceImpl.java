@@ -73,6 +73,27 @@ public class MovieServiceImpl implements MovieService {
 	}
 
 	@Override
+	public Optional<Movie> getPublicMovie(String id) throws CollectionSharingException, WebServicesException {
+		// doing a blind retrieve here; if not in local db, then try AWS
+		Optional<Movie> movie = movieDao.getMovie(id);
+		if (!movie.isPresent() && applicationProperties.isAwsEnabled()) {
+			try {
+				Optional<Movie> optional = dynamoMovieRepository.findById(id);
+				if (optional.isPresent()) {
+					movie = optional;
+				}
+			} catch (Exception e) {
+				throw new WebServicesException(e);
+			}
+		}
+		if (movie.isPresent()) {
+			// next call will throw the correct exception if collection is not publicly viewable
+			collectionService.getPublicMovieCollection(movie.get().getCollectionId());
+		}
+		return movie;
+	}
+
+	@Override
 	public Optional<Movie> getMovie(String id, String callingUsername) throws CollectionSharingException, WebServicesException {
 		// doing a blind retrieve here; if not in local db, then try AWS
 		Optional<Movie> movie = movieDao.getMovie(id);

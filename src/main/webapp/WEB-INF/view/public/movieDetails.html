@@ -1,0 +1,39 @@
+<ul class="nav nav-tabs">
+	<li role="presentation" class="active"><a href="#">Movie Details</a></li>
+	<!--/* Statistics tab is not being made available until after the statistics tab update (to use bars instead of numbers) */-->
+	<!--/*<li role="presentation"><a id="statisticsTab" href="#" th:href="@{/public/movieStatistics(movieId=${movie.id})}">Statistics</a></li>*/-->
+</ul>
+<div class="panel panel-info">
+	<div th:if="${movie}">
+		<div class="table-responsive">
+			<table class="table table-striped">
+				<thead>
+				</thead>
+				<tbody>
+					<tr th:each="attribute : ${movie.attributes}">
+						<td th:text="${attribute.key}"></td>
+						<td style="white-space: normal !important; word-wrap: break-word; min-width: 200px; max-width: 200px" th:text="${attribute.value}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+<button type="button" class="btn btn-default movieDetailsClose">Close</button>
+<script th:inline="javascript" type="text/javascript">
+$(document).ready(function() {
+	$("#movieDetailsDialog").dialog("option", "title", [[${movie.title}]]);
+	$(".movieDetailsClose").click(function (e) {
+		$("#movieDetailsDialog").dialog("close");
+	});
+	$("#statisticsTab").click(function (e) {
+		e.preventDefault();
+		$.ajax({
+			dataType: "html",
+			url: $(this).attr("href")
+		}).done(function (data) {
+			$("#movieDetailsDialog").html(data);
+		});		
+	});
+});
+</script>

@@ -30,6 +30,26 @@ public class CollectionDaoImpl implements CollectionDao {
 		return getSharedMovieCollections(username, false);
 	}
 
+	@Override
+	public Optional<MovieCollection> getMovieCollection(String collectionId) {
+		final String sql = "SELECT id, name, owner, cloud, publicView FROM collection"
+				+ " WHERE id = ?";
+		final List<MovieCollection> movieCollections = new ArrayList<MovieCollection>();
+		jdbcTemplate.query(sql, ps -> {
+			ps.setString(1, collectionId);
+		}, rs -> {
+			MovieCollection movieCollection = new MovieCollection();
+			movieCollection.setId(rs.getString(1));
+			movieCollection.setName(rs.getString(2));
+			movieCollection.setOwnerAndOwned(rs.getString(3), "");
+			movieCollection.setCloud(rs.getBoolean(4));
+			movieCollection.setEditable(false);
+			movieCollection.setPublicView(rs.getBoolean(5));
+			movieCollections.add(movieCollection);
+		});
+		return movieCollections.stream().findFirst();
+	}
+
 	private List<MovieCollection> getSharedMovieCollections(String username, boolean accepted) {
 		final String sql = "SELECT id, name, owner, cloud, allowEdit, publicView FROM collection"
 				+ " INNER JOIN collection_permission ON collection.id = collection_permission.collection_id"

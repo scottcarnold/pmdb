@@ -60,6 +60,18 @@ public interface CollectionService {
 	public List<MovieCollection> getViewableMovieCollections(String username);
 	
 	/**
+	 * Returns publicly viewable movie collection of given ID.  If the collection is not set publicly viewable or if there
+	 * is an error retrieving the collection, a CollectionSharingException is thrown.
+	 * 
+	 * @param collectionId  id of movie collection
+	 * 
+	 * @return movie collection of given ID
+	 * 
+	 * @throws CollectionSharingException is collection is not set publicly viewable
+	 */
+	public MovieCollection getPublicMovieCollection(String collectionId) throws CollectionSharingException;
+	
+	/**
 	 * Returns list of movie collections that have pending share offers for the user.
 	 * 
 	 * @param username  user

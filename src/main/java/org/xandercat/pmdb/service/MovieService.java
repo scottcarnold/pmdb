@@ -57,6 +57,18 @@ public interface MovieService {
 	public List<Movie> getUnlinkedMoviesForDefaultCollection(String callingUsername) throws WebServicesException;
 	
 	/**
+	 * Returns publicly viewable movie of given ID.  If movie of given ID is not publicly viewable, a 
+	 * CollectionSharingException is thrown.
+	 * 
+	 * @param id          id of movie
+	 * 
+	 * @return movie of given id
+	 * @throws CollectionSharingException if anonymous public user does not have permission to view the movie
+	 * @throws WebServicesException if a web service failure occurs
+	 */
+	public Optional<Movie> getPublicMovie(String id) throws CollectionSharingException, WebServicesException;
+	
+	/**
 	 * Returns movie of given id.
 	 * 
 	 * @param id                id of movie

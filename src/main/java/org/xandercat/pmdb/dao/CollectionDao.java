@@ -68,6 +68,16 @@ public interface CollectionDao {
 	public Optional<MovieCollection> getViewableMovieCollection(String collectionId, String username);
 
 	/**
+	 * Returns the movie collection for the given collectionId.  Editable flag will be
+	 * set false.  No permission check is performed.
+	 * 
+	 * @param collectionId
+	 * 
+	 * @return movie collection of given id
+	 */
+	public Optional<MovieCollection> getMovieCollection(String collectionId);
+	
+	/**
 	 * Offer to share a collection of given id to the given username.
 	 * 
 	 * @param collectionId  id of movie collection

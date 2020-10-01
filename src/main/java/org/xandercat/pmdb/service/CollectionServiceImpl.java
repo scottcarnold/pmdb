@@ -86,6 +86,17 @@ public class CollectionServiceImpl implements CollectionService {
 	}
 
 	@Override
+	public MovieCollection getPublicMovieCollection(String collectionId) throws CollectionSharingException {
+		Optional<MovieCollection> movieCollection = collectionDao.getMovieCollection(collectionId);
+		if (!movieCollection.isPresent()) {
+			throw new CollectionSharingException("Movie collection is not available.");
+		} else if (!movieCollection.get().isPublicView()) {
+			throw new CollectionSharingException("Movie collection is not available.");
+		}
+		return movieCollection.get();
+	}
+
+	@Override
 	public void addMovieCollection(MovieCollection movieCollection, String callingUsername) throws WebServicesException {
 		movieCollection.setOwnerAndOwned(callingUsername, callingUsername); // enforce that movie collection owner is the calling username
 		assertCloudReady(movieCollection);

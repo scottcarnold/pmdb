@@ -17,7 +17,7 @@
 					<div id="pmdbNavbar" class="navbar-collapse collapse">
 						<ul class="nav navbar-nav">
 							<li th:classappend="${viewTab == 'isHomeTab'}? 'active'"><a th:href="@{/}">Home</a></li>
-							<li th:classappend="${viewTab == 'isCollectionsTab'}? 'active'"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Collections <span th:if="${session.numShareOffers}" th:text="${session.numShareOffers}" class="badge">1</span><span class="caret"></span></a>
+							<li th:classappend="${viewTab == 'isCollectionsTab'}? 'active'" sec:authorize="hasRole('ROLE_USER')"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Collections <span th:if="${session.numShareOffers}" th:text="${session.numShareOffers}" class="badge">1</span><span class="caret"></span></a>
 								<ul class="dropdown-menu">
 									<li><a th:href="@{/collections}">Manage Collections <span th:if="${session.numShareOffers}" th:text="${session.numShareOffers}" class="badge">1</span></a></li>
 									<li role="separator" class="divider"></li>
@@ -25,11 +25,11 @@
 									<li><a th:href="@{/collections/import}">Import From Excel</a></li>
 								</ul>
 							</li>
-							<li th:classappend="${viewTab == 'isImdbSearchTab'}? 'active'"><a th:href="@{/imdbsearch}">IMDB Search</a></li>
-							<li th:classappend="${viewTab == 'isMyAccountTab'}? 'active'"><a th:href="@{/myaccount}">My Account</a></li>
+							<li th:classappend="${viewTab == 'isImdbSearchTab'}? 'active'" sec:authorize="hasRole('ROLE_USER')"><a th:href="@{/imdbsearch}">IMDB Search</a></li>
+							<li th:classappend="${viewTab == 'isMyAccountTab'}? 'active'" sec:authorize="hasRole('ROLE_USER')"><a th:href="@{/myaccount}">My Account</a></li>
 							<li th:classappend="${viewTab == 'isUserAdminTab'}? 'active'" sec:authorize="hasRole('ROLE_ADMIN')"><a th:href="@{/useradmin}">User Admin</a></li>
 						</ul>
-						<ul class="nav navbar-nav navbar-right">
+						<ul class="nav navbar-nav navbar-right" sec:authorize="hasRole('ROLE_USER')">
 							<li>
 								<!--  logout action has to be a post due to CSRF token; margin-top to improve appearance is a little hackish until I can figure out how to center it properly  -->
 								<form th:action="@{/logout}" method="post"><button type="submit" th:text="'Log Out'" class="btn btn-default" style="margin-top: 7px;">Log Out</button></form>

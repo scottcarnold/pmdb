@@ -85,10 +85,12 @@ public class HomeController {
 	 * @return home page
 	 */
 	@GetMapping("/")
-	public String home(Model model, Principal principal, HttpSession session) {
+	public String home(Model model, Principal principal) {
 		model.addAttribute("searchForm", new SearchForm());
-		return prepareHome(model, principal, null, session);
+		return prepareHome(model, principal, null);
 	}
+	
+
 	
 	/**
 	 * Search user's default/active movie collection.  This filters the list of movies in the user's default/active movie
@@ -103,13 +105,13 @@ public class HomeController {
 	 * @return home page, filtered to only movies matching their search
 	 */
 	@RequestMapping("/movies/search")
-	public String search(Model model, Principal principal, HttpSession session,
+	public String search(Model model, Principal principal,
 			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
 			BindingResult result) {
-		return prepareHome(model, principal, searchForm.getSearchString(), session);
+		return prepareHome(model, principal, searchForm.getSearchString());
 	}
 	
-	private String prepareHome(Model model, Principal principal, String searchString, HttpSession session) {
+	private String prepareHome(Model model, Principal principal, String searchString) {
 		Optional<MovieCollection> defaultMovieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		if (!defaultMovieCollection.isPresent()) {
 			// send them to collections so they can set a default movie collection
@@ -219,12 +221,11 @@ public class HomeController {
 	 * @param model      model
 	 * @param principal  principal
 	 * @param movieId    id of movie to edit
-	 * @param session    session
 	 * 
 	 * @return page to edit movie
 	 */
 	@RequestMapping("/movies/editMovie")
-	public String editMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
+	public String editMovie(Model model, Principal principal, @RequestParam String movieId) {
 		try {
 			Optional<Movie> movie = movieService.getMovie(movieId, principal.getName());
 			if (!movie.isPresent()) {
@@ -234,7 +235,7 @@ public class HomeController {
 		} catch (Exception e) {
 			LOGGER.error("Unable to edit movie for ID: " + movieId, e);
 			Alerts.setErrorMessage(model, "This movie cannot be edited.");
-			return home(model, principal, session);
+			return home(model, principal);
 		}
 		return "movie/editMovie";
 	}
@@ -244,14 +245,13 @@ public class HomeController {
 	 * 
 	 * @param model      model
 	 * @param principal  principal
-	 * @param session    session
 	 * @param movieForm  movie form
 	 * @param result     binding result
 	 * 
 	 * @return home page
 	 */
 	@RequestMapping("/movies/addMovieSubmit")
-	public String addMovieSubmit(Model model, Principal principal, HttpSession session,
+	public String addMovieSubmit(Model model, Principal principal,
 			@ModelAttribute("movieForm") @Valid MovieForm movieForm,
 			BindingResult result) {
 		if (result.hasErrors()) {
@@ -265,10 +265,10 @@ public class HomeController {
 		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("Unable to add movie.", e);
 			Alerts.setErrorMessage(model, "This movie cannot be added.");
-			return home(model, principal, session);
+			return home(model, principal);
 		}
 		Alerts.setMessage(model, "Movie added to the collection.");
-		return home(model, principal, session);
+		return home(model, principal);
 	}
 	
 	/**
@@ -276,14 +276,13 @@ public class HomeController {
 	 * 
 	 * @param model      model
 	 * @param principal  principal
-	 * @param session    session
 	 * @param movieForm  movie form
 	 * @param result     binding result
 	 * 
 	 * @return home page
 	 */
 	@RequestMapping("/movies/editMovieSubmit")
-	public String editMovieSubmit(Model model, Principal principal, HttpSession session,
+	public String editMovieSubmit(Model model, Principal principal,
 			@ModelAttribute("movieForm") @Valid MovieForm movieForm,
 			BindingResult result) {
 		if (result.hasErrors()) {
@@ -298,10 +297,10 @@ public class HomeController {
 		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("Unable to update movie.", e);
 			Alerts.setErrorMessage(model, "This movie cannot be updated.");
-			return home(model, principal, session);
+			return home(model, principal);
 		}
 		Alerts.setMessage(model, "Movie updated.");
-		return home(model, principal, session);
+		return home(model, principal);
 	}
 	
 	/**
@@ -310,27 +309,26 @@ public class HomeController {
 	 * @param model      model
 	 * @param principal  principal
 	 * @param movieId    id of movie to delete
-	 * @param session    session
 	 * 
 	 * @return home page
 	 */
 	@RequestMapping(value="/movies/deleteMovie", method=RequestMethod.POST)
-	public String deleteMovie(Model model, Principal principal, @RequestParam String movieId, HttpSession session) {
+	public String deleteMovie(Model model, Principal principal, @RequestParam String movieId) {
 		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		try {
 			Movie movie = movieService.getMovie(movieId, principal.getName()).get();
 			if (!movie.getCollectionId().equals(movieCollection.get().getId())) {
 				Alerts.setErrorMessage(model, "Movies can only be deleted from your currently active collection.");
-				return home(model, principal, session);
+				return home(model, principal);
 			}
 			movieService.deleteMovie(movieId, principal.getName());
 		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("Unable to delete movie.", e);
 			Alerts.setErrorMessage(model, "Movie cannot be deleted.");
-			return home(model, principal, session);
+			return home(model, principal);
 		}
 		Alerts.setMessage(model, "Movie deleted.");
-		return home(model, principal, session);
+		return home(model, principal);
 	}
 	
 	/**
@@ -338,12 +336,11 @@ public class HomeController {
 	 * 
 	 * @param model      model
 	 * @param principal  principal
-	 * @param session    session
 	 * 
 	 * @return page for configuring movie table columns
 	 */
 	@RequestMapping("/movies/configureColumns")
-	public String configureColumns(Model model, Principal principal, HttpSession session) {
+	public String configureColumns(Model model, Principal principal) {
 		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(principal.getName());
 		List<String> tableColumnOptions = null;
 		try {
@@ -351,7 +348,7 @@ public class HomeController {
 		} catch (CollectionSharingException | WebServicesException e) {
 			LOGGER.error("User " + principal.getName() + " cannot configure columns for collection " + movieCollection.get().getId(), e);
 			Alerts.setErrorMessage(model, "Columns cannot be configured.");
-			return home(model, principal, session);
+			return home(model, principal);
 		}
 		List<String> tableColumnPreferences = movieService.getTableColumnPreferences(principal.getName());
 		tableColumnOptions.removeAll(tableColumnPreferences); // remove ones already in preference list
@@ -367,12 +364,11 @@ public class HomeController {
 	 * @param principal  principal
 	 * @param dragIndex  index of column being moved
 	 * @param dropIndex  index of column where target column is being moved to
-	 * @param session    session
 	 * 
 	 * @return page for configuring movie table columns
 	 */
 	@RequestMapping("/movies/reorderColumns")
-	public String reorderColumns(Model model, Principal principal, @RequestParam int dragIndex, @RequestParam int dropIndex, HttpSession session) {
+	public String reorderColumns(Model model, Principal principal, @RequestParam int dragIndex, @RequestParam int dropIndex) {
 		LOGGER.debug("Requested drag from " + dragIndex + " to " + dropIndex);
 		try {
 			movieService.reorderTableColumnPreference(dragIndex, dropIndex, principal.getName());
@@ -381,7 +377,7 @@ public class HomeController {
 			LOGGER.error("Unable to reorder columns.", e);
 			Alerts.setErrorMessage(model, "Table columns could not be reordered.");
 		}
-		return configureColumns(model, principal, session);
+		return configureColumns(model, principal);
 	}
 	
 	/**
@@ -390,15 +386,14 @@ public class HomeController {
 	 * @param model          model
 	 * @param principal      principal
 	 * @param attributeName  name of attribute to add as a column in the table
-	 * @param session        session
 	 * 
 	 * @return page for configuring movie table columns
 	 */
 	@RequestMapping("/movies/addColumnPreference")
-	public String addColumnPreference(Model model, Principal principal, @RequestParam String attributeName, HttpSession session) {
+	public String addColumnPreference(Model model, Principal principal, @RequestParam String attributeName) {
 		movieService.addTableColumnPreference(attributeName, principal.getName());
 		// not going to set success messages here as it would reduce usability of the interface and be of little value
-		return configureColumns(model, principal, session);
+		return configureColumns(model, principal);
 	}
 	
 	/**
@@ -407,15 +402,14 @@ public class HomeController {
 	 * @param model        model
 	 * @param principal    principal
 	 * @param deleteIndex  index of column to be removed
-	 * @param session      session
 	 * 
 	 * @return page for configuring movie table columns
 	 */
 	@RequestMapping("/movies/deleteColumnPreference")
-	public String deleteColumnPreference(Model model, Principal principal, @RequestParam int deleteIndex, HttpSession session) {
+	public String deleteColumnPreference(Model model, Principal principal, @RequestParam int deleteIndex) {
 		movieService.deleteTableColumnPreference(deleteIndex, principal.getName());
 		// not going to set success messages here as it would reduce usability of the interface and be of little value
-		return configureColumns(model, principal, session);		
+		return configureColumns(model, principal);		
 	}
 	
 	/**
