@@ -101,7 +101,7 @@ public class HomeControllerTest {
 				.principal(principal)
 				.param("movieId", "id")
 		)
-				.andExpect(model().attributeExists("movie", "voteStatistics", "genreStatistics", "genresMostCommon", "genresLeastCommon"))
+				.andExpect(model().attributeExists("movie", "genreStatistics", "genresMostCommon", "genresLeastCommon"))
 				.andExpect(view().name("movie/movieStatistics"));
 	}
 	

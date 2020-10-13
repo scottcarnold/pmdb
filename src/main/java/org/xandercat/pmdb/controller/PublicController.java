@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.xandercat.pmdb.dto.Movie;
 import org.xandercat.pmdb.dto.MovieCollection;
+import org.xandercat.pmdb.dto.MovieStatistics;
 import org.xandercat.pmdb.exception.CollectionSharingException;
 import org.xandercat.pmdb.exception.WebServicesException;
 import org.xandercat.pmdb.form.movie.SearchForm;
@@ -26,7 +28,11 @@ import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.ImdbAttribute;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.Alerts;
+import org.xandercat.pmdb.util.BootstrapStackedProgressBar;
+import org.xandercat.pmdb.util.DoubleStatistics;
+import org.xandercat.pmdb.util.LongStatistics;
 import org.xandercat.pmdb.util.ViewUtil;
+import org.xandercat.pmdb.util.WordStatistics;
 import org.xandercat.pmdb.util.format.FormatUtil;
 
 /**
@@ -139,5 +145,69 @@ public class PublicController {
 			LOGGER.error("Unable to load movie id " + movieId + " for public user", e);
 		}
 		return "public/movieDetails";
+	}
+	
+	/**
+	 * AJAX method for returning movie and movie collection statistics for a movie in a public collection.  Returned result is
+	 * an HTML fragment that can be loaded into a dialog.
+	 * 
+	 * @param model      model
+	 * @param movieId    movie ID
+	 * 
+	 * @return page fragment for movie statistics
+	 */
+	@RequestMapping("/public/movieStatistics")
+	public String movieStatistics(Model model, @RequestParam String movieId) {
+		try {
+			Optional<Movie> movie = movieService.getPublicMovie(movieId);
+			MovieCollection defaultMovieCollection = collectionService.getPublicMovieCollection(movie.get().getCollectionId());
+			model.addAttribute("defaultMovieCollection", defaultMovieCollection);
+			Set<Movie> movies = movieService.getMoviesForCollection(defaultMovieCollection.getId(), defaultMovieCollection.getOwner());
+			if (movie.isPresent()) {
+				model.addAttribute("movie", movie.get());
+				
+			}
+			MovieStatistics movieStatistics = new MovieStatistics(movies);
+			Optional<DoubleStatistics> ratingStatistics = movieStatistics.getDoubleStatistics(ImdbAttribute.IMDB_RATING.getKey());
+			Optional<LongStatistics> voteStatistics = movieStatistics.getLenientLongStatistics(ImdbAttribute.IMDB_VOTES.getKey());
+			Optional<WordStatistics> genreStatistics = movieStatistics.getWordStatistics(ImdbAttribute.GENRE.getKey());
+			if (ratingStatistics.isPresent()) {
+				BootstrapStackedProgressBar pbar = new BootstrapStackedProgressBar(0.1, 10d);
+				pbar.addBar(ratingStatistics.get().getMin(), "Min: ", "progress-bar-danger");
+				pbar.addBar(ratingStatistics.get().getAverage(), "Average: ", "progress-bar-warning");
+				pbar.addBar(ratingStatistics.get().getMax(), "Max: ", "progress-bar-success");
+				model.addAttribute("ratingCollectionPBar", pbar.finalized());
+				double movieRating = FormatUtil.parseDoubleLenient(movie.get().getAttribute(ImdbAttribute.IMDB_RATING.getKey()));
+				String label = ratingStatistics.get().isOutlier(movieRating)? "Outlier: " : "";
+				model.addAttribute("ratingMoviePBar", pbar.getComparisonBar(movieRating, label, null));
+				
+			}
+			if (voteStatistics.isPresent()) {
+				BootstrapStackedProgressBar pbar = new BootstrapStackedProgressBar(0.1);
+				pbar.addBar(voteStatistics.get().getMin(), "Min: ", "progress-bar-danger");
+				pbar.addBar(voteStatistics.get().getMedian(), "Median: ", "progress-bar-warning");
+				pbar.addBar(voteStatistics.get().getMax(), "Max: ", "progress-bar-success");
+				model.addAttribute("votesCollectionPBar", pbar.finalized());
+				double movieVotes = FormatUtil.parseDoubleLenient(movie.get().getAttribute(ImdbAttribute.IMDB_VOTES.getKey()));
+				String label = voteStatistics.get().isOutlier(Math.round(movieVotes))? "Outlier: " : "";
+				model.addAttribute("votesMoviePBar", pbar.getComparisonBar(movieVotes, label, null));			
+			}
+			if (genreStatistics.isPresent()) {
+				model.addAttribute("genreStatistics", genreStatistics.get());
+				model.addAttribute("genresMostCommon", genreStatistics.get().getTopWordCounts(3).stream()
+						.map(WordStatistics.WordCount::toString).collect(Collectors.joining(",")));
+				model.addAttribute("genresLeastCommon", genreStatistics.get().getBottomWordCounts(3).stream()
+						.map(WordStatistics.WordCount::toString).collect(Collectors.joining(",")));
+				if (movie.isPresent()) {
+					model.addAttribute("specificGenreCounts", genreStatistics.get()
+							.getWordCountsForWords(movie.get().getAttribute(ImdbAttribute.GENRE.getKey())).stream()
+							.map(WordStatistics.WordCount::toString).collect(Collectors.joining(",")));
+				}
+			}
+
+		} catch (CollectionSharingException | WebServicesException e) {
+			LOGGER.error("Unable to load movie id " + movieId + " for public user", e);
+		}
+		return "public/movieStatistics";		
 	}
 }

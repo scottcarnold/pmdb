@@ -33,6 +33,7 @@ import org.xandercat.pmdb.service.CollectionService;
 import org.xandercat.pmdb.service.ImdbAttribute;
 import org.xandercat.pmdb.service.MovieService;
 import org.xandercat.pmdb.util.Alerts;
+import org.xandercat.pmdb.util.BootstrapStackedProgressBar;
 import org.xandercat.pmdb.util.DoubleStatistics;
 import org.xandercat.pmdb.util.LongStatistics;
 import org.xandercat.pmdb.util.ViewUtil;
@@ -164,6 +165,16 @@ public class HomeController {
 		return "movie/movieDetails";
 	}
 	
+	/**
+	 * AJAX method for returning movie and movie collection statistics for a movie in a collection.  Returned result is
+	 * an HTML fragment that can be loaded into a dialog.
+	 * 
+	 * @param model      model
+	 * @param principal  principal
+	 * @param movieId    movie ID
+	 * 
+	 * @return page fragment for movie statistics
+	 */
 	@RequestMapping("/movies/movieStatistics")
 	public String movieStatistics(Model model, Principal principal, @RequestParam String movieId) {
 		try {
@@ -180,10 +191,25 @@ public class HomeController {
 			Optional<LongStatistics> voteStatistics = movieStatistics.getLenientLongStatistics(ImdbAttribute.IMDB_VOTES.getKey());
 			Optional<WordStatistics> genreStatistics = movieStatistics.getWordStatistics(ImdbAttribute.GENRE.getKey());
 			if (ratingStatistics.isPresent()) {
-				model.addAttribute("ratingStatistics", ratingStatistics.get());
+				BootstrapStackedProgressBar pbar = new BootstrapStackedProgressBar(0.1, 10d);
+				pbar.addBar(ratingStatistics.get().getMin(), "Min: ", "progress-bar-danger");
+				pbar.addBar(ratingStatistics.get().getAverage(), "Average: ", "progress-bar-warning");
+				pbar.addBar(ratingStatistics.get().getMax(), "Max: ", "progress-bar-success");
+				model.addAttribute("ratingCollectionPBar", pbar.finalized());
+				double movieRating = FormatUtil.parseDoubleLenient(movie.get().getAttribute(ImdbAttribute.IMDB_RATING.getKey()));
+				String label = ratingStatistics.get().isOutlier(movieRating)? "Outlier: " : "";
+				model.addAttribute("ratingMoviePBar", pbar.getComparisonBar(movieRating, label, null));
+				
 			}
 			if (voteStatistics.isPresent()) {
-				model.addAttribute("voteStatistics", voteStatistics.get());
+				BootstrapStackedProgressBar pbar = new BootstrapStackedProgressBar(0.1);
+				pbar.addBar(voteStatistics.get().getMin(), "Min: ", "progress-bar-danger");
+				pbar.addBar(voteStatistics.get().getMedian(), "Median: ", "progress-bar-warning");
+				pbar.addBar(voteStatistics.get().getMax(), "Max: ", "progress-bar-success");
+				model.addAttribute("votesCollectionPBar", pbar.finalized());
+				double movieVotes = FormatUtil.parseDoubleLenient(movie.get().getAttribute(ImdbAttribute.IMDB_VOTES.getKey()));
+				String label = voteStatistics.get().isOutlier(Math.round(movieVotes))? "Outlier: " : "";
+				model.addAttribute("votesMoviePBar", pbar.getComparisonBar(movieVotes, label, null));			
 			}
 			if (genreStatistics.isPresent()) {
 				model.addAttribute("genreStatistics", genreStatistics.get());
@@ -192,7 +218,9 @@ public class HomeController {
 				model.addAttribute("genresLeastCommon", genreStatistics.get().getBottomWordCounts(3).stream()
 						.map(WordStatistics.WordCount::toString).collect(Collectors.joining(",")));
 				if (movie.isPresent()) {
-					model.addAttribute("specificGenreCounts", genreStatistics.get().getWordCountsForWords(movie.get().getAttribute(ImdbAttribute.GENRE.getKey())));
+					model.addAttribute("specificGenreCounts", genreStatistics.get()
+							.getWordCountsForWords(movie.get().getAttribute(ImdbAttribute.GENRE.getKey())).stream()
+							.map(WordStatistics.WordCount::toString).collect(Collectors.joining(",")));
 				}
 			}
 

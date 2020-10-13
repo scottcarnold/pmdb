@@ -2,6 +2,8 @@ package org.xandercat.pmdb.util;
 
 import java.util.List;
 
+import org.xandercat.pmdb.util.format.FormatUtil;
+
 /**
  * Statistics for numbers.  This class expects the list of numbers to be non-null, contain no null values, and have a size of at least 1.
  * 
@@ -18,6 +20,19 @@ public abstract class NumberStatistics<T extends Number> {
 	private Double interquartileRange;
 	private Double iqrQ1;
 	private Double iqrQ3;
+	
+	public static final double getPercentInRange(double startRange, double stopRange, double value) {
+		return (value - startRange) / (stopRange - startRange);
+	}
+	
+	public static final double getPercentInRange(double startRange, double stopRange, String valueSt) {
+		double value = 0;
+		valueSt = FormatUtil.formatAsNumber(valueSt);
+		if (valueSt != null && !valueSt.isEmpty()) {
+			value = Double.parseDouble(valueSt);
+		}
+		return getPercentInRange(startRange, stopRange, value);
+	}
 	
 	/**
 	 * Construct statistics for the provided list of values.
@@ -216,5 +231,4 @@ public abstract class NumberStatistics<T extends Number> {
 			return values.get(midpointIndex).doubleValue();
 		}
 	}
-
 }

@@ -1,7 +1,6 @@
 <ul class="nav nav-tabs">
 	<li role="presentation" class="active"><a href="#">Movie Details</a></li>
-	<!--/* Statistics tab is not being made available until after the statistics tab update (to use bars instead of numbers) */-->
-	<!--/*<li role="presentation"><a id="statisticsTab" href="#" th:href="@{/public/movieStatistics(movieId=${movie.id})}">Statistics</a></li>*/-->
+	<li role="presentation"><a id="statisticsTab" href="#" th:href="@{/public/movieStatistics(movieId=${movie.id})}">Statistics</a></li>
 </ul>
 <div class="panel panel-info">
 	<div th:if="${movie}">

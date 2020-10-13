@@ -1,14 +1,5 @@
-<div th:if="${defaultMovieCollection.editable}" class="text-right" style="overflow: visible; white-space: nowrap">
-	<a href="#" th:href="@{/movies/editMovie(movieId=${movie.id})}" class="btn btn-default" role="button">Edit</a> 
-	<a href="#" th:if="not ${#strings.isEmpty(movie.getAttribute('Imdb Id'))}" th:href="@{/imdbsearch/link(movieId=${movie.id},linkAll=false)}" class="btn btn-default" role="button">Relink</a>
-	<form th:action="@{/movies/deleteMovie}" method="post" style="display: inline">
-		<input type="hidden" name="movieId" th:value="${movie.id}"/>
-		<button type="submit" class="confirmDelete btn btn-default">Delete</button>
-	</form>
-	<button type="button" class="btn btn-default movieDetailsClose">Close</button>
-</div>
 <ul class="nav nav-tabs">
-	<li role="presentation"><a id="movieDetailsTab" href="#" th:href="@{/movies/movieDetails(movieId=${movie.id})}">Movie Details</a></li>
+	<li role="presentation"><a id="movieDetailsTab" href="#" th:href="@{/public/movieDetails(movieId=${movie.id})}">Movie Details</a></li>
 	<li role="presentation" class="active"><a href="#">Statistics</a></li>
 </ul>
 <div class="panel panel-info" style="padding: 10px;">
@@ -100,11 +91,6 @@
 	</div>
 </div>
 <button type="button" class="btn btn-default movieDetailsClose">Close</button>
-<div th:if="${defaultMovieCollection.editable}" id="confirmDeleteDialog" title="Confirm Delete">
-	<p>Are you sure you wish to delete this movie?</p>
-</div>
-<!--/* We can't put a th:if on the script because th:replace executes first, but it doesn't hurt to have script without dialog and buttons present, so just always include it */-->
-<script th:replace="script/script :: confirmDialog('#confirmDeleteDialog', '.confirmDelete')"></script>
 <script th:inline="javascript" type="text/javascript">
 $(document).ready(function() {
 	$("#movieDetailsDialog").dialog("option", "title", [[${movie.title}]]);

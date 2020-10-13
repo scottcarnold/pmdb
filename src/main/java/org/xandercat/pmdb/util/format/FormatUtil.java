@@ -120,6 +120,26 @@ public class FormatUtil {
 	}
 	
 	/**
+	 * Parses a string formatted number into a double. Non-numeric characters are stripped
+	 * prior to conversion.  If it cannot be converted to double, a value of 0 is returned.
+	 * 
+	 * @param number   string formatted number
+	 * 
+	 * @return number as a double (or 0 if cannot be converted)
+	 */
+	public static double parseDoubleLenient(String number) {
+		try {
+			number = formatAsNumber(number);
+			if (number == null || number.isEmpty()) {
+				return 0;
+			}
+			return Double.parseDouble(number);
+		} catch (Exception e) {
+			return 0;
+		}
+	}
+	
+	/**
 	 * Returns a "title case" formatted string from the string provided where each word begins with an upper case
 	 * letter, and all other characters are lower case.
 	 * 
