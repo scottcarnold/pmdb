@@ -160,13 +160,13 @@ public class BootstrapStackedProgressBar {
 			if (value < bar.value) {
 				barPercent += bar.percent * NumberStatistics.getPercentInRange(priorValue, bar.value, value);
 				comparisonBar.percent = barPercent;
-				return comparisonBar;
+				break;
 			} else {
 				barPercent += bar.percent;
 			}
 			priorBar = bar;
 		}
-		comparisonBar.percent = 1;
+		comparisonBar.percent = barPercent;
 		return comparisonBar;
 	}
 }
