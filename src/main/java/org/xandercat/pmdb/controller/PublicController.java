@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.apache.logging.log4j.LogManager;
@@ -54,15 +55,16 @@ public class PublicController {
 	/**
 	 * Page for listing movies for a collection for an anonymous public user.
 	 * 
+	 * @param request       HTTP Servlet Request
 	 * @param model         model
 	 * @param collectionId  collection ID
 	 * 
 	 * @return public collection view page
 	 */
 	@RequestMapping("/public/viewCollection")
-	public String publicViewCollection(Model model, 
+	public String publicViewCollection(HttpServletRequest request, Model model, 
 			@RequestParam("collectionId") String collectionId) {
-		preparePublicViewCollection(model, collectionId, null);
+		preparePublicViewCollection(request, model, collectionId, null);
 		SearchForm searchForm = new SearchForm();
 		searchForm.setCollectionId(collectionId);
 		model.addAttribute("searchForm", searchForm);
@@ -72,6 +74,7 @@ public class PublicController {
 	/**
 	 * Page for searching list of movies for a collection by an anonymous public user.
 	 * 
+	 * @param request    HTTP Servlet Request
 	 * @param model      model
 	 * @param principal  principal
 	 * @param searchForm search form
@@ -80,15 +83,16 @@ public class PublicController {
 	 * @return public collection view page
 	 */
 	@RequestMapping("/public/viewCollectionSearch")
-	public String publicViewCollectionSearch(Model model, Principal principal, 
+	public String publicViewCollectionSearch(HttpServletRequest request, Model model, Principal principal, 
 			@ModelAttribute("searchForm") @Valid SearchForm searchForm,
 			BindingResult result) {
-		preparePublicViewCollection(model, searchForm.getCollectionId(), searchForm.getSearchString());
+		preparePublicViewCollection(request, model, searchForm.getCollectionId(), searchForm.getSearchString());
 		return "public/movies";
 	}
 	
-	private void preparePublicViewCollection(Model model, String collectionId, String searchString) {
+	private void preparePublicViewCollection(HttpServletRequest request, Model model, String collectionId, String searchString) {
 		try {
+			LOGGER.info("Public user at " + request.getRemoteAddr() + " viewing collection ID " + collectionId + " with search string " + searchString);
 			MovieCollection movieCollection = collectionService.getPublicMovieCollection(collectionId);
 			model.addAttribute("defaultMovieCollection", movieCollection);
 			Set<Movie> movies = movieService.getMoviesForCollection(movieCollection.getId(), movieCollection.getOwner());
