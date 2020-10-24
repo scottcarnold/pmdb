@@ -89,9 +89,9 @@ public class CollectionServiceImpl implements CollectionService {
 	public MovieCollection getPublicMovieCollection(String collectionId) throws CollectionSharingException {
 		Optional<MovieCollection> movieCollection = collectionDao.getMovieCollection(collectionId);
 		if (!movieCollection.isPresent()) {
-			throw new CollectionSharingException("Movie collection is not available.");
+			throw new CollectionSharingException("Movie collection does not exist.");
 		} else if (!movieCollection.get().isPublicView()) {
-			throw new CollectionSharingException("Movie collection is not available.");
+			throw new CollectionSharingException("Movie collection is not available to public.");
 		}
 		return movieCollection.get();
 	}

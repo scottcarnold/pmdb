@@ -39,14 +39,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		LOGGER.info("SecurityConfig configure authentication manager builder method called");
+		LOGGER.debug("SecurityConfig configure authentication manager builder method called");
 		//auth.inMemoryAuthentication().withUser("user").password(passwordEncoder().encode("password")).roles("USER");
 		auth.userDetailsService(userDetailsService);
 	}
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		LOGGER.info("SecurityConfig configure http security method called");
+		LOGGER.debug("SecurityConfig configure http security method called");
 		http
 			.authorizeRequests()
 				.antMatchers("/login*").permitAll()

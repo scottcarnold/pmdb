@@ -92,7 +92,7 @@ public class PublicController {
 	
 	private void preparePublicViewCollection(HttpServletRequest request, Model model, String collectionId, String searchString) {
 		try {
-			LOGGER.info("Public user at " + request.getRemoteAddr() + " viewing collection ID " + collectionId + " with search string " + searchString);
+			LOGGER.info("Public user at " + request.getRemoteAddr() + " requested view of collection ID " + collectionId + ((searchString == null)? "" : " with search string " + searchString));
 			MovieCollection movieCollection = collectionService.getPublicMovieCollection(collectionId);
 			model.addAttribute("defaultMovieCollection", movieCollection);
 			Set<Movie> movies = movieService.getMoviesForCollection(movieCollection.getId(), movieCollection.getOwner());
@@ -109,13 +109,16 @@ public class PublicController {
 			model.addAttribute("attrColumns", attrColumns);
 			model.addAttribute("attributeNames", getAttributeNames(movieCollection.getOwner()));
 			
-		} catch (CollectionSharingException | WebServicesException e) {
-			LOGGER.error("Unable to retrieve movies for public movie collection request.", e);
+		} catch (CollectionSharingException cse) {
+			LOGGER.warn("Unable to retieve movies for public movie collection " + collectionId + ": " + cse.getMessage());
 			Alerts.setErrorMessage(model, "This movie collection is not available.");
-		}		
+		} catch (WebServicesException wse) {
+			LOGGER.error("Unable to retrieve movies for public movie collection " + collectionId + ".", wse);
+			Alerts.setErrorMessage(model, "This movie collection is not available.");			
+		}
 	}
 
-	public List<String> getAttributeNames(String userName) {
+	private List<String> getAttributeNames(String userName) {
 		Optional<MovieCollection> movieCollection = collectionService.getDefaultMovieCollection(userName);
 		if (movieCollection.isPresent()) {
 			try {

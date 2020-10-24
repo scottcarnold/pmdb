@@ -25,7 +25,7 @@ public class AppConfig {
 	 * @return resource for properties
 	 */
 	@Bean
-	public Resource propertiesResource() {
+	public static Resource propertiesResource() {
 		String propertiesLocation = SystemPropertyUtils.resolvePlaceholders("${pmdb.properties.location}pmdb_${pmdb.environment}.properties");
 		return new FileSystemResource(propertiesLocation);
 	}
@@ -38,7 +38,7 @@ public class AppConfig {
 	 * @return bean for property placeholders
 	 */
 	@Bean
-	public PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer(Resource propertiesResource) {
+	public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer(Resource propertiesResource) {
 		PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer = new PropertySourcesPlaceholderConfigurer();
 		propertySourcesPlaceholderConfigurer.setLocation(propertiesResource);
 		return propertySourcesPlaceholderConfigurer;
